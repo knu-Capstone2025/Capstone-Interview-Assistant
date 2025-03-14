@@ -1,7 +1,414 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>면접 코치 - 더 나은 면접을 위한 AI 솔루션</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>면접 코치 AI</h1>
+            <p class="hero-subtitle">이력서 기반 맞춤형 면접 준비 솔루션</p>
+            <a href="/resume-upload" class="btn btn-primary btn-start">시작하기</a>
+        </div>
+    </div>
+</div>
 
-Welcome to your new app.
+<div class="features-section">
+    <div class="container">
+        <h2 class="section-title">주요 기능</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="oi oi-document"></i>
+                </div>
+                <h3>이력서 분석</h3>
+                <p>AI가 이력서를 분석하여 직무에 맞는 맞춤형 면접 질문을 생성합니다.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="oi oi-chat"></i>
+                </div>
+                <h3>면접 질문 연습</h3>
+                <p>생성된 질문에 답변하고 실제 면접과 같은 환경에서 연습할 수 있습니다.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="oi oi-loop-circular"></i>
+                </div>
+                <h3>맞춤형 피드백</h3>
+                <p>AI가 답변을 분석하고 개선점과 강점을 제시하는 상세한 피드백을 제공합니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="how-it-works">
+    <div class="container">
+        <h2 class="section-title">이용 방법</h2>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>이력서 업로드</h3>
+                    <p>PDF 또는 DOCX 형식의 이력서를 업로드하세요.</p>
+                </div>
+            </div>
+            
+            <div class="step-connector"></div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>질문 생성</h3>
+                    <p>AI가 이력서를 분석하여 맞춤형 면접 질문을 생성합니다.</p>
+                </div>
+            </div>
+            
+            <div class="step-connector"></div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>답변 연습</h3>
+                    <p>질문에 답변하고 실전 면접 경험을 쌓으세요.</p>
+                </div>
+            </div>
+            
+            <div class="step-connector"></div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>피드백 확인</h3>
+                    <p>AI의 상세한 피드백으로 답변을 개선하세요.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cta-container">
+            <a href="/resume-upload" class="btn btn-primary btn-large">지금 시작하기</a>
+        </div>
+    </div>
+</div>
+
+<div class="testimonials">
+    <div class="container">
+        <h2 class="section-title">AI 면접 코치의 장점</h2>
+        
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <h3>24/7 언제든지</h3>
+                <p>시간에 구애받지 않고 언제든지 면접 연습이 가능합니다.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <h3>객관적인 피드백</h3>
+                <p>AI는 객관적인 관점에서 답변의 강점과 약점을 분석합니다.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <h3>맞춤형 질문</h3>
+                <p>이력서 내용에 기반한 개인화된 면접 질문을 제공합니다.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <h3>자신감 향상</h3>
+                <p>반복적인 연습으로 실제 면접에서의 자신감을 키울 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tech-footer">
+    <div class="container">
+        <p>Microsoft 기술 및 Semantic Kernel과 LLM을 활용한 지능형 애플리케이션</p>
+        <p>Azure 클라우드에서 호스팅되는 Cloud-Native 솔루션</p>
+    </div>
+</div>
+
+<style>
+    /* 전체 스타일 */
+    :root {
+        --primary-color: #0078d4;
+        --secondary-color: #2b88d8;
+        --accent-color: #00b7c3;
+        --text-color: #333;
+        --light-bg: #f5f9fc;
+        --card-bg: white;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* 섹션 공통 스타일 */
+    .section-title {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background-color: var(--primary-color);
+    }
+
+    /* 히어로 섹션 */
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+    }
+
+    .hero-section .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .hero-content {
+        flex: 1;
+    }
+
+    .hero-image {
+        flex: 1;
+        text-align: center;
+        margin-left: 2rem;
+    }
+
+    .hero-image img {
+        max-width: 100%;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+
+    .hero-section h1 {
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.4rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+        display: inline-block;
+        padding: 0.7rem 1.5rem;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: white;
+        color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        background-color: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+    }
+
+    .btn-start {
+        font-size: 1.1rem;
+        padding: 0.8rem 2rem;
+    }
+
+    .btn-large {
+        font-size: 1.2rem;
+        padding: 1rem 2.5rem;
+    }
+
+    /* 기능 섹션 */
+    .features-section {
+        padding: 4rem 0;
+        background-color: var(--light-bg);
+        margin-bottom: 3rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .feature-card {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--box-shadow);
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    /* 이용 방법 섹션 */
+    .how-it-works {
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+    }
+
+    .steps {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .step-number {
+        background-color: var(--primary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .step-content h3 {
+        margin-bottom: 0.5rem;
+    }
+
+    .step-connector {
+        height: 2px;
+        background-color: var(--primary-color);
+        flex: 0.5;
+        margin: 20px 10px;
+        display: none;
+    }
+
+    .cta-container {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .cta-container .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .cta-container .btn-primary:hover {
+        background-color: var(--secondary-color);
+    }
+
+    /* 장점 섹션 */
+    .testimonials {
+        padding: 4rem 0;
+        background-color: var(--light-bg);
+        margin-bottom: 3rem;
+    }
+
+    .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .benefit-card {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .benefit-card h3 {
+        color: var(--primary-color);
+        margin-bottom: 0.8rem;
+    }
+
+    /* 푸터 */
+    .tech-footer {
+        text-align: center;
+        padding: 2rem 0;
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .tech-footer p {
+        margin: 0.5rem 0;
+        opacity: 0.8;
+    }
+
+    /* 반응형 */
+    @@media (max-width: 768px) {
+        .hero-section .container {
+            flex-direction: column;
+        }
+
+        .hero-content {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero-image {
+            margin-left: 0;
+        }
+
+        .steps {
+            flex-direction: column;
+        }
+
+        .step {
+            width: 100%;
+        }
+
+        .step-connector {
+            display: none;
+        }
+    }
+</style>
+
+@code {
+    // 필요한 코드 로직은 여기에 추가
+}
