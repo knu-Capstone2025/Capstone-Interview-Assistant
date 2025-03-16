@@ -48,19 +48,19 @@ jobs:
           playwright install
 
       - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
-        run: dotnet test --no-build --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
+        run: dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --no-build --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
         continue-on-error: true
 
       - name: 🧪 Run Tests for InterviewAssistant.ApiService.Tests
-        run: dotnet test --no-build --logger "trx;LogFileName=apiservice_tests.trx" --results-directory ./test-results
+        run: dotnet test test/InterviewAssistant.ApiService.Tests/InterviewAssistant.ApiService.Tests.csproj --no-build --logger "trx;LogFileName=apiservice_tests.trx" --results-directory ./test-results
         continue-on-error: true
 
       - name: 🧪 Run Tests for InterviewAssistant.Web.Tests
-        run: dotnet test --no-build --logger "trx;LogFileName=web_tests.trx" --results-directory ./test-results
+        run: dotnet test test/InterviewAssistant.Web.Tests/InterviewAssistant.Web.Tests.csproj --no-build --logger "trx;LogFileName=web_tests.trx" --results-directory ./test-results
         continue-on-error: true
 
       - name: 🧪 Run Tests for InterviewAssistant.AppHost.Tests
-        run: dotnet test --no-build --logger "trx;LogFileName=apphost_tests.trx" --results-directory ./test-results
+        run: dotnet test test/InterviewAssistant.AppHost.Tests/InterviewAssistant.AppHost.Tests.csproj --no-build --logger "trx;LogFileName=apphost_tests.trx" --results-directory ./test-results
         continue-on-error: true
 
       - name: 🔄 Convert Test Results to JUnit Format
