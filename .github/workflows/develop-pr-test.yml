@@ -45,6 +45,7 @@ jobs:
       - name: 🔧 Install Playwright CLI for .NET
         run: |
           dotnet tool install --global Microsoft.Playwright.CLI
+          dotnet tool update --global Microsoft.Playwright.CLI
           playwright install
 
       - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
