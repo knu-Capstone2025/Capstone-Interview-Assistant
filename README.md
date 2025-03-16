@@ -1,6 +1,6 @@
 # Capstone Interview Assistant
 
-Azure OpenAI 및 Semantic Kernel을 활용한 인터뷰 코치 앱입니다
+Azure OpenAI 및 Semantic Kernel을 활용한 인터뷰 코치 앱입니다.
 
 ## 시스템 아키텍처
 
