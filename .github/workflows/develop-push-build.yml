@@ -34,6 +34,9 @@ jobs:
         sudo apt-get install -y xvfb
         nohup Xvfb :99 -ac -screen 0 1280x1024x24 &
 
+    - name: Trust ASP.NET Core Developer Certificate
+      run: dotnet dev-certs https --trust
+
     - name: 🧪 Run Tests
       run: dotnet test --configuration Release
 
