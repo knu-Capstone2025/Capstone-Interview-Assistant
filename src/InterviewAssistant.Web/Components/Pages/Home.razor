@@ -1,88 +1,86 @@
 ﻿@page "/"
 @using InterviewAssistant.Common.Models
-@using System.Net.Http.Json
-@inject HttpClient Http
+@using InterviewAssistant.Web.Services
+@inject IChatService ChatService
 @inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
 <PageTitle>면접 코치 - InterviewAssistant</PageTitle>
 
-
-    <!-- 메인 채팅 영역 -->
-    <div class="chat-main">
-
-        <!-- 채팅 메시지 영역 -->
-        <div class="chat-messages" id="chatMessages">
-            @if (messages.Count == 0)
-            {
-                <div class="welcome-message">
-                    <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
-                    <p>이력서와 채용공고 링크를 공유하시면 맞춤형 면접 질문과 피드백을 제공해 드립니다.</p>
-                </div>
-            }
-            else
-            {
-                @foreach (var message in messages)
-                {
-                    <div class="message @(message.IsUser ? "user-message" : "bot-message")">
-                        <div class="message-content">
-                            @((MarkupString)message.Content)
-                        </div>
-                    </div>
-                }
-            }
-            @if (isLoading)
-            {
-                <div class="message bot-message">
-                    <div class="message-content">
-                        <div class="loading-dots">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <!-- 입력 영역 -->
-        <div class="chat-input-container">
-            @if (showLinkInput)
-            {
-                <div class="file-link-container">
-                    <div class="link-input-group">
-                        <label>이력서 링크:</label>
-                        <input type="text" @bind="resumeLink" placeholder="https://drive.google.com/file/d/..." />
-                    </div>
-                    <div class="link-input-group">
-                        <label>채용공고 링크:</label>
-                        <input type="text" @bind="jobDescLink" placeholder="https://drive.google.com/file/d/..." />
-                    </div>
-                    <div class="link-buttons">
-                        <button @onclick="SubmitLinks" disabled="@(string.IsNullOrWhiteSpace(resumeLink) && string.IsNullOrWhiteSpace(jobDescLink))">제출</button>
-                        <button @onclick="ToggleLinkInput">취소</button>
-                    </div>
-                </div>
-            }
-            
-            <div class="input-wrapper">
-                <button class="attachment-btn" @onclick="ToggleLinkInput">
-                    <span class="attachment-icon">📎</span>
-                </button>
-                <textarea 
-                    id="messageInput"
-                    @bind="userInput" 
-                    @bind:event="oninput" 
-                    @onkeydown="HandleKeyDown" 
-                    placeholder="메시지를 입력하세요..." 
-                    rows="1"
-                    disabled="@isLoading"></textarea>
-                <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
-                    <span class="send-icon">↑</span>
-                </button>
+<!-- 메인 채팅 영역 -->
+<div class="chat-main">
+    <!-- 채팅 메시지 영역 -->
+    <div class="chat-messages" id="chatMessages">
+        @if (messages.Count == 0)
+        {
+            <div class="welcome-message">
+                <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
+                <p>이력서와 채용공고 링크를 공유하시면 맞춤형 면접 질문과 피드백을 제공해 드립니다.</p>
             </div>
+        }
+        else
+        {
+            @foreach (var message in messages)
+            {
+                <div class="message @(message.IsUser ? "user-message" : "bot-message")">
+                    <div class="message-content">
+                        @((MarkupString)message.Content)
+                    </div>
+                </div>
+            }
+        }
+        @if (isLoading)
+        {
+            <div class="message bot-message">
+                <div class="message-content">
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 입력 영역 -->
+    <div class="chat-input-container">
+        @if (showLinkInput)
+        {
+            <div class="file-link-container">
+                <div class="link-input-group">
+                    <label>이력서 링크:</label>
+                    <input type="text" @bind="resumeLink" placeholder="https://drive.google.com/file/d/..." />
+                </div>
+                <div class="link-input-group">
+                    <label>채용공고 링크:</label>
+                    <input type="text" @bind="jobDescLink" placeholder="https://drive.google.com/file/d/..." />
+                </div>
+                <div class="link-buttons">
+                    <button @onclick="SubmitLinks" disabled="@(string.IsNullOrWhiteSpace(resumeLink) && string.IsNullOrWhiteSpace(jobDescLink))">제출</button>
+                    <button @onclick="ToggleLinkInput">취소</button>
+                </div>
+            </div>
+        }
+        
+        <div class="input-wrapper">
+            <button class="attachment-btn" @onclick="ToggleLinkInput">
+                <span class="attachment-icon">+</span>
+            </button>
+            <textarea 
+                id="messageInput"
+                @bind="userInput" 
+                @bind:event="oninput" 
+                @onkeydown="HandleKeyDown" 
+                placeholder="메시지를 입력하세요." 
+                rows="1"
+                disabled="@isLoading"></textarea>
+            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
+                <span class="send-icon">↵</span>
+            </button>
         </div>
     </div>
+</div>
 
 @code {
     private List<ChatMessage> messages = new List<ChatMessage>();
@@ -107,13 +105,13 @@
         }
     }
 
-    // 대화 초기화
+    // 대화 초기화 - 서비스 사용
     private async Task ResetChat()
     {
         try
         {
             isLoading = true;
-            await Http.PostAsync("/api/v1/chat/reset", null);
+            await ChatService.ResetChatAsync();
             messages.Clear();
             resumeLink = string.Empty;
             jobDescLink = string.Empty;
@@ -129,7 +127,7 @@
         }
     }
 
-    // 메시지 전송
+    // 메시지 전송 - 서비스 사용
     private async Task SendMessage()
     {
         if (string.IsNullOrWhiteSpace(userInput) || isLoading)
@@ -148,16 +146,11 @@
             isLoading = true;
             StateHasChanged();
             
-            var request = new ChatRequest { Message = currentInput };
-            var response = await Http.PostAsJsonAsync<ChatRequest>("/api/v1/chat", request);
+            var chatResponse = await ChatService.SendMessageAsync(currentInput);
             
-            if (response.IsSuccessStatusCode)
+            if (chatResponse != null)
             {
-                var chatResponse = await response.Content.ReadFromJsonAsync<ChatResponse>();
-                if (chatResponse != null)
-                {
-                    messages.Add(new ChatMessage { IsUser = false, Content = chatResponse.Message });
-                }
+                messages.Add(new ChatMessage { IsUser = false, Content = chatResponse.Message });
             }
             else
             {

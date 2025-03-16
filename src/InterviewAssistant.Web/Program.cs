@@ -18,6 +18,7 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
         // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
         client.BaseAddress = new("https+http://apiservice");
     });
+builder.Services.AddScoped<InterviewAssistant.Web.Services.IChatService, InterviewAssistant.Web.Services.ChatService>();
 
 var app = builder.Build();
 
