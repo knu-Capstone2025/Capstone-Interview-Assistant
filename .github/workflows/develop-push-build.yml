@@ -21,11 +21,6 @@ jobs:
     - name: 📦 Restore Dependencies
       run: dotnet restore
 
-    - name: Install Playwright Browsers
-      run: |
-        npm install -g playwright
-        npx playwright install
-
     - name: 🏗️ Build Project
       run: dotnet build --configuration Release
 
@@ -37,13 +32,15 @@ jobs:
     - name: Trust ASP.NET Core Developer Certificate
       run: dotnet dev-certs https --trust
 
-    - name: Install Playwright Browsers for .NET
-      run: dotnet tool install --global Microsoft.Playwright.CLI
-      env:
-        PATH: ${{ runner.tool_cache }}/dotnet/tools:$PATH
-
     - name: Install Playwright Browsers
-      run: playwright install
+      run: |
+        npm install -g playwright
+        npx playwright install
+
+    - name: Install Playwright Browsers for .NET
+      run: |
+        dotnet tool install --global Microsoft.Playwright.CLI
+        playwright install
 
     - name: 🧪 Run Tests
       run: dotnet test --configuration Release
