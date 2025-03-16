@@ -34,6 +34,9 @@ jobs:
         npm install -g playwright
         npx playwright install
 
+    - name: Install Playwright Browsers for .NET
+      run: pwsh bin/Debug/net9.0/playwright.ps1 install
+
     - name: 🧪 Run Tests
       run: dotnet test --configuration Release
 
