@@ -24,20 +24,20 @@ jobs:
     - name: 🏗️ Build Project
       run: dotnet build --configuration Release
 
-    - name: Set up XVFB
+    - name: 🖥️ Set up XVFB for Headless Browser
       run: |
         sudo apt-get install -y xvfb
         nohup Xvfb :99 -ac -screen 0 1280x1024x24 &
 
-    - name: Trust ASP.NET Core Developer Certificate
+    - name: 🔐 Trust ASP.NET Core Developer Certificate
       run: dotnet dev-certs https --trust
 
-    - name: Install Playwright Browsers
+    - name: 🌐 Install Playwright Browsers
       run: |
         npm install -g playwright
         npx playwright install
 
-    - name: Install Playwright Browsers for .NET
+    - name: 🔧 Install Playwright CLI for .NET
       run: |
         dotnet tool install --global Microsoft.Playwright.CLI
         playwright install
@@ -49,7 +49,7 @@ jobs:
       if: success()
       run: dotnet publish --configuration Release --output ./publish
 
-    - name: 📤 Upload Artifact
+    - name: 📤 Upload Published Artifact
       if: success()
       uses: actions/upload-artifact@v4
       with:
@@ -62,7 +62,7 @@ jobs:
     if: success()
 
     steps:
-    - name: ⬇️ Download Artifact
+    - name: ⬇️ Download Published Artifact
       uses: actions/download-artifact@v4
       with:
         name: published-app
