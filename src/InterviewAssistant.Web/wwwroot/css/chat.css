@@ -273,6 +273,31 @@ body {
     .message {
         max-width: 95%;
     }
+
+    /* 모바일에서만 입력창 위치 조정 */
+    .chat-input-container {
+        position: fixed; /* 모바일에서는 fixed로 변경 */
+        bottom: 20px; /* 바닥에서 살짝 띄움 */
+    }
+
+    /* 스크롤 컨테이너 완전히 수정 */
+    .chat-messages {
+        /* 절대 위치 설정으로 정확한 영역 지정 */
+        position: absolute;
+        top: 10px;
+        bottom: 150px; /* 입력창 높이 + 여백 고려 */
+        left: 0;
+        right: 0;
+        /* 내부 패딩 */
+        padding: 20px 10%;
+        /* 오버플로우 설정 */
+        overflow-y: auto;
+        overflow-x: hidden;
+        /* 다른 스타일 유지 */
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -286,5 +311,8 @@ body {
 
     .chat-input-container {
         padding: 12px;
+        bottom: 15px;
+        left: 3%;
+        right: 3%;
     }
 }
