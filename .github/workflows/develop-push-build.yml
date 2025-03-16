@@ -35,7 +35,7 @@ jobs:
         npx playwright install
 
     - name: Install Playwright Browsers for .NET
-      run: pwsh bin/Debug/net9.0/playwright.ps1 install
+      run: pwsh -c "pwsh bin/Debug/net9.0/playwright.ps1 install"
 
     - name: 🧪 Run Tests
       run: dotnet test --configuration Release
