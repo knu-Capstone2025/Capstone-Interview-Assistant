@@ -24,7 +24,12 @@ jobs:
     - name: 🏗️ Build Project
       run: dotnet build --configuration Release
 
-    - name: 🔄 Install Playwright Browsers
+    - name: Set up XVFB
+      run: |
+        sudo apt-get install -y xvfb
+        nohup Xvfb :99 -ac -screen 0 1280x1024x24 &
+
+    - name: Install Playwright Browsers
       run: |
         npm install -g playwright
         npx playwright install
