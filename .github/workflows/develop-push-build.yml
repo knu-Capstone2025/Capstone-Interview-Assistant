@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: 🧑‍💻 Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: 🔧 Set Up .NET Core SDK
       uses: actions/setup-dotnet@v2
