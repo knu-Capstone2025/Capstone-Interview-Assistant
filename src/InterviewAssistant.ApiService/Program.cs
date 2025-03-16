@@ -1,45 +1,75 @@
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.OpenApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add service defaults & Aspire client integrations.
+// 기존 기본 서비스 등록
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+// Swagger 서비스 등록
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Interview Assistant API", Version = "v1" });
+});
+
+// Semantic Kernel 서비스 등록
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var azureOpenAIKey = configuration["AzureOpenAI:ApiKey"] 
+        ?? throw new InvalidOperationException("Azure OpenAI API 키가 구성되지 않았습니다.");
+    var azureOpenAIEndpoint = configuration["AzureOpenAI:Endpoint"] 
+        ?? throw new InvalidOperationException("Azure OpenAI 엔드포인트가 구성되지 않았습니다.");
+    var deploymentName = configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4";
+
+    // 최신 API 방식으로 커널 생성
+    var kernelBuilder = Kernel.CreateBuilder();
+    kernelBuilder.AddAzureOpenAIChatCompletion(
+        deploymentName: deploymentName,
+        endpoint: azureOpenAIEndpoint,
+        apiKey: azureOpenAIKey);
+    
+    return kernelBuilder.Build();
+});
+
+// CORS 설정 추가
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
+// ServiceDefaults 추가 (.NET Aspire 프로젝트에 포함된 기본 설정)
 builder.AddServiceDefaults();
-
-// Add services to the container.
-builder.Services.AddProblemDetails();
-
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-app.UseExceptionHandler();
-
+// Swagger 미들웨어 추가
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Interview Assistant API v1");
+    });
 }
 
-string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
+// CORS 미들웨어 활성화
+app.UseCors("AllowAll");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// 기타 미들웨어 설정
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 
+// ServiceDefaults 맵핑 (.NET Aspire 프로젝트에 포함된 기본 설정)
 app.MapDefaultEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
