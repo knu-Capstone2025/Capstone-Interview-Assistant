@@ -53,18 +53,18 @@ jobs:
       - name: 🔄 Convert Test Results to JUnit Format
         run: |
           dotnet tool install --global trx2junit
-          trx2junit ./test-results/test_results.trx
+          find ./test-results -name '*.trx' -exec trx2junit {} \;
 
       - name: 📑 Publish Test Results as PR Comment
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: '**/test-results/test_results.xml'
+          files: '**/test-results/*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: ✅ Add Check Comments for Failed Code Lines
         uses: mikepenz/action-junit-report@v3
         if: always()
         with:
-          report_paths: '**/test-results/test_results.xml'
+          report_paths: '**/test-results/*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
