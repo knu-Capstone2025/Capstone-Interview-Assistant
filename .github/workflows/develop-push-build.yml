@@ -24,6 +24,11 @@ jobs:
     - name: 🏗️ Build Project
       run: dotnet build --configuration Release
 
+    - name: 🔄 Install Playwright Browsers
+      run: |
+        npm install -g playwright
+        npx playwright install
+
     - name: 🧪 Run Tests
       run: dotnet test --configuration Release
 
