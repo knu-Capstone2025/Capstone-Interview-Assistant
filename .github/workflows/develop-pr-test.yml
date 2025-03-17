@@ -1,9 +1,9 @@
-name: 🚀 Run Test Code on Develop PR
+name: 🚀 Run Test Code on PR
 
 on:
   pull_request:
     branches:
-      - develop
+      - main
 
 permissions:
   contents: write
@@ -19,9 +19,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔧 Set up .NET
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '9.x'
 
       - name: 📦 Restore Dependencies
         run: dotnet restore
@@ -33,7 +33,6 @@ jobs:
         run: |
           sudo apt-get install -y xvfb
           nohup Xvfb :99 -ac -screen 0 1280x1024x24 &
-
       - name: 🔐 Trust ASP.NET Core Developer Certificate
         run: dotnet dev-certs https --trust
 
@@ -41,12 +40,11 @@ jobs:
         run: |
           npm install -g playwright
           npx playwright install
-
       - name: 🔧 Install Playwright CLI for .NET
         run: |
           dotnet tool install --global Microsoft.Playwright.CLI
+          dotnet tool update --global Microsoft.Playwright.CLI
           playwright install
-
       - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
         run: dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --no-build --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
         continue-on-error: true
@@ -67,7 +65,6 @@ jobs:
         run: |
           dotnet tool install --global trx2junit
           find ./test-results -name '*.trx' -exec trx2junit {} \;
-
       - name: 📑 Publish Test Results as PR Comment
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
@@ -81,3 +78,4 @@ jobs:
         with:
           report_paths: '**/test-results/*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          

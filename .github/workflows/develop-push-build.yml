@@ -1,9 +1,9 @@
-name: 🚀 Build, Test, and Upload on Develop Push
+name: 🚀 Build, Test, and Upload on Push
 
 on:
   push:
     branches:
-      - develop
+      - main
 
 jobs:
   build:
@@ -14,9 +14,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 🔧 Set Up .NET Core SDK
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'
+        dotnet-version: '9.x'
 
     - name: 📦 Restore Dependencies
       run: dotnet restore
@@ -40,6 +40,7 @@ jobs:
     - name: 🔧 Install Playwright CLI for .NET
       run: |
         dotnet tool install --global Microsoft.Playwright.CLI
+        dotnet tool update --global Microsoft.Playwright.CLI
         playwright install
 
     - name: 🧪 Run Tests
@@ -67,3 +68,4 @@ jobs:
       with:
         name: published-app
         path: ./downloaded-publish
+        
