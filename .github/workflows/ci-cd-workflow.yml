@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - feature/*
-      - feat/*
       - Feat/*
   pull_request:
     branches:
@@ -29,14 +28,14 @@ jobs:
       with:
         dotnet-version: '9.x'
 
+    - name: 🔐 Trust ASP.NET Core Developer Certificate
+      run: dotnet dev-certs https --trust
+
     - name: 📦 Restore Dependencies
       run: dotnet restore
 
     - name: 🏗️ Build Project
       run: dotnet build --configuration Release
-
-    - name: 🔐 Trust ASP.NET Core Developer Certificate
-      run: dotnet dev-certs https --trust
         
     - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
       run: dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --configuration Release --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
