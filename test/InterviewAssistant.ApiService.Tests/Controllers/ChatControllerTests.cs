@@ -6,21 +6,23 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Moq;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 
 namespace InterviewAssistant.ApiService.Tests
 {
+    [TestFixture]
     public class ChatControllerTests
     {
-        private readonly Mock<ILogger<ChatController>> _mockLogger;
-        private readonly Kernel _kernel;
+        private Mock<ILogger<ChatController>> _mockLogger;
+        private Kernel _kernel;
 
-        public ChatControllerTests()
+        [SetUp]
+        public void Setup()
         {
             _mockLogger = new Mock<ILogger<ChatController>>();
             
@@ -29,7 +31,7 @@ namespace InterviewAssistant.ApiService.Tests
             _kernel = builder.Build();
         }
 
-        [Fact]
+        [Test]
         public async Task PostMessage_WithEmptyMessage_ReturnsBadRequest()
         {
             // Arrange
@@ -40,11 +42,11 @@ namespace InterviewAssistant.ApiService.Tests
             var result = await controller.PostMessage(request);
 
             // Assert
-            Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.That(result.Result, Is.InstanceOf<BadRequestObjectResult>());
         }
 
-        [Fact]
-        public async Task ResetChat_ClearsConversation()
+        [Test]
+        public void ResetChat_ClearsConversation()
         {
             // Arrange
             var controller = new ChatController(_mockLogger.Object, _kernel);
@@ -53,15 +55,17 @@ namespace InterviewAssistant.ApiService.Tests
             var resetResult = controller.ResetChat();
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(resetResult);
+            Assert.That(resetResult, Is.InstanceOf<OkObjectResult>());
             
-            // JsonElement을 사용하여 동적 속성 접근
+            // NUnit에서 JsonElement를 사용하여 동적 속성 접근
+            var okResult = (OkObjectResult)resetResult;
             var jsonElement = JsonSerializer.Deserialize<JsonElement>(
                 JsonSerializer.Serialize(okResult.Value));
             
             // message 속성이 있는지 확인
-            Assert.True(jsonElement.TryGetProperty("message", out JsonElement messageElement));
-            Assert.Equal("대화가 초기화되었습니다.", messageElement.GetString());
+            Assert.That(jsonElement.TryGetProperty("message", out JsonElement messageElement), Is.True);
+            Assert.That(messageElement.GetString(), Is.EqualTo("대화가 초기화되었습니다."));
         }
+
     }
 }
