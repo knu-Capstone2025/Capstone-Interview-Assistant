@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <Target Name="InstallPlaywright" AfterTargets="Build">
-    <Exec Command="pwsh $(ProjectDir)/bin/Debug/net9.0/playwright.ps1 install" />
+    <Exec Command="pwsh $(ProjectDir)/bin/Release/net9.0/playwright.ps1 install" />
   </Target>
 
 </Project>
