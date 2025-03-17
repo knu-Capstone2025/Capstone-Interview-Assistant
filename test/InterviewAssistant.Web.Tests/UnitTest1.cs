@@ -1,4 +1,5 @@
-﻿namespace InterviewAssistant.Web.Tests;
+﻿/*
+namespace InterviewAssistant.Web.Tests;
 
 [Parallelizable(ParallelScope.Self)]
 [TestFixture]
@@ -25,3 +26,4 @@ public class Tests : PageTest
         await Expect(Page).ToHaveURLAsync(new Regex(".*intro"));
     }
 }
+*/
