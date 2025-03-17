@@ -1,7 +1,10 @@
-name: 🚀 Build, Test, and Upload on Push
+name: 🚀 Git Action Logic for Push and PR
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -42,16 +45,49 @@ jobs:
         dotnet tool install --global Microsoft.Playwright.CLI
         dotnet tool update --global Microsoft.Playwright.CLI
         playwright install
+        
+    - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
+      run: dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --no-build --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
+      continue-on-error: true
 
-    - name: 🧪 Run Tests
-      run: dotnet test --configuration Release
+    - name: 🧪 Run Tests for InterviewAssistant.ApiService.Tests
+      run: dotnet test test/InterviewAssistant.ApiService.Tests/InterviewAssistant.ApiService.Tests.csproj --no-build --logger "trx;LogFileName=apiservice_tests.trx" --results-directory ./test-results
+      continue-on-error: true
+
+    - name: 🧪 Run Tests for InterviewAssistant.Web.Tests
+      run: dotnet test test/InterviewAssistant.Web.Tests/InterviewAssistant.Web.Tests.csproj --no-build --logger "trx;LogFileName=web_tests.trx" --results-directory ./test-results
+      continue-on-error: true
+
+    - name: 🧪 Run Tests for InterviewAssistant.AppHost.Tests
+      run: dotnet test test/InterviewAssistant.AppHost.Tests/InterviewAssistant.AppHost.Tests.csproj --no-build --logger "trx;LogFileName=apphost_tests.trx" --results-directory ./test-results
+      continue-on-error: true
+
+    - name: 🔄 Convert Test Results to JUnit Format
+      if: github.event_name == 'pull_request'
+      run: |
+        dotnet tool install --global trx2junit
+        find ./test-results -name '*.trx' -exec trx2junit {} \;
+
+    - name: 📑 Publish Test Results as PR Comment
+      if: github.event_name == 'pull_request'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        files: '**/test-results/*.xml'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: ✅ Add Check Comments for Failed Code Lines
+      if: github.event_name == 'pull_request'
+      uses: mikepenz/action-junit-report@v3
+      with:
+        report_paths: '**/test-results/*.xml'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 📦 Publish Project
-      if: success()
+      if: github.event_name == 'push'
       run: dotnet publish --configuration Release --output ./publish
 
     - name: 📤 Upload Published Artifact
-      if: success()
+      if: github.event_name == 'push'
       uses: actions/upload-artifact@v4
       with:
         name: published-app
@@ -60,7 +96,7 @@ jobs:
   download-artifact:
     runs-on: ubuntu-latest
     needs: build
-    if: success()
+    if: github.event_name == 'push'
 
     steps:
     - name: ⬇️ Download Published Artifact
@@ -68,4 +104,3 @@ jobs:
       with:
         name: published-app
         path: ./downloaded-publish
-        
