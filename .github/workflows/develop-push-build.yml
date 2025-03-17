@@ -29,29 +29,21 @@ jobs:
 
     - name: 🔐 Trust ASP.NET Core Developer Certificate
       run: dotnet dev-certs https --trust
-
-    - name: 🧪 Build and Run Tests for InterviewAssistant.Common.Tests
-      run: |
-        dotnet build test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --configuration Release
-        dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --no-build --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
+        
+    - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
+      run: dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --configuration Release --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results
       continue-on-error: true
 
-    - name: 🧪 Build and Run Tests for InterviewAssistant.ApiService.Tests
-      run: |
-        dotnet build test/InterviewAssistant.ApiService.Tests/InterviewAssistant.ApiService.Tests.csproj --configuration Release
-        dotnet test test/InterviewAssistant.ApiService.Tests/InterviewAssistant.ApiService.Tests.csproj --no-build --logger "trx;LogFileName=apiservice_tests.trx" --results-directory ./test-results
+    - name: 🧪 Run Tests for InterviewAssistant.ApiService.Tests
+      run: dotnet test test/InterviewAssistant.ApiService.Tests/InterviewAssistant.ApiService.Tests.csproj --configuration Release --logger "trx;LogFileName=apiservice_tests.trx" --results-directory ./test-results
       continue-on-error: true
 
-    - name: 🧪 Build and Run Tests for InterviewAssistant.Web.Tests
-      run: |
-        dotnet build test/InterviewAssistant.Web.Tests/InterviewAssistant.Web.Tests.csproj --configuration Release
-        dotnet test test/InterviewAssistant.Web.Tests/InterviewAssistant.Web.Tests.csproj --no-build --logger "trx;LogFileName=web_tests.trx" --results-directory ./test-results
+    - name: 🧪 Run Tests for InterviewAssistant.Web.Tests
+      run: dotnet test test/InterviewAssistant.Web.Tests/InterviewAssistant.Web.Tests.csproj --configuration Release --logger "trx;LogFileName=web_tests.trx" --results-directory ./test-results
       continue-on-error: true
 
-    - name: 🧪 Build and Run Tests for InterviewAssistant.AppHost.Tests
-      run: |
-        dotnet build test/InterviewAssistant.AppHost.Tests/InterviewAssistant.AppHost.Tests.csproj --configuration Release
-        dotnet test test/InterviewAssistant.AppHost.Tests/InterviewAssistant.AppHost.Tests.csproj --no-build --logger "trx;LogFileName=apphost_tests.trx" --results-directory ./test-results
+    - name: 🧪 Run Tests for InterviewAssistant.AppHost.Tests
+      run: dotnet test test/InterviewAssistant.AppHost.Tests/InterviewAssistant.AppHost.Tests.csproj --configuration Release --logger "trx;LogFileName=apphost_tests.trx" --results-directory ./test-results
       continue-on-error: true
 
     - name: 🔄 Convert Test Results to JUnit Format
