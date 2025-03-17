@@ -45,28 +45,7 @@
 
     <!-- 입력 영역 -->
     <div class="chat-input-container">
-        @if (showLinkInput)
-        {
-            <div class="file-link-container">
-                <div class="link-input-group">
-                    <label>이력서 링크:</label>
-                    <input type="text" @bind="resumeLink" placeholder="https://drive.google.com/file/d/..." />
-                </div>
-                <div class="link-input-group">
-                    <label>채용공고 링크:</label>
-                    <input type="text" @bind="jobDescLink" placeholder="https://drive.google.com/file/d/..." />
-                </div>
-                <div class="link-buttons">
-                    <button @onclick="SubmitLinks" disabled="@(string.IsNullOrWhiteSpace(resumeLink) && string.IsNullOrWhiteSpace(jobDescLink))">제출</button>
-                    <button @onclick="ToggleLinkInput">취소</button>
-                </div>
-            </div>
-        }
-        
         <div class="input-wrapper">
-            <button class="attachment-btn" @onclick="ToggleLinkInput">
-                <span class="attachment-icon">+</span>
-            </button>
             <textarea 
                 id="messageInput"
                 @bind="userInput" 
@@ -86,16 +65,7 @@
     private List<ChatMessage> messages = new List<ChatMessage>();
     private string userInput = string.Empty;
     private bool isLoading = false;
-    private bool showLinkInput = false;
-    private string resumeLink = string.Empty;
-    private string jobDescLink = string.Empty;
     
-    // 링크 입력 UI 토글
-    private void ToggleLinkInput()
-    {
-        showLinkInput = !showLinkInput;
-    }
-
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
@@ -113,8 +83,6 @@
             isLoading = true;
             await ChatService.ResetChatAsync();
             messages.Clear();
-            resumeLink = string.Empty;
-            jobDescLink = string.Empty;
         }
         catch (Exception ex)
         {
@@ -168,33 +136,6 @@
             await ScrollToBottom();
             await JSRuntime.InvokeVoidAsync("focusTextArea", "messageInput");
         }
-    }
-
-    // 파일 링크 제출
-    private async Task SubmitLinks()
-    {
-        if (string.IsNullOrWhiteSpace(resumeLink) && string.IsNullOrWhiteSpace(jobDescLink))
-            return;
-
-        var linkInfoMessage = "제출된 링크:";
-        if (!string.IsNullOrWhiteSpace(resumeLink))
-            linkInfoMessage += $"<br>📄 이력서: {resumeLink}";
-        if (!string.IsNullOrWhiteSpace(jobDescLink))
-            linkInfoMessage += $"<br>🔍 채용공고: {jobDescLink}";
-
-        messages.Add(new ChatMessage { IsUser = true, Content = linkInfoMessage });
-        
-        // 봇에게 링크 정보 전달
-        var message = $"다음 링크를 분석해주세요:";
-        if (!string.IsNullOrWhiteSpace(resumeLink))
-            message += $" 이력서 링크: {resumeLink}";
-        if (!string.IsNullOrWhiteSpace(jobDescLink))
-            message += $" 채용공고 링크: {jobDescLink}";
-        
-        userInput = message;
-        await SendMessage();
-        
-        showLinkInput = false;
     }
 
     // 채팅창 스크롤을 항상 최하단으로
