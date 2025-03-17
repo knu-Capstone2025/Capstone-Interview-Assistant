@@ -27,24 +27,8 @@ jobs:
     - name: 🏗️ Build Project
       run: dotnet build --configuration Release
 
-    - name: 🖥️ Set up XVFB for Headless Browser
-      run: |
-        sudo apt-get install -y xvfb
-        nohup Xvfb :99 -ac -screen 0 1280x1024x24 &
-
     - name: 🔐 Trust ASP.NET Core Developer Certificate
       run: dotnet dev-certs https --trust
-
-    - name: 🌐 Install Playwright Browsers
-      run: |
-        npm install -g playwright
-        npx playwright install
-
-    - name: 🔧 Install Playwright CLI for .NET
-      run: |
-        dotnet tool install --global Microsoft.Playwright.CLI
-        dotnet tool update --global Microsoft.Playwright.CLI
-        playwright install
         
     - name: 🧪 Run Tests for InterviewAssistant.Common.Tests
       run: dotnet test test/InterviewAssistant.Common.Tests/InterviewAssistant.Common.Tests.csproj --no-build --logger "trx;LogFileName=common_tests.trx" --results-directory ./test-results

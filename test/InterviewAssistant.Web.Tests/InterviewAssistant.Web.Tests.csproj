@@ -28,4 +28,8 @@
     <ProjectReference Include="..\..\src\InterviewAssistant.Web\InterviewAssistant.Web.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="playwright install --with-deps" />
+  </Target>
+
 </Project>
