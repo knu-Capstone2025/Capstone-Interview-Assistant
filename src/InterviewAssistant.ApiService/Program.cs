@@ -1,7 +1,9 @@
-using Microsoft.AspNetCore.OpenApi;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+using OpenAI;
+using OpenAI.Chat;
 using InterviewAssistant.ApiService.Models;
 using InterviewAssistant.ApiService.Services;
 
@@ -9,29 +11,23 @@ var builder = WebApplication.CreateBuilder(args);
 
 // API 탐색기 사용 (.NET 9의 기본 OpenAPI 패키지)
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Semantic Kernel 서비스 등록
-builder.Services.AddSingleton(sp =>
+builder.Services.AddSwaggerGen(c =>
 {
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var azureOpenAIKey = configuration["AzureOpenAI:ApiKey"] 
-        ?? throw new InvalidOperationException("Azure OpenAI API 키가 구성되지 않았습니다.");
-    var azureOpenAIEndpoint = configuration["AzureOpenAI:Endpoint"] 
-        ?? throw new InvalidOperationException("Azure OpenAI 엔드포인트가 구성되지 않았습니다.");
-    var deploymentName = configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4";
-
-    // 최신 API 방식으로 커널 생성
-    var kernelBuilder = Kernel.CreateBuilder();
-    kernelBuilder.AddAzureOpenAIChatCompletion(
-        deploymentName: deploymentName,
-        endpoint: azureOpenAIEndpoint,
-        apiKey: azureOpenAIKey);
-    
-    return kernelBuilder.Build();
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Interview Assistant API", Version = "v1" });
 });
 
-// ServiceDefaults 추가 (.NET Aspire 프로젝트에 포함된 기본 설정)
+// 의존성 주입 설정
+builder.Services.Configure<AiServiceOptions>(builder.Configuration.GetSection("AiService"));
+builder.Services.AddSingleton<IAiServiceFactory, AiServiceFactory>();
+
+// ChatClient를 명확하게 Singleton으로 등록
+builder.Services.AddSingleton(sp => 
+{
+    var factory = sp.GetRequiredService<IAiServiceFactory>();
+    return factory.CreateChatClient();
+});
+
+// ServiceDefaults 추가
 builder.AddServiceDefaults();
 
 // 채팅 상태 관리 서비스 등록
@@ -56,7 +52,7 @@ app.UseHttpsRedirection();
 var chatGroup = app.MapGroup("/api/v1/chat").WithTags("Chat");
 
 // 채팅 메시지 전송 엔드포인트
-chatGroup.MapPost("/", async (ChatRequest request, Kernel kernel, ChatState state, ILogger<Program> logger) =>
+chatGroup.MapPost("/", async (ChatRequest request, ChatClient chatClient, ChatState state, ILogger<Program> logger) =>
 {
     try
     {
@@ -69,61 +65,40 @@ chatGroup.MapPost("/", async (ChatRequest request, Kernel kernel, ChatState stat
         // 요청 스로틀링 적용
         await state.ApplyRateLimiting(logger);
 
-        // 채팅 히스토리 생성
-        var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage("당신은 유용한 AI 챗봇입니다. 짧고 명확하게 답변해주세요.");
+        // 메시지 준비
+        var messages = new List<ChatMessage>();
+        
+        // 시스템 메시지 추가
+        messages.Add(new SystemChatMessage("당신은 유용한 AI 챗봇입니다. 짧고 명확하게 답변해주세요."));
         
         // 이전 대화가 있으면 추가
         if (!string.IsNullOrEmpty(state.LastUserMessage) && !string.IsNullOrEmpty(state.LastBotResponse))
         {
-            chatHistory.AddUserMessage(state.LastUserMessage);
-            chatHistory.AddAssistantMessage(state.LastBotResponse);
+            messages.Add(new UserChatMessage(state.LastUserMessage));
+            messages.Add(new AssistantChatMessage(state.LastBotResponse));
         }
         
         // 현재 메시지 추가
-        chatHistory.AddUserMessage(request.Message);
+        messages.Add(new UserChatMessage(request.Message));
         state.LastUserMessage = request.Message;
 
-        // 짧은 응답을 위한 설정
-        var openAIPromptExecutionSettings = new OpenAIPromptExecutionSettings
-        {
-            MaxTokens = 200,  // 최대 토큰 수 제한
-            Temperature = 0.7, // 창의성 조절 (0: 결정적, 1: 창의적)
-            TopP = 0.95 // 다양성 조절
-        };
-
-        string responseText;
-        try 
-        {
-            // AI 응답 요청
-            var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
-            var result = await chatCompletionService.GetChatMessageContentAsync(
-                chatHistory,
-                openAIPromptExecutionSettings,
-                kernel
-            );
-            
-            responseText = result.ToString();
-        }
-        catch (Exception ex) 
-        {
-            // 오류 발생 시 로깅 및 기본 응답 제공
-            logger.LogError(ex, "Error calling AI service");
-            responseText = "죄송합니다. 현재 시스템이 바쁩니다. 잠시 후 다시 시도해주세요.";
-        }
+        // AI 응답 요청
+        var response = chatClient.CompleteChat(messages);
         
+        string responseText = response.Value.Content[0].Text;
+
         // 마지막 대화 저장
         state.LastBotResponse = responseText;
 
         // 응답 생성
-        var response = new ChatResponse
+        var chatResponse = new ChatResponse
         {
             Response = responseText,
             Timestamp = DateTime.UtcNow
         };
 
         logger.LogInformation("Chat response generated");
-        return Results.Ok(response);
+        return Results.Ok(chatResponse);
     }
     catch (Exception ex)
     {
@@ -148,3 +123,65 @@ chatGroup.MapPost("/reset", (ChatState state) =>
 app.MapDefaultEndpoints();
 
 app.Run();
+
+// AI 서비스 옵션 클래스 추가
+public class AiServiceOptions
+{
+    public string Provider { get; set; } = "GitHub"; // 기본값 GitHub
+    public string Model { get; set; } = "gpt-4o";
+    public string Endpoint { get; set; } = "https://models.inference.ai.azure.com";
+    public string ApiKey { get; set; } = string.Empty;
+}
+
+// AI 서비스 팩토리 인터페이스
+public interface IAiServiceFactory
+{
+    ChatClient CreateChatClient();
+}
+
+// AI 서비스 팩토리 구현
+public class AiServiceFactory : IAiServiceFactory
+{
+    private readonly AiServiceOptions _options;
+    private readonly IConfiguration _configuration;
+
+    public AiServiceFactory(IConfiguration configuration)
+    {
+        _configuration = configuration;
+        _options = new AiServiceOptions();
+        configuration.GetSection("AiService").Bind(_options);
+    }
+
+    public ChatClient CreateChatClient()
+    {
+        switch (_options.Provider.ToLower())
+        {
+            case "azureopenai":
+                // Azure OpenAI 클라이언트 생성
+                var azureOpenAIKey = _configuration["AzureOpenAI:ApiKey"] 
+                    ?? throw new InvalidOperationException("Azure OpenAI API 키가 구성되지 않았습니다.");
+                var azureOpenAIEndpoint = _configuration["AzureOpenAI:Endpoint"] 
+                    ?? throw new InvalidOperationException("Azure OpenAI 엔드포인트가 구성되지 않았습니다.");
+                var deploymentName = _configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4";
+
+                var azureOpenAIOptions = new OpenAIClientOptions()
+                {
+                    Endpoint = new Uri(azureOpenAIEndpoint)
+                };
+                var azureCredential = new System.ClientModel.ApiKeyCredential(azureOpenAIKey);
+
+                return new ChatClient(deploymentName, azureCredential, azureOpenAIOptions);
+
+            case "github":
+            default:
+                // GitHub Models 클라이언트 생성
+                var githubToken = _configuration["GitHub:Token"] 
+                    ?? throw new InvalidOperationException("GitHub 토큰이 구성되지 않았습니다.");
+                
+                var endpoint = new Uri(_options.Endpoint);
+                var credential = new System.ClientModel.ApiKeyCredential(githubToken);
+
+                return new ChatClient(_options.Model, credential, new OpenAIClientOptions { Endpoint = endpoint });
+        }
+    }
+}
