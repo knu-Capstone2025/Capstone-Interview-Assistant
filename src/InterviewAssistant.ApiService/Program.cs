@@ -61,9 +61,6 @@ chatGroup.MapPost("/", async (ChatRequest request, ChatClient chatClient, ChatSt
         {
             return Results.BadRequest("메시지 내용이 비어있습니다.");
         }
-        
-        // 요청 스로틀링 적용
-        await state.ApplyRateLimiting(logger);
 
         // 메시지 준비
         var messages = new List<ChatMessage>();
