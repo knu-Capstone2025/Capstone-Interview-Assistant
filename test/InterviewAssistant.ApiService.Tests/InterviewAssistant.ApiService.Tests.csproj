@@ -16,6 +16,7 @@
     <PackageReference Include="Moq" Version="4.*" />
     <PackageReference Include="NUnit" Version="4.*" />
     <PackageReference Include="NUnit3TestAdapter" Version="5.*" />
+    <PackageReference Include="OpenAI" Version="2.2.0-beta.1" />
     <PackageReference Include="Shouldly" Version="4.*" />
     <PackageReference Include="NSubstitute" Version="5.*" />
   </ItemGroup>

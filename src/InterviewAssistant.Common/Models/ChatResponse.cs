@@ -1,9 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace InterviewAssistant.ApiService.Models;
+namespace InterviewAssistant.Common.Models;
 
-
-public class ChatRequest
+public class ChatResponse
 {
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
