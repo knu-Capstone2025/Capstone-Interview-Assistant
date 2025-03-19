@@ -1,3 +1,6 @@
+using InterviewAssistant.Common.Models;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
@@ -18,6 +21,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+var chatGroup = app.MapGroup("/api/v1/chat").WithTags("Chat");
+
+chatGroup.MapPost("/upload", (ApplicationDataRequest request) => new ChatResponse());
 
 string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
