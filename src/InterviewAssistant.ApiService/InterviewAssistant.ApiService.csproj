@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
