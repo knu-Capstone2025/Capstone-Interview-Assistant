@@ -1,7 +1,7 @@
 ﻿<!-- Home.razor -->
 
 @page "/"
-@using InterviewAssistant.Common.Models
+@* @using InterviewAssistant.Common.Models *@
 @using InterviewAssistant.Web.Services
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
@@ -18,6 +18,7 @@
             <div class="welcome-message">
                 <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
                 <p>이력서와 채용공고 링크를 공유하시면 맞춤형 면접 질문과 피드백을 제공해 드립니다.</p>
+                <button class="link-share-btn" @onclick="ShowLinkInput">📎 링크 공유</button>
             </div>
         }
         else
@@ -55,45 +56,91 @@
                 @onkeydown="HandleKeyDown" 
                 placeholder="메시지를 입력하세요." 
                 rows="1"
-                disabled="@isLoading"></textarea>
-            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
+                disabled="@(isLoading || !isLinksSubmitted)"></textarea>
+            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading || !isLinksSubmitted)">
                 <span class="send-icon">↵</span>
             </button>
         </div>
     </div>
 </div>
 
+@if (showLinkInput)
+{
+    <div class="link-input-overlay">
+        <div class="link-input-container @(showLinkInput ? "show" : "")">
+            <h3>링크 공유</h3>
+            <input type="text" placeholder="이력서 링크" @bind="resumeLink" />
+            <input type="text" placeholder="채용공고 링크" @bind="jobPostingLink" />
+            <button class="submit-btn" @onclick="SubmitLinks">올리기</button>
+            <button class="cancel-btn" @onclick="CloseLinkInput">취소</button>
+        </div>
+    </div>
+}
+
 @code {
     private List<ChatMessage> messages = new List<ChatMessage>();
     private string userInput = string.Empty;
     private bool isLoading = false;
-    
+    private bool showLinkInput = false;
+    private bool isLinksSubmitted = false;
+    private string resumeLink = string.Empty;
+    private string jobPostingLink = string.Empty;
+    private int questionIndex = 0;
+
+    private readonly string[] questions = new[]
+    {
+        "면접 질문 #1: 자기소개를 해주세요.",
+        "면접 질문 #2: 이력서에 적힌 프로젝트 중 가장 기억에 남는 프로젝트는 무엇인가요?",
+        "면접 질문 #3: 이 회사에서 이루고 싶은 목표는 무엇인가요?"
+    };
+
+    private readonly string[] feedbacks = new[]
+    {
+        "피드백 #1: 자기소개를 잘 해주셨습니다. 다음 질문으로 넘어가겠습니다.",
+        "피드백 #2: 프로젝트에 대한 설명이 좋았습니다. 다음 질문으로 넘어가겠습니다.",
+        "피드백 #3: 목표에 대한 설명이 인상적입니다. 면접을 종료하겠습니다."
+    };
+
+    private void ShowLinkInput()
+    {
+        showLinkInput = true;
+        StateHasChanged(); // UI 업데이트
+    }
+
+    private void CloseLinkInput()
+    {
+        showLinkInput = false;
+        StateHasChanged(); // UI 업데이트
+    }
+
+    private async Task SubmitLinks()
+    {
+        if (!string.IsNullOrWhiteSpace(resumeLink) && !string.IsNullOrWhiteSpace(jobPostingLink))
+        {
+            isLoading = true;
+            StateHasChanged(); // UI 업데이트
+
+            await Task.Delay(3000); // 3초 대기
+
+            isLinksSubmitted = true;
+            Console.WriteLine($"이력서 링크: {resumeLink}");
+            Console.WriteLine($"채용공고 링크: {jobPostingLink}");
+            showLinkInput = false;
+            isLoading = false;
+            StateHasChanged(); // UI 업데이트
+
+            // 첫 번째 질문 추가
+            messages.Add(new ChatMessage { IsUser = false, Content = questions[questionIndex] });
+            StateHasChanged();
+        }
+    }
+
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && !e.ShiftKey)
         {
             await SendMessage();
-        }
-    }
-
-    // 대화 초기화 - 서비스 사용
-    private async Task ResetChat()
-    {
-        try
-        {
-            isLoading = true;
-            await ChatService.ResetChatAsync();
-            messages.Clear();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error resetting chat: {ex.Message}");
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
         }
     }
 
@@ -116,15 +163,23 @@
             isLoading = true;
             StateHasChanged();
             
-            var chatResponse = await ChatService.SendMessageAsync(currentInput);
-            
-            if (chatResponse != null)
+            // 피드백 및 다음 질문 추가
+            await Task.Delay(1000);
+            messages.Add(new ChatMessage { IsUser = false, Content = feedbacks[questionIndex] });
+            StateHasChanged();
+            await Task.Delay(1000);
+
+            questionIndex++;
+            if (questionIndex < questions.Length)
             {
-                messages.Add(new ChatMessage { IsUser = false, Content = chatResponse.Message });
+                messages.Add(new ChatMessage { IsUser = false, Content = questions[questionIndex] });
             }
             else
             {
-                messages.Add(new ChatMessage { IsUser = false, Content = "죄송합니다. 메시지 처리 중 오류가 발생했습니다." });
+                messages.Add(new ChatMessage { IsUser = false, Content = @"
+                    <button class='result-btn' @onclick='ShowResult'>결과보기</button>
+                    <button class='restart-btn' @onclick='RetryInterview'>재면접</button>
+                " });
             }
         }
         catch (Exception ex)
@@ -138,6 +193,19 @@
             await ScrollToBottom();
             await JSRuntime.InvokeVoidAsync("focusTextArea", "messageInput");
         }
+    }
+
+    private void ShowResult()
+    {
+        // 결과보기 기능 구현 예정
+    }
+
+    private void RetryInterview()
+    {
+        messages.Clear();
+        isLinksSubmitted = false;
+        questionIndex = 0;
+        StateHasChanged();
     }
 
     // 채팅창 스크롤을 항상 최하단으로
@@ -160,14 +228,14 @@
                     }
                 }
 
-            window.focusTextArea = function(elementId) {
-                setTimeout(function() {
-                    const element = document.getElementById(elementId);
-                    if (element) {
-                        element.focus();
-                    }
-                }, 0);
-            }
+                window.focusTextArea = function(elementId) {
+                    setTimeout(function() {
+                        const element = document.getElementById(elementId);
+                        if (element) {
+                            element.focus();
+                        }
+                    }, 0);
+              }
             ");
         }
     }
