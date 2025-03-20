@@ -9,14 +9,11 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-  checks: write
-  pull-requests: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      tests_passed: ${{ steps.test-status.outputs.tests_passed }}
 
     steps:
     - name: 🧑‍💻 Checkout Repository
@@ -30,6 +27,10 @@ jobs:
     - name: 🔐 Trust ASP.NET Core Developer Certificate
       run: dotnet dev-certs https --trust
 
+    - name: 🛠️ Install trx2junit Tool
+      if: github.event_name == 'pull_request'
+      run: dotnet tool install --global trx2junit
+      
     - name: 📦 Restore Dependencies
       run: dotnet restore
 
@@ -37,18 +38,34 @@ jobs:
       run: dotnet build --configuration Release
         
     - name: 🧪 Run All Tests
+      id: run-tests
       run: |
+        mkdir -p ./test-results
+        all_tests_passed=true
+        
         for proj in $(find test -name "*.csproj"); do
           proj_name=$(basename $proj .csproj)
-          dotnet test "$proj" --configuration Release --logger "trx;LogFileName=${proj_name}.trx" --results-directory ./test-results || true
+          if ! dotnet test "$proj" --configuration Release --logger "trx;LogFileName=${proj_name}.trx" --results-directory ./test-results; then
+            all_tests_passed=false
+          fi
         done
+        
+        echo "all_tests_passed=${all_tests_passed}" >> $GITHUB_OUTPUT
       shell: bash
+
+    - name: 📊 Set Test Status
+      id: test-status
+      run: |
+        if [ "${{ steps.run-tests.outputs.all_tests_passed }}" == "true" ]; then
+          echo "tests_passed=true" >> $GITHUB_OUTPUT
+        else
+          echo "tests_passed=false" >> $GITHUB_OUTPUT
+          echo "❌ Some tests failed. Deployment will be skipped."
+        fi
 
     - name: 🔄 Convert Test Results to JUnit Format
       if: github.event_name == 'pull_request'
-      run: |
-        dotnet tool install --global trx2junit
-        find ./test-results -name '*.trx' -exec trx2junit {} \;
+      run: find ./test-results -name '*.trx' -exec trx2junit {} \;
 
     - name: 📑 Publish Test Results as PR Comment
       if: github.event_name == 'pull_request'
@@ -65,11 +82,11 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 📦 Publish Project
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
       run: dotnet publish --configuration Release --output ./publish
 
     - name: 📤 Upload Published Artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: published-app
@@ -78,7 +95,7 @@ jobs:
   download-artifact:
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build.outputs.tests_passed == 'true'
 
     steps:
     - name: ⬇️ Download Published Artifact
