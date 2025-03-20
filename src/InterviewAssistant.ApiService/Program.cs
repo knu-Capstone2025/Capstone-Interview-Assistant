@@ -25,9 +25,14 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // 채팅 API 그룹
-var chatGroup = app.MapGroup("/api/v1/chat").WithTags("Chat");
+var chatGroup = app.MapGroup("/api/v1/chat");
 
 // 채팅 메시지 전송 엔드포인트
-chatGroup.MapPost("/", (ChatRequest request) => new ChatResponse());
+chatGroup.MapPost("/", (ChatRequest request) => new ChatResponse())
+    .Accepts<ChatRequest>(contentType: "application/json")
+    .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
+    .WithTags("Chat")
+    .WithName("ChatCompletion")
+    .WithOpenApi();
 
 app.Run();
