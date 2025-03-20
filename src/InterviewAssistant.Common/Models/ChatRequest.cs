@@ -11,8 +11,9 @@ namespace InterviewAssistant.Common.Models
     public class ChatMessage
     {
         [JsonPropertyName("role")]
-        public string Role { get; set; }
+        public string Role { get; set; } = string.Empty;
+        
         [JsonPropertyName("message")]
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }
