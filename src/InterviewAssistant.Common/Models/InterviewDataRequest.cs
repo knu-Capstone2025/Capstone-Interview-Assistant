@@ -1,4 +1,5 @@
 namespace InterviewAssistant.Common.Models;
+
 public class InterviewDataRequest
 {
     public string ResumeUrl { get; set; } = string.Empty;
