@@ -12,9 +12,5 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.*" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.*" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
-    <PackageReference Include="OpenAI" Version="2.*" />
   </ItemGroup>
 </Project>
