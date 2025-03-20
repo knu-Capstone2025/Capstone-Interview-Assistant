@@ -1,6 +1,7 @@
 // ChatService.cs
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.Web.Clients;
@@ -19,26 +20,15 @@ namespace InterviewAssistant.Web.Services
         /// <param name="message">사용자 메시지</param>
         /// <returns>처리된 챗봇 응답</returns>
         Task<ChatResponse?> SendMessageAsync(string message);
-        
-        /// <summary>
-        /// 새로운 채팅 세션을 시작합니다.
-        /// </summary>
-        Task ResetChatAsync();
     }
 
     /// <summary>
     /// 채팅 관련 비즈니스 로직을 처리하는 서비스 구현
     /// </summary>
-    public class ChatService : IChatService
+    public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : IChatService
     {
-        private readonly IChatApiClient _chatApiClient;
-        private readonly ILogger<ChatService> _logger;
-        
-        public ChatService(IChatApiClient chatApiClient, ILogger<ChatService> logger)
-        {
-            _chatApiClient = chatApiClient ?? throw new ArgumentNullException(nameof(chatApiClient));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
+        private readonly IChatApiClient _client = client ?? throw new ArgumentNullException(nameof(client));
+        private readonly ILogger<ChatService> _logger = loggerFactory.CreateLogger<ChatService>();
         
         /// <inheritdoc/>
         public async Task<ChatResponse?> SendMessageAsync(string message)
@@ -49,38 +39,24 @@ namespace InterviewAssistant.Web.Services
                 return null;
             }
             
-            _logger.LogInformation("메시지 처리 시작: {MessagePreview}", 
-                message.Length <= 50 ? message : message.Substring(0, 50) + "...");
-            
-            // 메시지 전처리 로직 (향후 확장 가능)
-            // 예: 링크 감지, 특수 명령어 처리 등
+            _logger.LogInformation("메시지 처리 시작: {Message}", message);
+
+            // 현재는 메세지 트림만 처리한다
             string processedMessage = message.Trim();
-            
-            // API 요청 생성 및 전송
-            var request = new ChatRequest { Message = processedMessage };
-            var response = await _chatApiClient.SendMessageAsync(request);
-            
-            // 응답 후처리 로직 (향후 확장 가능)
-            // 예: 응답 포맷팅, 추가 정보 주입 등
+                        
+            // API 요청 생성 및 전송 (현재는 하드코딩된 응답을 반환하는 ChatApiClient 사용)
+            var request = new ChatRequest { 
+                Messages = new List<ChatMessage> { 
+                    new ChatMessage { 
+                        Role = "user", 
+                        Message = processedMessage 
+                    } 
+                } 
+            };
+            var response = await _client.SendMessageAsync(request);
             
             _logger.LogInformation("메시지 처리 완료");
             return response;
-        }
-        
-        /// <inheritdoc/>
-        public async Task ResetChatAsync()
-        {
-            _logger.LogInformation("채팅 세션 초기화 시작");
-            
-            // 세션 초기화 전 로직 (향후 확장 가능)
-            // 예: 로컬 상태 초기화, 사용자 설정 로드 등
-            
-            await _chatApiClient.ResetChatAsync();
-            
-            // 세션 초기화 후 로직 (향후 확장 가능)
-            // 예: 초기 메시지 설정, 상태 업데이트 등
-            
-            _logger.LogInformation("채팅 세션 초기화 완료");
         }
     }
 }

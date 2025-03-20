@@ -22,12 +22,14 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
     client.BaseAddress = new("https+http://apiservice");
 });
 
-// ChatApiClient 등록 추가
+/*
+// ChatApiClient 등록 추가, https://apiservice 주소로 통신
 builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>
 {
-    //client.BaseAddress = new("https+http://apiservice"); // 기존 코드
-    client.BaseAddress = new("http://localhost:5168");
+    client.BaseAddress = new("https+http://apiservice");
 });
+*/
+builder.Services.AddScoped<IChatApiClient, ChatApiClient>();
 
 // ChatService 등록 (수정 없음)
 builder.Services.AddScoped<IChatService, ChatService>();

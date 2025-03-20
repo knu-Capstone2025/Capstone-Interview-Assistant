@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace InterviewAssistant.Common.Models
@@ -7,6 +8,17 @@ namespace InterviewAssistant.Common.Models
     /// </summary>
     public class ChatRequest
     {
+        public List<ChatMessage> Messages { get; set; } = [];
+    }
+
+    /// <summary>
+    /// 채팅 메시지 모델
+    /// </summary>
+    public class ChatMessage
+    {
+        [JsonPropertyName("role")]
+        public string Role { get; set; } = string.Empty;
+        
         [JsonPropertyName("message")]
         public string Message { get; set; } = string.Empty;
     }
@@ -16,18 +28,6 @@ namespace InterviewAssistant.Common.Models
     /// </summary>
     public class ChatResponse
     {
-        [JsonPropertyName("message")]
-        public string Message { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// 전역 응답 모델
-    /// </summary>
-    public class GlobalResponse
-    {
-        [JsonPropertyName("success")]
-        public bool Success { get; set; }
-
         [JsonPropertyName("message")]
         public string Message { get; set; } = string.Empty;
     }
