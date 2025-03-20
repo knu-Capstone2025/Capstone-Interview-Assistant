@@ -7,10 +7,10 @@ public class ApplicationDataRequest{
 
     [Required]
     [JsonPropertyName("resumeUrl")]
-    public string ResumeUrl { get; set; }
+    public string ResumeUrl { get; set; } = string.Empty;
 
     [Required]
     [JsonPropertyName("jobPostingUrl")]
-    public string JobPostingUrl { get; set; }
+    public string JobPostingUrl { get; set; } = string.Empty;
 
 }
