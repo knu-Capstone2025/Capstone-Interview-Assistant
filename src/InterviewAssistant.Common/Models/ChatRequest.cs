@@ -1,10 +1,13 @@
-using System.Text.Json.Serialization;
+namespace InterviewAssistant.Common.Models;
 
-namespace InterviewAssistant.Common.Models
+public class ChatRequest
+{   
+    public List<ChatMessage> Messages { get; set; } = [];
+}
+
+public class ChatMessage
 {
-    public class ChatResponse
-    {
-        [JsonPropertyName("message")]
-        public string Message { get; set; } = string.Empty;
-    }
+    public string Role { get; set; } = string.Empty;
+
+    public string Message { get; set; } = string.Empty;
 }
