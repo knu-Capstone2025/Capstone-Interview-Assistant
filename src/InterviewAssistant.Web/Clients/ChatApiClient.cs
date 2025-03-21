@@ -26,9 +26,8 @@ namespace InterviewAssistant.Web.Clients
     public class ChatApiClient(ILoggerFactory loggerFactory) : IChatApiClient
     {
         // ILoggerFactory를 사용하여 로거 생성, null 체크 포함
-        private readonly ILogger<ChatApiClient> _logger = 
-            (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
-            .CreateLogger<ChatApiClient>();
+        private readonly ILogger<ChatApiClient> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
+                                                          .CreateLogger<ChatApiClient>();
             
         // 하드코딩된 응답
         private readonly string _hardcodedResponse = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
