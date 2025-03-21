@@ -70,7 +70,8 @@ namespace InterviewAssistant.Web.Tests.Services
         public async Task SendMessageAsync_WhenApiFails_ReturnsNull()
         {
             // Arrange - 대체 API 클라이언트가 null을 반환하도록 설정
-            _apiClient.SendMessageAsync(Arg.Any<ChatRequest>()).Returns(Task.FromResult<ChatResponse?>(null));
+            _apiClient.SendMessageAsync(Arg.Any<ChatRequest>())
+                .Returns<Task<ChatResponse>>(x => throw new Exception("API 호출 실패"));
             
             // Act - ChatService의 메시지 전송 메서드 호출
             ChatResponse? result = await _chatService.SendMessageAsync("안녕하세요");

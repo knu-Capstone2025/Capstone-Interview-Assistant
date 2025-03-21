@@ -3,29 +3,58 @@ HomeTests.cs
 Playwright를 사용한 E2E 테스트
 */
 
+using System;
+using System.Threading.Tasks;
+
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.Web.Services;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
+using Microsoft.Playwright.NUnit;
 
-namespace InterviewAssistant.Web.Tests.Components.Pages
+using NSubstitute;
+
+using NUnit.Framework;
+
+using Shouldly;
+
+namespace InterviewAssistant.AppHost.Tests.Components.Pages
 {
     [TestFixture]
     public class HomeTests : PageTest
     {
         private IChatService _mockChatService;
-        private readonly string _baseUrl = "http://localhost:5168";
+        private string _baseUrl = string.Empty;
 
         [OneTimeSetUp]
-        public void OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             // CI 환경 감지: GitHub Actions에서는 GITHUB_ACTIONS 환경 변수가 설정됩니다
             if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
             {
                 Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
             }
+
+            // .NET Aspire 테스트 환경에서는 일반적으로 ASPNETCORE_URLS 환경 변수에 URL이 설정됩니다
+            string? aspireUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+
+            if (!string.IsNullOrEmpty(aspireUrl) && aspireUrl.Contains(";"))
+            {
+                // 여러 URL이 설정된 경우 첫 번째 URL 사용
+                _baseUrl = aspireUrl.Split(';')[0];
+                Console.WriteLine($"Aspire URL 사용: {_baseUrl}");
+            }
+            else
+            {
+                // 환경 변수가 없으면 기본 URL 사용
+                _baseUrl = "http://localhost:5168";
+                Console.WriteLine($"기본 URL 사용: {_baseUrl}");
+            }
+            await Task.CompletedTask;
+
         }
-        
+
         [SetUp]
         public void Setup()
         {
@@ -42,14 +71,14 @@ namespace InterviewAssistant.Web.Tests.Components.Pages
             // 테스트 페이지 접근
             await Page.GotoAsync(_baseUrl);
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            
+
             // 환영 메시지 확인 (Locator 기반으로 변경)
             var welcomeMessage = Page.Locator(".welcome-message");
             await Expect(welcomeMessage).ToBeVisibleAsync();
-            
+
             var heading = Page.Locator(".welcome-message h2");
             await Expect(heading).ToBeVisibleAsync();
-            
+
             var headingText = await heading.TextContentAsync();
             headingText?.ShouldContain("면접 코치 봇에 오신 것을 환영합니다", Case.Insensitive, "환영 메시지가 올바른 내용을 포함해야 합니다");
         }
@@ -63,14 +92,14 @@ namespace InterviewAssistant.Web.Tests.Components.Pages
             // 테스트 페이지 접근
             await Page.GotoAsync(_baseUrl);
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            
+
             // 입력 UI 요소 확인 (Locator 기반으로 변경)
             var textarea = Page.Locator("textarea#messageInput");
             await Expect(textarea).ToBeVisibleAsync();
-            
+
             var sendButton = Page.Locator("button.send-btn");
             await Expect(sendButton).ToBeVisibleAsync();
-            
+
         }
 
         /// <summary>
@@ -82,41 +111,41 @@ namespace InterviewAssistant.Web.Tests.Components.Pages
             // 테스트 페이지 접근
             await Page.GotoAsync(_baseUrl);
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            
+
             // 초기 상태에서 전송 버튼은 비활성화 (Locator 기반으로 변경)
             var sendButton = Page.Locator("button.send-btn");
             await Expect(sendButton).ToBeVisibleAsync();
             await Expect(sendButton).ToBeDisabledAsync();
-            
+
             // 텍스트 입력 필드 찾기 (Locator 기반으로 변경)
             var textarea = Page.Locator("textarea#messageInput");
             await Expect(textarea).ToBeVisibleAsync();
-            
+
             // 텍스트 입력 전 잠시 대기
             await Task.Delay(500);
-            
+
             // 텍스트 필드 클릭하고 내용 지우기
             await textarea.ClickAsync();
             await textarea.FillAsync(""); // 내용 비우기 - TypeAsync 대신 FillAsync 사용
-            
+
             // 텍스트 입력
             await textarea.FillAsync("안녕하세요"); // TypeAsync 대신 FillAsync 사용
-            
+
             // 입력 완료 후 UI 업데이트를 위한 시간 제공
             await Task.Delay(1000);
-            
+
             // 디버깅용: 입력된 텍스트 확인
             var textareaValue = await Page.EvaluateAsync<string>("document.querySelector('textarea#messageInput').value");
             Console.WriteLine($"입력된 텍스트: '{textareaValue}'");
-            
+
             // 디버깅용: 버튼 상태 확인
             var buttonDisabled = await Page.EvaluateAsync<bool>("document.querySelector('button.send-btn').disabled");
             Console.WriteLine($"버튼 비활성화 상태: {buttonDisabled}");
-            
+
             // 텍스트 입력 후 전송 버튼은 활성화되어야 함
             await Expect(sendButton).ToBeEnabledAsync();
         }
-        
+
         /// <summary>
         /// 전송 버튼이 적절하게 설정되어 있는지 확인합니다.
         /// </summary>
@@ -126,15 +155,15 @@ namespace InterviewAssistant.Web.Tests.Components.Pages
             // 테스트 페이지 접근
             await Page.GotoAsync(_baseUrl);
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            
+
             // 버튼 찾기 및 확인 (Locator 기반으로 변경)
             var sendButton = Page.Locator("button.send-btn");
             await Expect(sendButton).ToBeVisibleAsync();
-            
+
             // 클래스 확인
             var buttonClass = await sendButton.GetAttributeAsync("class");
             buttonClass?.ShouldContain("send-btn", Case.Insensitive, "버튼이 올바른 CSS 클래스를 가져야 합니다");
-            
+
             // 텍스트 확인
             var buttonText = await sendButton.TextContentAsync();
             buttonText?.ShouldContain("↵", Case.Insensitive, "버튼이 적절한 아이콘이나 텍스트를 표시해야 합니다");
