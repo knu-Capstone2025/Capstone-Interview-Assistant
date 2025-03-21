@@ -16,8 +16,8 @@ namespace InterviewAssistant.Web.Clients
         /// 메시지를 백엔드 API로 전송합니다.
         /// </summary>
         /// <param name="request">전송할 채팅 요청</param>
-        /// <returns>API 응답 또는 오류 시 null</returns>
-        Task<ChatResponse?> SendMessageAsync(ChatRequest request);
+        /// <returns>API 응답</returns>
+        Task<ChatResponse> SendMessageAsync(ChatRequest request);
     }
 
     /// <summary>
@@ -33,27 +33,19 @@ namespace InterviewAssistant.Web.Clients
         private readonly string _hardcodedResponse = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         
         /// <inheritdoc/>
-        public async Task<ChatResponse?> SendMessageAsync(ChatRequest request)
+        public async Task<ChatResponse> SendMessageAsync(ChatRequest request)
         {
-            try
-            {
-                _logger.LogInformation("API 요청 시뮬레이션: {Message}", 
-                    request.Messages.LastOrDefault()?.Message ?? "빈 메시지");
-                
-                // 네트워크 지연 시뮬레이션
-                await Task.Delay(1000);
-                
-                // 하드코딩된 응답 반환
-                var response = new ChatResponse { Message = _hardcodedResponse };
-                
-                _logger.LogInformation("API 응답 시뮬레이션 완료");
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "메시지 처리 중 오류 발생");
-                return null;
-            }
+            _logger.LogInformation("API 요청 시뮬레이션: {Message}", 
+                request.Messages.LastOrDefault()?.Message ?? "빈 메시지");
+    
+            // 네트워크 지연 시뮬레이션
+            await Task.Delay(1000);
+    
+            // 하드코딩된 응답 반환
+            var response = new ChatResponse { Message = _hardcodedResponse };
+    
+            _logger.LogInformation("API 응답 시뮬레이션 완료");
+            return response;
         }
     }
 }
