@@ -71,7 +71,16 @@
     {
         if (e.Key == "Enter" && !e.ShiftKey)
         {
+        // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
+        var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
+        
+        // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
+        if (!string.IsNullOrWhiteSpace(actualValue))
+        {
+            // 실제 값으로 userInput을 갱신합니다
+            userInput = actualValue;
             await SendMessage();
+        }
         }
     }
 
@@ -86,7 +95,7 @@
         
         var currentInput = userInput;
         userInput = string.Empty;
-        
+
         await ScrollToBottom();
         
         try
