@@ -28,7 +28,8 @@ namespace InterviewAssistant.Web.Services
     public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : IChatService
     {
         private readonly IChatApiClient _client = client ?? throw new ArgumentNullException(nameof(client));
-        private readonly ILogger<ChatService> _logger = loggerFactory.CreateLogger<ChatService>();
+        private readonly ILogger<ChatService> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
+        .CreateLogger<ChatService>();
         
         /// <inheritdoc/>
         public async Task<ChatResponse?> SendMessageAsync(string message)

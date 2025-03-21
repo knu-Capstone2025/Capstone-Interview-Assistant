@@ -14,14 +14,6 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-// 기존 WeatherApiClient 등록
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
-{
-    // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-    // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-    client.BaseAddress = new("https+http://apiservice");
-});
-
 /*
 // ChatApiClient 등록 추가, https://apiservice 주소로 통신
 builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>

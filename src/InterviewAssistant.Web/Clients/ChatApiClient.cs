@@ -23,15 +23,15 @@ namespace InterviewAssistant.Web.Clients
     /// <summary>
     /// 백엔드 채팅 API와의 통신을 담당하는 클라이언트 구현
     /// </summary>
-    public class ChatApiClient : IChatApiClient
+    public class ChatApiClient(ILoggerFactory loggerFactory) : IChatApiClient
     {
-        private readonly ILogger<ChatApiClient> _logger;
+        // ILoggerFactory를 사용하여 로거 생성, null 체크 포함
+        private readonly ILogger<ChatApiClient> _logger = 
+            (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
+            .CreateLogger<ChatApiClient>();
+            
         // 하드코딩된 응답
         private readonly string _hardcodedResponse = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
-        public ChatApiClient(ILogger<ChatApiClient> logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
         
         /// <inheritdoc/>
         public async Task<ChatResponse?> SendMessageAsync(ChatRequest request)
@@ -56,6 +56,5 @@ namespace InterviewAssistant.Web.Clients
                 return null;
             }
         }
-
     }
 }
