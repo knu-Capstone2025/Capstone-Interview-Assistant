@@ -22,9 +22,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-var chatGroup = app.MapGroup("/api/v1/chat").WithTags("Chat");
+var chatGroup = app.MapGroup("/api/chat").WithTags("Chat");
 
-chatGroup.MapPost("/upload", (ApplicationDataRequest request) => new ChatResponse());
+chatGroup.MapPost("/interview-data", (InterviewDataRequest request) => new List<ChatResponse>())
+    .Accepts<InterviewDataRequest>(contentType: "application/json")
+    .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
+    .WithName("PostInterviewData")
+    .WithOpenApi();
 
 string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
