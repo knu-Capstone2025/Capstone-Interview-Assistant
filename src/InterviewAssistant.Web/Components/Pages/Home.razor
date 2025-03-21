@@ -125,6 +125,7 @@
             isLoading = false;
             StateHasChanged();
             await ScrollToBottom();
+            await JSRuntime.InvokeVoidAsync("resetTextAreaHeight", "messageInput");
             await JSRuntime.InvokeVoidAsync("focusTextArea", "messageInput");
         }
     }
@@ -134,6 +135,17 @@
     {
         await Task.Delay(50); // 렌더링 시간 고려
         await JSRuntime.InvokeVoidAsync("scrollToBottomWithOffset", "chatMessages", 300);
+    }
+
+    // 페이지로드시 자동으로 리사이징
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 처음 렌더링될 때만 설정
+            await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
+        }
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     // 채팅 메시지 클래스

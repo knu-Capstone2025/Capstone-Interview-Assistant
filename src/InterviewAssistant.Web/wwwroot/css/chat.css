@@ -94,6 +94,7 @@ body {
 .message-content {
     word-break: break-word;
     line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 /* 로딩 애니메이션 */
@@ -173,6 +174,10 @@ body {
     font-size: 1rem;
     color: var(--text-color);
     outline: none;
+    overflow-y: hidden; /* 스크롤바 숨김 */
+    min-height: 20px; /* 최소 높이 설정 */
+    max-height: 200px; /* 최대 높이 설정 (선택 사항) */
+    transition: height 0.1s ease; /* 높이 변경 애니메이션 */
 }
 
 .send-btn {
