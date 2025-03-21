@@ -16,6 +16,16 @@ namespace InterviewAssistant.Web.Tests.Components.Pages
         private IChatService _mockChatService;
         private readonly string _baseUrl = "http://localhost:5168";
 
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            // CI 환경 감지: GitHub Actions에서는 GITHUB_ACTIONS 환경 변수가 설정됩니다
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
+            }
+        }
+        
         [SetUp]
         public void Setup()
         {
