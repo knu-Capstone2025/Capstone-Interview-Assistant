@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.*" />
+    <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

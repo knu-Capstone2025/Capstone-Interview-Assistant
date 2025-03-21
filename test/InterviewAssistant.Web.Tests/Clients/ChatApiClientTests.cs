@@ -47,7 +47,7 @@ namespace InterviewAssistant.Web.Tests.Clients
             // Arrange
             var request = new ChatRequest { 
                 Messages = new List<ChatMessage> { 
-                    new ChatMessage { Role = "user", Message = "안녕하세요" } 
+                    new ChatMessage { Role = MessageRoleType.User, Message = "안녕하세요" } 
                 } 
             };
             

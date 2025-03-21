@@ -13,25 +13,24 @@
     <PackageReference Include="coverlet.collector" Version="6.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Include="Microsoft.Playwright.NUnit" Version="1.*" />
+    <PackageReference Include="NSubstitute" Version="5.*" />
     <PackageReference Include="NUnit" Version="4.*" />
     <PackageReference Include="NUnit.Analyzers" Version="4.*" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.*" />
-    <PackageReference Include="NSubstitute" Version="5.1.0" />
-    <PackageReference Include="Shouldly" Version="4.2.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+    <PackageReference Include="Shouldly" Version="4.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\InterviewAssistant.Web\InterviewAssistant.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
     <Using Include="Microsoft.Playwright.NUnit" />
+    <Using Include="NSubstitute" />
     <Using Include="NUnit.Framework" />
     <Using Include="Shouldly" />
-    <Using Include="NSubstitute" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\InterviewAssistant.Web\InterviewAssistant.Web.csproj" />
   </ItemGroup>
 
   <Target Name="InstallPlaywright" AfterTargets="Build">

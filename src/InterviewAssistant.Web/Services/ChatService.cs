@@ -49,7 +49,7 @@ namespace InterviewAssistant.Web.Services
             var request = new ChatRequest { 
                 Messages = new List<ChatMessage> { 
                     new ChatMessage { 
-                        Role = "user", 
+                        Role = MessageRoleType.User, 
                         Message = processedMessage 
                     } 
                 } 

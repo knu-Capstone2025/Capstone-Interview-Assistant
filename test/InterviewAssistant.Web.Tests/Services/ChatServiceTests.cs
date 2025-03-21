@@ -60,7 +60,7 @@ namespace InterviewAssistant.Web.Tests.Services
             // API 클라이언트가 올바른 요청으로 호출되었는지 확인
             await _apiClient.Received(1).SendMessageAsync(Arg.Is<ChatRequest>(
                 req => req.Messages.Count == 1 && 
-                      req.Messages[0].Role == "user" && 
+                      req.Messages[0].Role == MessageRoleType.User && 
                       req.Messages[0].Message == "안녕하세요"
             ));
         }
