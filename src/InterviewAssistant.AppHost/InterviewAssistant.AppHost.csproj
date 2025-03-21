@@ -12,12 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InterviewAssistant.ApiService\InterviewAssistant.ApiService.csproj" />
-    <ProjectReference Include="..\InterviewAssistant.Web\InterviewAssistant.Web.csproj" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.1.0" />
+    <ProjectReference Include="..\InterviewAssistant.ApiService\InterviewAssistant.ApiService.csproj" />
+    <ProjectReference Include="..\InterviewAssistant.Web\InterviewAssistant.Web.csproj" />
   </ItemGroup>
 
 </Project>

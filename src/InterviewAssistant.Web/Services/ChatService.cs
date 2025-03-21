@@ -29,7 +29,7 @@ namespace InterviewAssistant.Web.Services
     {
         private readonly IChatApiClient _client = client ?? throw new ArgumentNullException(nameof(client));
         private readonly ILogger<ChatService> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
-        .CreateLogger<ChatService>();
+                                                        .CreateLogger<ChatService>();
         
         /// <inheritdoc/>
         public async Task<ChatResponse?> SendMessageAsync(string message)
@@ -49,7 +49,7 @@ namespace InterviewAssistant.Web.Services
             var request = new ChatRequest { 
                 Messages = new List<ChatMessage> { 
                     new ChatMessage { 
-                        Role = "user", 
+                        Role = MessageRoleType.User, 
                         Message = processedMessage 
                     } 
                 } 
