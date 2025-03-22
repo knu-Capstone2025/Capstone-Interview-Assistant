@@ -54,10 +54,19 @@ namespace InterviewAssistant.Web.Services
                     } 
                 } 
             };
-            var response = await _client.SendMessageAsync(request);
+            //try-catching the response
+            try
+            {
+                var response = await _client.SendMessageAsync(request);
             
-            _logger.LogInformation("메시지 처리 완료");
-            return response;
+                _logger.LogInformation("메시지 처리 완료");
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "메시지 처리 중 오류 발생");
+                return null;
+            }
         }
     }
 }
