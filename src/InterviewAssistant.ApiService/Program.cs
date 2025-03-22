@@ -1,56 +1,51 @@
 using InterviewAssistant.Common.Models;
-
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
-
-// Add services to the container.
 builder.Services.AddProblemDetails();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+//OpenAPI 설정
 builder.Services.AddOpenApi();
+
+// JSON 직렬화 설정
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-app.UseExceptionHandler();
-
+// 개발 환경에서만 Swagger UI 활성화
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
+app.UseHttpsRedirection();
+app.UseExceptionHandler();
+
+// 채팅 API 그룹
 var chatGroup = app.MapGroup("/api/chat").WithTags("Chat");
 
+// 채용공고문 전송 엔드포인트
 chatGroup.MapPost("/interview-data", (InterviewDataRequest request) => new List<ChatResponse>())
     .Accepts<InterviewDataRequest>(contentType: "application/json")
     .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
     .WithName("PostInterviewData")
     .WithOpenApi();
 
-string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
+// 채팅 메시지 전송 엔드포인트
+chatGroup.MapPost("/", (ChatRequest request) => new List<ChatResponse>())
+    .Accepts<ChatRequest>(contentType: "application/json")
+    .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
+    .WithName("ChatCompletion")
+    .WithOpenApi();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
 
+// 기본 엔드포인트 매핑
 app.MapDefaultEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

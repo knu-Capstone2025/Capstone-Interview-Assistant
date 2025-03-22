@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -19,6 +19,7 @@
   <ItemGroup>
     <Using Include="NUnit.Framework" />
   </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\InterviewAssistant.ApiService\InterviewAssistant.ApiService.csproj" />
