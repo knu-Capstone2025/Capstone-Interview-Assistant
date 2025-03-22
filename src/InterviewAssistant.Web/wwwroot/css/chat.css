@@ -1,0 +1,273 @@
+/* 기본 스타일 */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+:root {
+    --primary-color: #3b82f6;
+    --bg-color: #f8fafc;
+    --sidebar-bg: #ffffff;
+    --chat-bg: #ffffff;
+    --user-msg-bg: #f0f7ff;
+    --bot-msg-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-color: #334155;
+    --light-text: #64748b;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, sans-serif;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+}
+
+/* 메인 채팅 영역 */
+.chat-main {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--chat-bg);
+    height: 100vh; /* 전체 화면 높이 */
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden; /* 중요: 메인 영역에서 스크롤 방지 */
+    position: relative;
+}
+
+/* 채팅 메시지 영역 수정 */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto; /* 내용이 넘칠 때만 스크롤 표시 */
+    padding: 20px 10%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 100px; /* 채팅 입력창 위 여백 */
+    padding-bottom: 200px; /* 패딩 대신 마진 사용 */
+    min-height: 0; /* 중요: flex 컨테이너 내에서 스크롤이 제대로 작동하게 함 */
+}
+
+/* 환영 메시지 */
+.welcome-message {
+    text-align: center;
+    margin: auto;
+    max-width: 600px;
+    padding: 24px;
+    background-color: var(--bot-msg-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-message h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+/* 메시지 스타일 */
+.message {
+    display: flex;
+    max-width: 80%;
+    width: fit-content;
+    padding: 16px;
+    border-radius: 8px;
+    animation: fadeIn 0.3s;
+}
+
+.user-message {
+    background-color: var(--user-msg-bg);
+    align-self: flex-end;
+}
+
+.bot-message {
+    background-color: var(--bot-msg-bg);
+    border: 1px solid var(--border-color);
+    align-self: flex-start;
+}
+
+.message-content {
+    word-break: break-word;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+/* 로딩 애니메이션 */
+.loading-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 입력 영역 */
+.chat-input-container {
+    position: absolute; /* 절대 위치 지정 */
+    bottom: 120px; /* 하단에서 위에 배치 */
+    left: 5%;
+    right: 5%;
+    background-color: var(--chat-bg);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* 그림자 효과로 떠 있는 느낌 */
+    z-index: 10; /* 다른 요소 위에 표시 */
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    background-color: white;
+}
+
+.input-wrapper textarea {
+    flex: 1;
+    border: none;
+    resize: none;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text-color);
+    outline: none;
+    overflow-y: hidden; /* 스크롤바 숨김 */
+    min-height: 20px; /* 최소 높이 설정 */
+    max-height: 200px; /* 최대 높이 설정 (선택 사항) */
+    transition: height 0.1s ease; /* 높이 변경 애니메이션 */
+}
+
+.send-btn {
+    background: none;
+    border: none;
+    color: var(--light-text);
+    font-size: 1.25rem;
+    padding: 8px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.send-btn:hover {
+    color: var(--primary-color);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .mobile-header {
+        display: flex;
+    }
+
+    .message {
+        max-width: 95%;
+    }
+
+    /* 모바일에서만 입력창 위치 조정 */
+    .chat-input-container {
+        position: fixed; /* 모바일에서는 fixed로 변경 */
+        bottom: 20px; /* 바닥에서 살짝 띄움 */
+    }
+
+    /* 스크롤 컨테이너 완전히 수정 */
+    .chat-messages {
+        /* 절대 위치 설정으로 정확한 영역 지정 */
+        position: absolute;
+        top: 10px;
+        bottom: 150px; /* 입력창 높이 + 여백 고려 */
+        left: 0;
+        right: 0;
+        /* 내부 패딩 */
+        padding: 20px 10%;
+        /* 오버플로우 설정 */
+        overflow-y: auto;
+        overflow-x: hidden;
+        /* 다른 스타일 유지 */
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-messages {
+        padding: 12px;
+    }
+
+    .message {
+        padding: 12px;
+    }
+
+    .chat-input-container {
+        padding: 12px;
+        bottom: 15px;
+        left: 3%;
+        right: 3%;
+    }
+}

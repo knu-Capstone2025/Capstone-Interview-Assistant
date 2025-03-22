@@ -1,5 +1,7 @@
 using InterviewAssistant.Web;
 using InterviewAssistant.Web.Components;
+using InterviewAssistant.Web.Services;
+using InterviewAssistant.Web.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +14,17 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
-    {
-        // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-        // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-        client.BaseAddress = new("https+http://apiservice");
-    });
+/*
+// ChatApiClient 등록 추가, https://apiservice 주소로 통신
+builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
+*/
+builder.Services.AddScoped<IChatApiClient, ChatApiClient>();
+
+// ChatService 등록 (수정 없음)
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 
