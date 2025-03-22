@@ -3,9 +3,11 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+builder.Services.AddProblemDetails();
+
 //OpenAPI 설정
 builder.Services.AddOpenApi();
-builder.Services.AddHealthChecks();
 
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -13,9 +15,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
-
-builder.AddServiceDefaults();
-builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -29,13 +28,12 @@ app.UseHttpsRedirection();
 app.UseExceptionHandler();
 
 // 채팅 API 그룹
-var chatGroup = app.MapGroup("/api/v1/chat");
+var chatGroup = app.MapGroup("/api/chat").WithTags("Chat");
 
 // 채팅 메시지 전송 엔드포인트
 chatGroup.MapPost("/", (ChatRequest request) => new List<ChatResponse>())
     .Accepts<ChatRequest>(contentType: "application/json")
     .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
-    .WithTags("Chat")
     .WithName("ChatCompletion")
     .WithOpenApi();
 
