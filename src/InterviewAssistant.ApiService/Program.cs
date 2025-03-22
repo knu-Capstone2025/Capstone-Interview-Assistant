@@ -30,6 +30,13 @@ app.UseExceptionHandler();
 // 채팅 API 그룹
 var chatGroup = app.MapGroup("/api/chat").WithTags("Chat");
 
+// 채용공고문 전송 엔드포인트
+chatGroup.MapPost("/interview-data", (InterviewDataRequest request) => new List<ChatResponse>())
+    .Accepts<InterviewDataRequest>(contentType: "application/json")
+    .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
+    .WithName("PostInterviewData")
+    .WithOpenApi();
+
 // 채팅 메시지 전송 엔드포인트
 chatGroup.MapPost("/", (ChatRequest request) => new List<ChatResponse>())
     .Accepts<ChatRequest>(contentType: "application/json")
