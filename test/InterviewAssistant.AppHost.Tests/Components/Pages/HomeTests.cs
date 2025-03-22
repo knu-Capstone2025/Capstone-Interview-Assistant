@@ -6,9 +6,6 @@ Playwright를 사용한 E2E 테스트
 using System;
 using System.Threading.Tasks;
 
-using InterviewAssistant.Common.Models;
-using InterviewAssistant.Web.Services;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
@@ -24,17 +21,18 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
     [TestFixture]
     public class HomeTests : PageTest
     {
-        private IChatService _mockChatService;
+        //private IChatService _mockChatService;
         private string _baseUrl = string.Empty;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
             // CI 환경 감지: GitHub Actions에서는 GITHUB_ACTIONS 환경 변수가 설정됩니다
-            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
-            {
-                Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
-            }
+            // if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            // {
+            //     // gitjub action 에서도 실행되어야 함
+            //     //Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
+            // }
 
             // .NET Aspire 테스트 환경에서는 일반적으로 ASPNETCORE_URLS 환경 변수에 URL이 설정됩니다
             string? aspireUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
@@ -56,10 +54,13 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         }
 
         [SetUp]
-        public void Setup()
+        public async Task Setup() //비동기 프로그램 구현
         {
+            //Arrange
+            await Page.GotoAsync(_baseUrl); //지정된 URL(_baseUrl)로 이동
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle); //페이지가 완전히 로드될 때까지 대기
             // 모의 서비스 설정
-            _mockChatService = Substitute.For<IChatService>();
+            //_mockChatService = Substitute.For<IChatService>();
         }
 
         /// <summary>
@@ -68,17 +69,16 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_InitialRender_ShowsWelcomeMessage()
         {
-            // 테스트 페이지 접근
-            await Page.GotoAsync(_baseUrl);
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+           // Arrange : 페이지 접속 및 로드 완료 대기 (Setup 메서드에서 수행)
 
-            // 환영 메시지 확인 (Locator 기반으로 변경)
+            // Act : 환영 메시지 확인 (Locator 기반으로 변경)
             var welcomeMessage = Page.Locator(".welcome-message");
             await Expect(welcomeMessage).ToBeVisibleAsync();
 
             var heading = Page.Locator(".welcome-message h2");
             await Expect(heading).ToBeVisibleAsync();
 
+            // Assert : 환영 메시지 확인
             var headingText = await heading.TextContentAsync();
             headingText?.ShouldContain("면접 코치 봇에 오신 것을 환영합니다", Case.Insensitive, "환영 메시지가 올바른 내용을 포함해야 합니다");
         }
@@ -89,15 +89,14 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_InitialRender_ShowsInputAreaAndButtons()
         {
-            // 테스트 페이지 접근
-            await Page.GotoAsync(_baseUrl);
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            // Arrange : 페이지 접속 및 로드 완료 대기 (Setup 메서드에서 수행)
 
-            // 입력 UI 요소 확인 (Locator 기반으로 변경)
+            // Act : 입력 UI 요소 확인 (Locator 기반으로 변경)
             var textarea = Page.Locator("textarea#messageInput");
-            await Expect(textarea).ToBeVisibleAsync();
-
             var sendButton = Page.Locator("button.send-btn");
+
+            // Assert : UI 요소 확인
+            await Expect(textarea).ToBeVisibleAsync();
             await Expect(sendButton).ToBeVisibleAsync();
 
         }
@@ -108,17 +107,17 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_SendButton_DisabledWhenNoInput()
         {
-            // 테스트 페이지 접근
-            await Page.GotoAsync(_baseUrl);
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-            // 초기 상태에서 전송 버튼은 비활성화 (Locator 기반으로 변경)
+            // Arrange
+            // SetUp에서 이미 페이지가 로드되어 있으므로 별도의 로딩 동작은 필요 없음
             var sendButton = Page.Locator("button.send-btn");
+            var textarea = Page.Locator("textarea#messageInput");
+
+            // Act
+            // 초기 상태에서 전송 버튼은 비활성화 (Locator 기반으로 변경)
             await Expect(sendButton).ToBeVisibleAsync();
             await Expect(sendButton).ToBeDisabledAsync();
 
             // 텍스트 입력 필드 찾기 (Locator 기반으로 변경)
-            var textarea = Page.Locator("textarea#messageInput");
             await Expect(textarea).ToBeVisibleAsync();
 
             // 텍스트 입력 전 잠시 대기
@@ -142,6 +141,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             var buttonDisabled = await Page.EvaluateAsync<bool>("document.querySelector('button.send-btn').disabled");
             Console.WriteLine($"버튼 비활성화 상태: {buttonDisabled}");
 
+            // Assert
             // 텍스트 입력 후 전송 버튼은 활성화되어야 함
             await Expect(sendButton).ToBeEnabledAsync();
         }
@@ -152,20 +152,24 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_SendButton_IsCorrectlySetup()
         {
-            // 테스트 페이지 접근
-            await Page.GotoAsync(_baseUrl);
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-            // 버튼 찾기 및 확인 (Locator 기반으로 변경)
+            // Arrange
             var sendButton = Page.Locator("button.send-btn");
+
+            // Act
+            // 버튼 찾기 및 확인 (Locator 기반으로 변경)
             await Expect(sendButton).ToBeVisibleAsync();
 
             // 클래스 확인
             var buttonClass = await sendButton.GetAttributeAsync("class");
-            buttonClass?.ShouldContain("send-btn", Case.Insensitive, "버튼이 올바른 CSS 클래스를 가져야 합니다");
 
             // 텍스트 확인
             var buttonText = await sendButton.TextContentAsync();
+
+            // Assert
+            // CSS 클래스 확인
+            buttonClass?.ShouldContain("send-btn", Case.Insensitive, "버튼이 올바른 CSS 클래스를 가져야 합니다");
+
+            // 텍스트 확인
             buttonText?.ShouldContain("↵", Case.Insensitive, "버튼이 적절한 아이콘이나 텍스트를 표시해야 합니다");
         }
     }

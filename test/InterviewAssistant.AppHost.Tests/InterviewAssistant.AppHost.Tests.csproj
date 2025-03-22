@@ -22,9 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\InterviewAssistant.AppHost\InterviewAssistant.AppHost.csproj" />
-
-    <ProjectReference Include="..\..\src\InterviewAssistant.Web\InterviewAssistant.Web.csproj" />
-    <ProjectReference Include="..\..\src\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
