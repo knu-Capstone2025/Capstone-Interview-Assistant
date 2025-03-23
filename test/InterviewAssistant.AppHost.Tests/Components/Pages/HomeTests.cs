@@ -26,10 +26,19 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
     public class HomeTests : PageTest
     {
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+        // Setup 메서드 시작 부분에 이 코드 추가
+        public override BrowserNewContextOptions ContextOptions()
+        {
+            return new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true
+            };
+        }
 
         [SetUp]
         public async Task Setup()
         {
+            
             // Playwright에서 HTTPS 인증서 오류 무시 환경 변수 설정
             Environment.SetEnvironmentVariable("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
             Environment.SetEnvironmentVariable("PLAYWRIGHT_CHROMIUM_NO_SANDBOX", "1");
@@ -71,9 +80,14 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 uriString = "http://" + uriString.Substring(8);
             }
 
-            // 페이지 이동 및 로드 완료 대기
-            await Page.GotoAsync(uriString);
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            // 페이지 이동 및 로드 완료 대기 - 타임아웃 추가
+            await Page.GotoAsync(uriString, new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.NetworkIdle,
+                Timeout = 30000
+            });
+
+            Console.WriteLine($"페이지로 이동 완료: {uriString}");
         }
 
         /// <summary>
