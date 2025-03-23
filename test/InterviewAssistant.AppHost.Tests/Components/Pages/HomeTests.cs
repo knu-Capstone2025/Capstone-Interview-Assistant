@@ -5,62 +5,62 @@ Playwright를 사용한 E2E 테스트
 
 using System;
 using System.Threading.Tasks;
+using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
 
 using NSubstitute;
-
 using NUnit.Framework;
-
 using Shouldly;
+
+using Aspire.Hosting;
+using Aspire.Hosting.Testing;
+using Aspire.Hosting.Lifecycle;
 
 namespace InterviewAssistant.AppHost.Tests.Components.Pages
 {
     [TestFixture]
     public class HomeTests : PageTest
     {
-        //private IChatService _mockChatService;
-        private string _baseUrl = string.Empty;
-
-        [OneTimeSetUp]
-        public async Task OneTimeSetUp()
-        {
-            // CI 환경 감지: GitHub Actions에서는 GITHUB_ACTIONS 환경 변수가 설정됩니다
-            // if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
-            // {
-            //     // gitjub action 에서도 실행되어야 함
-            //     //Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
-            // }
-
-            // .NET Aspire 테스트 환경에서는 일반적으로 ASPNETCORE_URLS 환경 변수에 URL이 설정됩니다
-            string? aspireUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
-
-            if (!string.IsNullOrEmpty(aspireUrl) && aspireUrl.Contains(";"))
-            {
-                // 여러 URL이 설정된 경우 첫 번째 URL 사용
-                _baseUrl = aspireUrl.Split(';')[0];
-                Console.WriteLine($"Aspire URL 사용: {_baseUrl}");
-            }
-            else
-            {
-                // 환경 변수가 없으면 기본 URL 사용
-                _baseUrl = "http://localhost:5168";
-                Console.WriteLine($"기본 URL 사용: {_baseUrl}");
-            }
-            await Task.CompletedTask;
-
-        }
+        private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
         [SetUp]
-        public async Task Setup() //비동기 프로그램 구현
+        public async Task Setup()
         {
-            //Arrange
-            await Page.GotoAsync(_baseUrl); //지정된 URL(_baseUrl)로 이동
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle); //페이지가 완전히 로드될 때까지 대기
-            // 모의 서비스 설정
-            //_mockChatService = Substitute.For<IChatService>();
+            // Arrange
+            var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.InterviewAssistant_AppHost>();
+
+            appHost.Services.AddLogging(logging =>
+            {
+                logging.SetMinimumLevel(LogLevel.Debug);
+                logging.AddFilter(appHost.Environment.ApplicationName, LogLevel.Debug);
+                logging.AddFilter("Aspire.", LogLevel.Debug);
+            });
+
+            appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
+            {
+                clientBuilder.AddStandardResilienceHandler();
+            });
+
+            await using var app = await appHost.BuildAsync().WaitAsync(DefaultTimeout);
+            await app.StartAsync().WaitAsync(DefaultTimeout);
+
+            // 웹 리소스 찾기
+            var webResource = appHost.Resources.FirstOrDefault(r => r.Name == "webfrontend");
+            Assert.That(webResource, Is.Not.Null, "webfrontend 리소스를 찾을 수 없습니다.");
+
+            // 엔드포인트 찾기
+            var endpoint = webResource.Annotations.OfType<EndpointAnnotation>()
+                                     .FirstOrDefault(x => x.Name == "http");
+            Assert.That(endpoint, Is.Not.Null, "HTTP 엔드포인트를 찾을 수 없습니다.");
+
+            // Playwright로 페이지 이동
+            var uriString = endpoint?.AllocatedEndpoint?.UriString ?? "http://localhost:5168";
+            await Page.GotoAsync(uriString);
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         }
 
         /// <summary>
