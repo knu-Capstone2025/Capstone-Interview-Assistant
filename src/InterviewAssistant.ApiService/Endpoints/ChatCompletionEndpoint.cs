@@ -3,8 +3,16 @@ using InterviewAssistant.Common.Models;
 
 namespace InterviewAssistant.ApiService.Endpoints;
 
+/// <summary>
+/// This represents the chat completion endpoint for the API service.
+/// </summary>
 public static class ChatCompletionEndpoint
 {
+    /// <summary>
+    /// Maps the chat completion endpoint to the specified route builder.
+    /// </summary>
+    /// <param name="routeBuilder"><see cref="IEndpointRouteBuilder"/> instance.</param>
+    /// <returns>Returns the <see cref="IEndpointRouteBuilder"/> instance.</returns>
     public static IEndpointRouteBuilder MapChatCompletionEndpoint(this IEndpointRouteBuilder routeBuilder)
     {
         // Chat Completion API 그룹
