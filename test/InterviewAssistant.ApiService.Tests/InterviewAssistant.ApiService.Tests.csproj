@@ -20,7 +20,6 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\InterviewAssistant.ApiService\InterviewAssistant.ApiService.csproj" />
   </ItemGroup>

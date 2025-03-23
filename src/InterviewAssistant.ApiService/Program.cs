@@ -1,5 +1,6 @@
-using InterviewAssistant.Common.Models;
 using System.Text.Json.Serialization;
+
+using InterviewAssistant.Common.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,6 @@ chatGroup.MapPost("/", (ChatRequest request) => new List<ChatResponse>())
     .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
     .WithName("ChatCompletion")
     .WithOpenApi();
-
 
 // 기본 엔드포인트 매핑
 app.MapDefaultEndpoints();
