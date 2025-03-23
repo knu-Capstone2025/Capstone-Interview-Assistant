@@ -30,13 +30,10 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
-            // GitHub Actions 환경에서는 테스트 건너뛰기
-            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
-            {
-                Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
-                return;
-            }
-            
+            // Playwright에서 HTTPS 인증서 오류 무시 환경 변수 설정
+            Environment.SetEnvironmentVariable("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
+            Environment.SetEnvironmentVariable("PLAYWRIGHT_CHROMIUM_NO_SANDBOX", "1");
+
             // Arrange
             var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.InterviewAssistant_AppHost>();
 
@@ -64,8 +61,17 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                                      .FirstOrDefault(x => x.Name == "http");
             Assert.That(endpoint, Is.Not.Null, "HTTP 엔드포인트를 찾을 수 없습니다.");
 
-            // Playwright로 페이지 이동
+            // Playwright 초기 스크립트 추가 (브라우저 인식용)
+            await Context.AddInitScriptAsync("Object.defineProperty(window, 'playwright', { get: () => true });");
+
+            // HTTPS URL을 HTTP로 변환하여 인증서 오류 방지
             var uriString = endpoint?.AllocatedEndpoint?.UriString ?? "http://localhost:5168";
+            if (uriString.StartsWith("https://"))
+            {
+                uriString = "http://" + uriString.Substring(8);
+            }
+
+            // 페이지 이동 및 로드 완료 대기
             await Page.GotoAsync(uriString);
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         }
@@ -76,7 +82,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_InitialRender_ShowsWelcomeMessage()
         {
-           // Arrange : 페이지 접속 및 로드 완료 대기 (Setup 메서드에서 수행)
+            // Arrange : 페이지 접속 및 로드 완료 대기 (Setup 메서드에서 수행)
 
             // Act : 환영 메시지 확인 (Locator 기반으로 변경)
             var welcomeMessage = Page.Locator(".welcome-message");
