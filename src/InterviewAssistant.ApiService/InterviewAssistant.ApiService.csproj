@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
     <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
   </ItemGroup>
 
