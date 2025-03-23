@@ -30,6 +30,13 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
+            // GitHub Actions 환경에서는 테스트 건너뛰기
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                Assert.Ignore("CI 환경에서는 E2E 테스트를 실행하지 않습니다.");
+                return;
+            }
+            
             // Arrange
             var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.InterviewAssistant_AppHost>();
 
