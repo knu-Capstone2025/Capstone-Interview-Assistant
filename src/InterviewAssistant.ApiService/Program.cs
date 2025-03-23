@@ -1,9 +1,11 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using InterviewAssistant.Common.Models;
+using InterviewAssistant.ApiService.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// .NET Aspire 기본 설정
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 
@@ -13,8 +15,10 @@ builder.Services.AddOpenApi();
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.WriteIndented = true;
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 });
 
 var app = builder.Build();
@@ -28,24 +32,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 
-// 채팅 API 그룹
-var chatGroup = app.MapGroup("/api/chat").WithTags("Chat");
+// Chat Completion 엔드포인트 매핑
+app.MapChatCompletionEndpoint();
 
-// 채용공고문 전송 엔드포인트
-chatGroup.MapPost("/interview-data", (InterviewDataRequest request) => new List<ChatResponse>())
-    .Accepts<InterviewDataRequest>(contentType: "application/json")
-    .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
-    .WithName("PostInterviewData")
-    .WithOpenApi();
-
-// 채팅 메시지 전송 엔드포인트
-chatGroup.MapPost("/", (ChatRequest request) => new List<ChatResponse>())
-    .Accepts<ChatRequest>(contentType: "application/json")
-    .Produces<IEnumerable<ChatResponse>>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
-    .WithName("ChatCompletion")
-    .WithOpenApi();
-
-// 기본 엔드포인트 매핑
+// .NET Aspire 헬스체크 및 모니터링 엔드포인트 매핑
 app.MapDefaultEndpoints();
 
 app.Run();
