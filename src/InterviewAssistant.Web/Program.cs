@@ -1,4 +1,3 @@
-using InterviewAssistant.Web;
 using InterviewAssistant.Web.Components;
 using InterviewAssistant.Web.Services;
 using InterviewAssistant.Web.Clients;
@@ -10,20 +9,15 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+                .AddInteractiveServerComponents();
 
-builder.Services.AddOutputCache();
-
-/*
-// ChatApiClient 등록 추가, https://apiservice 주소로 통신
+// ChatApiClient 등록
 builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>
 {
     client.BaseAddress = new("https+http://apiservice");
 });
-*/
-builder.Services.AddScoped<IChatApiClient, ChatApiClient>();
 
-// ChatService 등록 (수정 없음)
+// ChatService 등록
 builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
@@ -39,12 +33,10 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.UseOutputCache();
-
 app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+   .AddInteractiveServerRenderMode();
 
 app.MapDefaultEndpoints();
 

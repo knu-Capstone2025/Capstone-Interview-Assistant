@@ -22,9 +22,9 @@
         {
             @foreach (var message in messages)
             {
-                <div class="message @(message.IsUser ? "user-message" : "bot-message")">
+                <div class="message @(message.Role == MessageRoleType.User ? "user-message" : "bot-message")">
                     <div class="message-content">
-                        @((MarkupString)message.Content)
+                        @((MarkupString)message.Message)
                     </div>
                 </div>
             }
@@ -90,7 +90,7 @@
         if (string.IsNullOrWhiteSpace(userInput) || isLoading)
             return;
 
-        var userMessage = new ChatMessage { IsUser = true, Content = userInput };
+        var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
         
         var currentInput = userInput;
@@ -104,21 +104,18 @@
             StateHasChanged();
             
             // ChatService를 통해 응답 가져오기
-            var response = await ChatService.SendMessageAsync(currentInput);
-            
-            if (response != null)
+            var responses = ChatService.SendMessageAsync(currentInput);
+            await foreach (var response in responses)
             {
                 // 응답을 채팅 메시지로 추가
-                messages.Add(new ChatMessage { IsUser = false, Content = response.Message });
-            }
-            else
-            {
-                messages.Add(new ChatMessage { IsUser = false, Content = "죄송합니다, 응답을 생성하는 데 문제가 발생했습니다." });
+                messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = response.Message });
+                StateHasChanged();
+                await ScrollToBottom();
             }
         }
         catch (Exception ex)
         {
-            messages.Add(new ChatMessage { IsUser = false, Content = $"오류: {ex.Message}" });
+            messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
         }
         finally
         {
@@ -146,12 +143,5 @@
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
         }
         await base.OnAfterRenderAsync(firstRender);
-    }
-
-    // 채팅 메시지 클래스
-    private class ChatMessage
-    {
-        public bool IsUser { get; set; }
-        public string Content { get; set; } = string.Empty;
     }
 }
