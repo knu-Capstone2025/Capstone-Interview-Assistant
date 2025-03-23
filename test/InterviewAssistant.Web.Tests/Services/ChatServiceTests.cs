@@ -1,8 +1,8 @@
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.Web.Services;
 using InterviewAssistant.Web.Clients;
-
 using Microsoft.Extensions.Logging;
+using NSubstitute.ExceptionExtensions;
 
 namespace InterviewAssistant.Web.Tests.Services;
 
@@ -45,5 +45,19 @@ public class ChatServiceTests
         // Assert - 결과 검증
         result.ShouldNotBeNull();
         result[0].Message.ShouldBe("테스트 응답입니다");
+    }
+
+    // 테스트 2: 메시지 전송이 실패할 때 예외 처리하는지 검증
+    [Test]
+    public void SendMessageAsync_WhenApiFails_ThrowsException()
+    {
+        // Arrange - 대체 API 클라이언트가 예외를 발생하도록 설정
+        _apiClient.SendMessageAsync(Arg.Any<ChatRequest>()).Throws(new Exception("API 호출 실패"));
+
+        // Act & Assert - 예외가 발생하는지 검증
+        var ex = Assert.ThrowsAsync<Exception>(async () =>
+            await _chatService.SendMessageAsync("안녕하세요").ToListAsync());
+
+        Assert.That(ex.Message, Is.EqualTo("API 호출 실패"));
     }
 }
