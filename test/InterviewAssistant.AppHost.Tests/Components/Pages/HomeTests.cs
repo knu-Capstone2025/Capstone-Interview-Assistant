@@ -34,7 +34,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             };
         }
 
-        [OneTimeSetUp]
+        [SetUp]
         public async Task Setup()
         {
 
