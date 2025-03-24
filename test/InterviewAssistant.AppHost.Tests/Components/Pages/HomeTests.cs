@@ -25,7 +25,8 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
     [TestFixture]
     public class HomeTests : PageTest
     {
-        private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+        private static DistributedApplication _app;
+        private static string _baseUrl;
         public override BrowserNewContextOptions ContextOptions()
         {
             return new BrowserNewContextOptions
@@ -34,28 +35,37 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             };
         }
 
-        [SetUp]
-        public async Task Setup()
+        [OneTimeSetUp]
+        public async Task OneTimeSetUp()
         {
-
             // Playwright CI/CD 테스트 환경 최적화 설정
             Environment.SetEnvironmentVariable("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
             Environment.SetEnvironmentVariable("PLAYWRIGHT_CHROMIUM_NO_SANDBOX", "1");
 
             // Arrange
             var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.InterviewAssistant_AppHost>();
-
-            await using var app = await appHost.BuildAsync();
-            await app.StartAsync();
+            _app = appHost.Build();
+            await _app.StartAsync();
 
             var webResource = appHost.Resources.FirstOrDefault(r => r.Name == "webfrontend");
-
             var endpoint = webResource?.Annotations.OfType<EndpointAnnotation>()
                 .FirstOrDefault(x => x.Name == "http");
 
-            await Page.GotoAsync(endpoint?.AllocatedEndpoint?.UriString ?? "http://localhost:5168");
+            _baseUrl = endpoint?.AllocatedEndpoint?.UriString!;
+        }
+        
+        [SetUp]
+        public async Task Setup()
+        {
+            await Page.GotoAsync(_baseUrl);
         }
 
+        [OneTimeTearDown]
+        public async Task OneTimeTearDown()
+        {
+            await _app.StopAsync();
+            await _app.DisposeAsync();
+        }
         /// <summary>
         /// 컴포넌트가 초기 상태에서 환영 메시지를 올바르게 표시하는지 확인합니다.
         /// </summary>
