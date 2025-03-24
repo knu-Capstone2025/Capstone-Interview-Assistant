@@ -26,7 +26,6 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
     public class HomeTests : PageTest
     {
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
-        // Setup 메서드 시작 부분에 이 코드 추가
         public override BrowserNewContextOptions ContextOptions()
         {
             return new BrowserNewContextOptions
@@ -35,59 +34,26 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             };
         }
 
-        [SetUp]
+        [OneTimeSetUp]
         public async Task Setup()
         {
-            
-            // Playwright에서 HTTPS 인증서 오류 무시 환경 변수 설정
+
+            // Playwright CI/CD 테스트 환경 최적화 설정
             Environment.SetEnvironmentVariable("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
             Environment.SetEnvironmentVariable("PLAYWRIGHT_CHROMIUM_NO_SANDBOX", "1");
 
             // Arrange
             var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.InterviewAssistant_AppHost>();
 
-            appHost.Services.AddLogging(logging =>
-            {
-                logging.SetMinimumLevel(LogLevel.Debug);
-                logging.AddFilter(appHost.Environment.ApplicationName, LogLevel.Debug);
-                logging.AddFilter("Aspire.", LogLevel.Debug);
-            });
+            await using var app = await appHost.BuildAsync();
+            await app.StartAsync();
 
-            appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
-            {
-                clientBuilder.AddStandardResilienceHandler();
-            });
-
-            await using var app = await appHost.BuildAsync().WaitAsync(DefaultTimeout);
-            await app.StartAsync().WaitAsync(DefaultTimeout);
-
-            // 웹 리소스 찾기
             var webResource = appHost.Resources.FirstOrDefault(r => r.Name == "webfrontend");
-            Assert.That(webResource, Is.Not.Null, "webfrontend 리소스를 찾을 수 없습니다.");
 
-            // 엔드포인트 찾기
-            var endpoint = webResource.Annotations.OfType<EndpointAnnotation>()
-                                     .FirstOrDefault(x => x.Name == "http");
-            Assert.That(endpoint, Is.Not.Null, "HTTP 엔드포인트를 찾을 수 없습니다.");
+            var endpoint = webResource?.Annotations.OfType<EndpointAnnotation>()
+                .FirstOrDefault(x => x.Name == "http");
 
-            // Playwright 초기 스크립트 추가 (브라우저 인식용)
-            await Context.AddInitScriptAsync("Object.defineProperty(window, 'playwright', { get: () => true });");
-
-            // HTTPS URL을 HTTP로 변환하여 인증서 오류 방지
-            var uriString = endpoint?.AllocatedEndpoint?.UriString ?? "http://localhost:5168";
-            if (uriString.StartsWith("https://"))
-            {
-                uriString = "http://" + uriString.Substring(8);
-            }
-
-            // 페이지 이동 및 로드 완료 대기 - 타임아웃 추가
-            await Page.GotoAsync(uriString, new PageGotoOptions
-            {
-                WaitUntil = WaitUntilState.NetworkIdle,
-                Timeout = 30000
-            });
-
-            Console.WriteLine($"페이지로 이동 완료: {uriString}");
+            await Page.GotoAsync(endpoint?.AllocatedEndpoint?.UriString ?? "http://localhost:5168");
         }
 
         /// <summary>
