@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
 using InterviewAssistant.ApiService.Endpoints;
+using InterviewAssistant.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +11,7 @@ builder.Services.AddProblemDetails();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
+builder.Services.AddAIModelService();
 
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>
