@@ -38,9 +38,6 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            // Playwright CI/CD 테스트 환경 최적화 설정
-            Environment.SetEnvironmentVariable("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
-            Environment.SetEnvironmentVariable("PLAYWRIGHT_CHROMIUM_NO_SANDBOX", "1");
 
             // Arrange
             var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.InterviewAssistant_AppHost>();
