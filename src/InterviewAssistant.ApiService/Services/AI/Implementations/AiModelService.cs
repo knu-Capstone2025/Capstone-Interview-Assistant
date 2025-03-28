@@ -6,7 +6,7 @@ namespace InterviewAssistant.ApiService.Services;
 /// <summary>
 /// AI 모델 서비스 구현 클래스
 /// </summary>
-public class AiModelService : IAiModelService
+public class AIModelService : IAIModelService
 {
     private readonly IConfiguration _configuration;
     
@@ -23,7 +23,7 @@ public class AiModelService : IAiModelService
     /// AiModelService 생성자
     /// </summary>
     /// <param name="configuration">애플리케이션 구성</param>
-    public AiModelService(IConfiguration configuration)
+    public AIModelService(IConfiguration configuration)
     {
         _configuration = configuration;
         
