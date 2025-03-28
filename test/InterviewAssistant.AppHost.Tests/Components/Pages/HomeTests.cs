@@ -25,8 +25,8 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
     [TestFixture]
     public class HomeTests : PageTest
     {
-        private static DistributedApplication _app;
-        private static string _baseUrl;
+        private DistributedApplication _app;
+        private string _baseUrl;
         public override BrowserNewContextOptions ContextOptions()
         {
             return new BrowserNewContextOptions
