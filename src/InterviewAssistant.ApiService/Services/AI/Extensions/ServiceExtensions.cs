@@ -14,14 +14,6 @@ public static class ServiceExtensions
     {
         // IAiModelService와 구현체 AiModelService를 싱글톤으로 등록
         services.AddSingleton<IAIModelService, AIModelService>();
-        
-        // ChatClient를 서비스로 등록 (인터페이스를 통해 접근)
-        services.AddSingleton(sp => 
-        {
-            var aiModelService = sp.GetRequiredService<IAIModelService>();
-            return aiModelService.CreateChatClient();
-        });
-        
         return services;
     }
 }
