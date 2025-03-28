@@ -1,5 +1,6 @@
-using InterviewAssistant.Web;
 using InterviewAssistant.Web.Components;
+using InterviewAssistant.Web.Services;
+using InterviewAssistant.Web.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,16 +9,16 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+                .AddInteractiveServerComponents();
 
-builder.Services.AddOutputCache();
+// ChatApiClient 등록
+builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
 
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
-    {
-        // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-        // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-        client.BaseAddress = new("https+http://apiservice");
-    });
+// ChatService 등록
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 
@@ -32,12 +33,10 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.UseOutputCache();
-
 app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+   .AddInteractiveServerRenderMode();
 
 app.MapDefaultEndpoints();
 
