@@ -1,7 +1,147 @@
 ﻿@page "/"
+@using InterviewAssistant.Common.Models
+@using InterviewAssistant.Web.Services
+@inject IChatService ChatService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>면접 코치 - InterviewAssistant</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- 메인 채팅 영역 -->
+<div class="chat-main">
+    <!-- 채팅 메시지 영역 -->
+    <div class="chat-messages" id="chatMessages">
+        @if (messages.Count == 0)
+        {
+            <div class="welcome-message">
+                <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
+                <p>질문을 입력하시면 면접 준비를 도와드립니다.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var message in messages)
+            {
+                <div class="message @(message.Role == MessageRoleType.User ? "user-message" : "bot-message")">
+                    <div class="message-content">
+                        @((MarkupString)message.Message)
+                    </div>
+                </div>
+            }
+        }
+        @if (isLoading)
+        {
+            <div class="message bot-message">
+                <div class="message-content">
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 
-Welcome to your new app.
+    <!-- 입력 영역 -->
+    <div class="chat-input-container">
+        <div class="input-wrapper">
+            <textarea 
+                id="messageInput"
+                @bind="userInput" 
+                @bind:event="oninput" 
+                @onkeydown="HandleKeyDown" 
+                placeholder="메시지를 입력하세요." 
+                rows="1"
+                disabled="@isLoading"></textarea>
+            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
+                <span class="send-icon">↵</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ChatMessage> messages = new List<ChatMessage>();
+    private string userInput = string.Empty;
+    private bool isLoading = false;
+
+    // 키 입력 처리 (엔터키로 메시지 전송)
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+        // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
+        var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
+        
+        // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
+        if (!string.IsNullOrWhiteSpace(actualValue))
+        {
+            // 실제 값으로 userInput을 갱신합니다
+            userInput = actualValue;
+            await SendMessage();
+        }
+        }
+    }
+
+    // 메시지 전송 - 서비스 사용
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(userInput) || isLoading)
+            return;
+
+        var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
+        messages.Add(userMessage);
+        
+        var currentInput = userInput;
+        userInput = string.Empty;
+
+        await ScrollToBottom();
+        
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            
+            // ChatService를 통해 응답 가져오기
+            var responses = ChatService.SendMessageAsync(currentInput);
+            await foreach (var response in responses)
+            {
+                // 응답을 채팅 메시지로 추가
+                messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = response.Message });
+                StateHasChanged();
+                await ScrollToBottom();
+            }
+        }
+        catch (Exception ex)
+        {
+            messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+            await ScrollToBottom();
+            await JSRuntime.InvokeVoidAsync("resetTextAreaHeight", "messageInput");
+            await JSRuntime.InvokeVoidAsync("focusTextArea", "messageInput");
+        }
+    }
+
+    // 채팅창 스크롤을 항상 최하단으로
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(50); // 렌더링 시간 고려
+        await JSRuntime.InvokeVoidAsync("scrollToBottomWithOffset", "chatMessages", 300);
+    }
+
+    // 페이지로드시 자동으로 리사이징
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 처음 렌더링될 때만 설정
+            await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
