@@ -33,19 +33,24 @@ public class AIModelService(IConfiguration configuration) : IAIModelService
     /// </summary>
     private ChatClient CreateAzureOpenAIChatClient()
     {
-        var azureOpenAIKey = configuration["AzureOpenAI:ApiKey"] 
+        // Azure OpenAI API 키 및 엔드포인트 가져오기
+        var apiKey = configuration["AzureOpenAI:ApiKey"] 
             ?? throw new InvalidOperationException("Azure OpenAI API 키가 구성되지 않았습니다.");
-        var azureOpenAIEndpoint = configuration["AzureOpenAI:Endpoint"] 
+        var endpoint = configuration["AzureOpenAI:Endpoint"] 
             ?? throw new InvalidOperationException("Azure OpenAI 엔드포인트가 구성되지 않았습니다.");
         var deploymentName = configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4o";
         
-        var azureOpenAIOptions = new OpenAIClientOptions()
+        // 클라이언트 옵션 구성
+        var options = new OpenAIClientOptions()
         {
-            Endpoint = new Uri(azureOpenAIEndpoint)
+            Endpoint = new Uri(endpoint)
         };
-        var azureCredential = new System.ClientModel.ApiKeyCredential(azureOpenAIKey);
         
-        return new ChatClient(deploymentName, azureCredential, azureOpenAIOptions);
+        // 인증 정보 생성
+        var credential = new System.ClientModel.ApiKeyCredential(apiKey);
+        
+        // 채팅 클라이언트 반환
+        return new ChatClient(deploymentName, credential, options);
     }
     
     /// <summary>
@@ -53,12 +58,20 @@ public class AIModelService(IConfiguration configuration) : IAIModelService
     /// </summary>
     private ChatClient CreateGitHubChatClient()
     {
-        var githubToken = configuration["GitHub:Token"] 
+        // GitHub 토큰 가져오기
+        var apiKey = configuration["GitHub:Token"] 
             ?? throw new InvalidOperationException("GitHub 토큰이 구성되지 않았습니다.");
         
-        var endpoint = new Uri(_endpoint);
-        var credential = new System.ClientModel.ApiKeyCredential(githubToken);
+        // 클라이언트 옵션 구성
+        var options = new OpenAIClientOptions() 
+        { 
+            Endpoint = new Uri(_endpoint) 
+        };
         
-        return new ChatClient(_model, credential, new OpenAIClientOptions { Endpoint = endpoint });
+        // 인증 정보 생성
+        var credential = new System.ClientModel.ApiKeyCredential(apiKey);
+        
+        // 채팅 클라이언트 반환
+        return new ChatClient(_model, credential, options);
     }
 }
