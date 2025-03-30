@@ -1,10 +1,5 @@
 using InterviewAssistant.ApiService.Services.Interfaces;
 using OpenAI.Chat;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace InterviewAssistant.ApiService.Services.Implementations;
 
 /// <summary>

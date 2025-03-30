@@ -1,9 +1,7 @@
-using Microsoft.Extensions.Configuration;
 using OpenAI;
 using OpenAI.Chat;
 using InterviewAssistant.ApiService.Services.Interfaces;
 using InterviewAssistant.ApiService.Services.Implementations;
-using System;
 
 namespace InterviewAssistant.ApiService.Services;
 
