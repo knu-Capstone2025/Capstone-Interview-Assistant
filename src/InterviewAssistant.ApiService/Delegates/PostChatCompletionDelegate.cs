@@ -12,9 +12,9 @@ public static partial class ChatCompletionDelegate
     /// <summary>
     /// Invokes the chat completion endpoint.
     /// </summary>
-    /// <param name="req">List of <see cref="ChatRequest"/> instances as a request payload.</param>
+    /// <param name="req"><see cref="ChatRequest"/> instance as a request payload.</param>
     /// <returns>Returns an asynchronous stream of <see cref="ChatResponse"/>.</returns>
-    public static async IAsyncEnumerable<ChatResponse> PostChatCompletionAsync([FromBody] IEnumerable<ChatRequest> req)
+    public static async IAsyncEnumerable<ChatResponse> PostChatCompletionAsync([FromBody] ChatRequest req)
     {
         await Task.Delay(1000); // Simulate async work
 

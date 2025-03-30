@@ -17,11 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework" />
+    <ProjectReference Include="..\..\src\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
+    <Using Include="NUnit.Framework" />
   </ItemGroup>
 
 </Project>
