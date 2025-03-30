@@ -1,49 +1,32 @@
+using Microsoft.Extensions.Configuration;
 using OpenAI;
 using OpenAI.Chat;
+using InterviewAssistant.ApiService.Services.Interfaces;
+using InterviewAssistant.ApiService.Services.Implementations;
+using System;
 
 namespace InterviewAssistant.ApiService.Services;
 
 /// <summary>
-/// AI 모델 서비스 구현 클래스
+/// AI 모델 서비스 구현 클래스 (기본 생성자 사용)
 /// </summary>
-public class AIModelService : IAIModelService
+public class AIModelService(IConfiguration configuration) : IAIModelService
 {
-    private readonly IConfiguration _configuration;
+    private readonly string _provider = configuration["AiService:Provider"] ?? "GitHub";
+    private readonly string _model = configuration["AiService:Model"] ?? "gpt-4o";
+    private readonly string _endpoint = configuration["AiService:Endpoint"] ?? "https://models.inference.ai.azure.com";
     
     /// <inheritdoc/>
-    public string Provider { get; private set; } = "GitHub"; // 기본값 GitHub
-    
-    /// <inheritdoc/>
-    public string Model { get; private set; } = "gpt-4o";
-    
-    /// <inheritdoc/>
-    public string Endpoint { get; private set; } = "https://models.inference.ai.azure.com";
-    
-    /// <summary>
-    /// AiModelService 생성자
-    /// </summary>
-    /// <param name="configuration">애플리케이션 구성</param>
-    public AIModelService(IConfiguration configuration)
+    public IChatClient CreateChatClient()
     {
-        _configuration = configuration;
-        
-        // 설정에서 값 로드
-        Provider = configuration["AiService:Provider"] ?? Provider;
-        Model = configuration["AiService:Model"] ?? Model;
-        Endpoint = configuration["AiService:Endpoint"] ?? Endpoint;
-    }
-    
-    /// <inheritdoc/>
-    public ChatClient CreateChatClient()
-    {
-        switch (Provider.ToLower())
+        switch (_provider.ToLower())
         {
             case "azureopenai":
-                return CreateAzureOpenAIChatClient();
+                return new OpenAIChatClient(CreateAzureOpenAIChatClient());
                 
             case "github":
             default:
-                return CreateGitHubChatClient();
+                return new OpenAIChatClient(CreateGitHubChatClient());
         }
     }
     
@@ -52,11 +35,11 @@ public class AIModelService : IAIModelService
     /// </summary>
     private ChatClient CreateAzureOpenAIChatClient()
     {
-        var azureOpenAIKey = _configuration["AzureOpenAI:ApiKey"] 
+        var azureOpenAIKey = configuration["AzureOpenAI:ApiKey"] 
             ?? throw new InvalidOperationException("Azure OpenAI API 키가 구성되지 않았습니다.");
-        var azureOpenAIEndpoint = _configuration["AzureOpenAI:Endpoint"] 
+        var azureOpenAIEndpoint = configuration["AzureOpenAI:Endpoint"] 
             ?? throw new InvalidOperationException("Azure OpenAI 엔드포인트가 구성되지 않았습니다.");
-        var deploymentName = _configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4";
+        var deploymentName = configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4o";
         
         var azureOpenAIOptions = new OpenAIClientOptions()
         {
@@ -72,12 +55,12 @@ public class AIModelService : IAIModelService
     /// </summary>
     private ChatClient CreateGitHubChatClient()
     {
-        var githubToken = _configuration["GitHub:Token"] 
+        var githubToken = configuration["GitHub:Token"] 
             ?? throw new InvalidOperationException("GitHub 토큰이 구성되지 않았습니다.");
         
-        var endpoint = new Uri(Endpoint);
+        var endpoint = new Uri(_endpoint);
         var credential = new System.ClientModel.ApiKeyCredential(githubToken);
         
-        return new ChatClient(Model, credential, new OpenAIClientOptions { Endpoint = endpoint });
+        return new ChatClient(_model, credential, new OpenAIClientOptions { Endpoint = endpoint });
     }
 }

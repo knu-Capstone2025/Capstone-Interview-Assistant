@@ -1,4 +1,4 @@
-using OpenAI.Chat;
+using InterviewAssistant.ApiService.Services.Interfaces;
 
 namespace InterviewAssistant.ApiService.Services;
 
@@ -10,21 +10,6 @@ public interface IAIModelService
     /// <summary>
     /// 채팅 클라이언트 생성 메서드
     /// </summary>
-    /// <returns>구성된 ChatClient 인스턴스</returns>
-    ChatClient CreateChatClient();
-    
-    /// <summary>
-    /// AI 서비스 공급자
-    /// </summary>
-    string Provider { get; }
-    
-    /// <summary>
-    /// 사용할 AI 모델
-    /// </summary>
-    string Model { get; }
-    
-    /// <summary>
-    /// AI 서비스 엔드포인트
-    /// </summary>
-    string Endpoint { get; }
+    /// <returns>구성된 IChatClient 인스턴스</returns>
+    IChatClient CreateChatClient();
 }
