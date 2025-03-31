@@ -3,6 +3,7 @@
 @using InterviewAssistant.Web.Services
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
+@inject ILogger<Home> Logger
 @rendermode InteractiveServer
 
 <PageTitle>면접 코치 - InterviewAssistant</PageTitle>
@@ -105,24 +106,33 @@
     private string resumeUrl = string.Empty;
     private string jobUrl = string.Empty;
     private void CloseModal() => showModal = false;
-
+    bool IsValidUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
     private void SubmitLinks()
     {
-        // URL 유효성 검사 (현재는 입력됬는지만 확인인)
-        if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl))
+        // URL 유효성 검사
+        if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl) &&
+            IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
         {
+            CloseModal();
             isLinkShared = true;
             // 이후 URL을 서버에 전송하는 로직 추가
-            showModal = false;
-            
+            Logger?.LogInformation($"이력서 URL: {resumeUrl}, 채용공고 URL: {jobUrl}");
             messages.Add(new ChatMessage { 
                 Role = MessageRoleType.Assistant, 
-                Message = $"이력서와 채용공고 URL이 등록되었습니다. 이제 면접 준비를 시작하겠습니다..." 
+                Message = $"이력서와 채용공고 URL이 등록되었습니다. 이제 면접 준비를 시작하겠습니다." 
+            });
+            messages.Add(new ChatMessage { 
+                Role = MessageRoleType.Assistant, 
+                Message = $"안녕하세요! 자기소개부터 해봅시다."
             });
         }
         else
         {
-            JSRuntime.InvokeVoidAsync("alert", "이력서 URL과 채용공고 URL을 모두 입력해주세요.");
+            JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
     }
 
