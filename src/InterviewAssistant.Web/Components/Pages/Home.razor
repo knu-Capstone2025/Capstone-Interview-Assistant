@@ -106,29 +106,11 @@
     private string resumeUrl = string.Empty;
     private string jobUrl = string.Empty;
     private void CloseModal() => showModal = false;
-    private string? selectedResumeFileName;
     bool IsValidUrl(string url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
-    
-    private IBrowserFile? selectedFile;
-
-    private void FileSelect(InputFileChangeEventArgs e)
-    {
-        try
-        {
-            selectedFile = e.File;
-            selectedResumeFileName = selectedFile.Name; // 파일 이름 저장
-            Logger?.LogInformation($"선택된 이력서 파일: {selectedResumeFileName}");
-        }
-        catch (Exception ex)
-        {
-            Logger?.LogError($"파일 선택 중 오류 발생: {ex.Message}");
-        }
-    }
-    
     private void SubmitLinks()
     {
         // URL 유효성 검사
