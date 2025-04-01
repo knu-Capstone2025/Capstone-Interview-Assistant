@@ -32,8 +32,7 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
         _logger.LogInformation("API 요청 시뮬레이션: {Message}", request.Messages.LastOrDefault()?.Message ?? "빈 메시지");
 
         // 하드코딩된 응답 반환
-        var responses = loremipsum.Split([ " ", "\r", "\n" ], StringSplitOptions.RemoveEmptyEntries)
-                                  .Select(message => new ChatResponse { Message = message.Trim() });
+        var responses = new[] { new ChatResponse { Message = loremipsum.Trim() } };
 
         // 응답 메시지 전송
         foreach (var response in responses)
