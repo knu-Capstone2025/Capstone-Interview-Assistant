@@ -263,7 +263,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             // Assert
             await alertHandled.Task;
-            alertMessage.ShouldBe("URL이 유효하지 않습니다. 다시 확인해주세요.");
+            alertMessage.ShouldBe("이력서 파일과 채용공고 URL을 올바르게 입력해주세요.");
         }
 
         /// <summary>

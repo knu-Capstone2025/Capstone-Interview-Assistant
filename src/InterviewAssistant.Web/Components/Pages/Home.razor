@@ -20,8 +20,8 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="resumeUrl">이력서 URL</label>
-                    <input type="text" id="resumeUrl" @bind="resumeUrl" placeholder="이력서 URL을 입력하세요" />
+                    <label for="resumeFile">이력서 파일</label>
+                    <InputFile id="resumeFile" OnChange="FileSelect" />
                 </div>
                 <div class="form-group">
                     <label for="jobUrl">채용공고 URL</label>
@@ -99,41 +99,54 @@
     private string userInput = string.Empty;
     private bool isLoading = false;
     // 링크 공유 여부
-    private bool isLinkShared = false; 
+    private bool isLinkShared = false;
 
     // 모달 관련 변수
     private bool showModal = false;
-    private string resumeUrl = string.Empty;
     private string jobUrl = string.Empty;
     private void CloseModal() => showModal = false;
+    private string? selectedResumeFileName;
     bool IsValidUrl(string url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
+    
+    private IBrowserFile? selectedFile;
+
+    private void FileSelect(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            selectedFile = e.File;
+            selectedResumeFileName = selectedFile.Name; // 파일 이름 저장
+            Logger?.LogInformation($"선택된 이력서 파일: {selectedResumeFileName}");
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError($"파일 선택 중 오류 발생: {ex.Message}");
+        }
+    }
+    
     private void SubmitLinks()
     {
         // URL 유효성 검사
-        if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl) &&
-            IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
+        if (string.IsNullOrWhiteSpace(selectedResumeFileName) || string.IsNullOrWhiteSpace(jobUrl) || !IsValidUrl(jobUrl))
         {
-            CloseModal();
-            isLinkShared = true;
-            // 이후 URL을 서버에 전송하는 로직 추가
-            Logger?.LogInformation($"이력서 URL: {resumeUrl}, 채용공고 URL: {jobUrl}");
-            messages.Add(new ChatMessage { 
-                Role = MessageRoleType.Assistant, 
-                Message = $"이력서와 채용공고 URL이 등록되었습니다. 이제 면접 준비를 시작하겠습니다." 
-            });
-            messages.Add(new ChatMessage { 
-                Role = MessageRoleType.Assistant, 
-                Message = $"안녕하세요! 자기소개부터 해봅시다."
-            });
+            JSRuntime.InvokeVoidAsync("alert", "이력서 파일과 채용공고 URL을 올바르게 입력해주세요.");
+            return;
         }
-        else
+
+        CloseModal();
+        isLinkShared = true;
+
+        // 이후 파일 업로드 및 URL 처리 로직 추가 가능
+        Logger?.LogInformation($"이력서 파일: {selectedResumeFileName}, 채용공고 URL: {jobUrl}");
+        messages.Add(new ChatMessage
         {
-            JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
-        }
+            Role = MessageRoleType.System,
+            Message = $"이력서 파일과 채용공고 URL이 등록되었습니다. 이제 면접 준비를 시작하겠습니다.\n자기소개를 해주세요."
+        });
     }
 
     // 키 입력 처리 (엔터키로 메시지 전송)
