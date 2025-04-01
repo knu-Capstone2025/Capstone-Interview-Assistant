@@ -247,6 +247,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             // Act
             await linkShareButton.ClickAsync();
+            await Expect(modal).ToBeVisibleAsync(); // Timeout error : 모달이 열릴 때까지 대기
 
             // `alert` 감지 이벤트 핸들러 등록
             string alertMessage = "";
@@ -263,7 +264,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             // Assert
             await alertHandled.Task;
-            alertMessage.ShouldBe("이력서 파일과 채용공고 URL을 올바르게 입력해주세요.");
+            alertMessage.ShouldBe("URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
 
         /// <summary>
