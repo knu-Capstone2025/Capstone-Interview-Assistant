@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tests_passed: ${{ steps.test-status.outputs.tests_passed }}
-
+    env:
+      ConnectionStrings__openai: ${{ secrets.OPENAI_CONNECTION_STRING }}
     steps:
     - name: 🧑‍💻 Checkout Repository
       uses: actions/checkout@v4
