@@ -105,12 +105,18 @@
             
             // ChatService를 통해 응답 가져오기
             var responses = ChatService.SendMessageAsync(currentInput);
+
+            // 응답 메시지를 미리 추가하여 UI에서 즉시 반영될 수 있도록 함.
+            // 이후 응답이 도착하면 해당 객체의 Message 값을 업데이트함.
+            var assistantChatMessage = new ChatMessage { Role = MessageRoleType.Assistant, Message = string.Empty};
+            messages.Add(assistantChatMessage);
+
             await foreach (var response in responses)
             {
                 // 응답을 채팅 메시지로 추가
-                messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = response.Message });
-                StateHasChanged();
+                assistantChatMessage.Message += response.Message; 
                 await ScrollToBottom();
+                StateHasChanged(); // 메시지 변경 후 호출
             }
         }
         catch (Exception ex)
