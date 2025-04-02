@@ -1,8 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
+
 using Microsoft.SemanticKernel;
+
 using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
