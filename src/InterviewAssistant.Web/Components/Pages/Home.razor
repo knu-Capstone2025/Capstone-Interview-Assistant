@@ -3,9 +3,38 @@
 @using InterviewAssistant.Web.Services
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
+@inject ILogger<Home> Logger
 @rendermode InteractiveServer
 
 <PageTitle>면접 코치 - InterviewAssistant</PageTitle>
+
+<!-- 모달 창 영역 -->
+@if (showModal)
+{
+    <div class="modal show">
+        <div class="modal-overlay" @onclick="CloseModal"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>링크 공유</h3>
+                <button class="close-btn" @onclick="CloseModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="resumeUrl">이력서 URL</label>
+                    <input type="text" id="resumeUrl" @bind="resumeUrl" placeholder="이력서 URL을 입력하세요" />
+                </div>
+                <div class="form-group">
+                    <label for="jobUrl">채용공고 URL</label>
+                    <input type="text" id="jobUrl" @bind="jobUrl" placeholder="채용공고 URL을 입력하세요" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" @onclick="CloseModal">취소</button>
+                <button class="submit-btn" @onclick="SubmitLinks">확인</button>
+            </div>
+        </div>
+    </div>
+}
 
 <!-- 메인 채팅 영역 -->
 <div class="chat-main">
@@ -16,6 +45,10 @@
             <div class="welcome-message">
                 <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
                 <p>질문을 입력하시면 면접 준비를 도와드립니다.</p>
+                <button class="share-btn" @onclick="() => showModal = true">
+                    <i class="share-icon"></i>
+                    이력서 및 채용공고 공유하기
+                </button>
             </div>
         }
         else
@@ -53,7 +86,7 @@
                 @onkeydown="HandleKeyDown" 
                 placeholder="메시지를 입력하세요." 
                 rows="1"
-                disabled="@isLoading"></textarea>
+                disabled="@(isLoading || !isLinkShared)"></textarea>
             <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
                 <span class="send-icon">↵</span>
             </button>
@@ -65,6 +98,43 @@
     private List<ChatMessage> messages = new List<ChatMessage>();
     private string userInput = string.Empty;
     private bool isLoading = false;
+    // 링크 공유 여부
+    private bool isLinkShared = false;
+
+    // 모달 관련 변수
+    private bool showModal = false;
+    private string resumeUrl = string.Empty;
+    private string jobUrl = string.Empty;
+    private void CloseModal() => showModal = false;
+    bool IsValidUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+    private void SubmitLinks()
+    {
+        // URL 유효성 검사
+        if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl) &&
+            IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
+        {
+            CloseModal();
+            isLinkShared = true;
+            // 이후 URL을 서버에 전송하는 로직 추가
+            Logger?.LogInformation($"이력서 URL: {resumeUrl}, 채용공고 URL: {jobUrl}");
+            messages.Add(new ChatMessage { 
+                Role = MessageRoleType.System, 
+                Message = $"이력서와 채용공고 URL이 등록되었습니다. 이제 면접 준비를 시작하겠습니다." 
+            });
+            messages.Add(new ChatMessage { 
+                Role = MessageRoleType.System, 
+                Message = $"안녕하세요! 자기소개부터 해봅시다."
+            });
+        }
+        else
+        {
+            JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
+        }
+    }
 
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
