@@ -116,13 +116,19 @@ jobs:
     #       --client-id "$Env:AZURE_CLIENT_ID" `
     #       --federated-credential-provider "github" `
     #       --tenant-id "$Env:AZURE_TENANT_ID"
-    #   shell: pwsh
+    #   shell: bash
 
     # - name: 🏗️ Provision Infrastructure
     #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
     #   run: azd provision --no-prompt
     #   env:
     #     AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
+
+    # - name: 🔧 Set Azure Environment Variables
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+    #   run: |
+    #     azd env set ConnectionStrings__openai "$Env:ConnectionStrings__openai"
+    #   shell: bash
 
     # - name: 🚢 Deploy Application
     #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
