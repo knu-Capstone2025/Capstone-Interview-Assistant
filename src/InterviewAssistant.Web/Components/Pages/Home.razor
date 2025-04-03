@@ -105,12 +105,21 @@
             
             // ChatService를 통해 응답 가져오기
             var responses = ChatService.SendMessageAsync(currentInput);
+
+            var assistantMessage = new ChatMessage { Role = MessageRoleType.Assistant, Message = string.Empty };
+            messages.Add(assistantMessage);
+
+            // 2초 동안 버퍼링 (로딩 인디케이터 유지)
+            await Task.Delay(2000);
+            isLoading = false;
+            StateHasChanged();
+
             await foreach (var response in responses)
             {
-                // 응답을 채팅 메시지로 추가
-                messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = response.Message });
-                StateHasChanged();
+                // 점진적으로 메시지를 추가하면서 렌더링
+                assistantMessage.Message += response.Message + " ";
                 await ScrollToBottom();
+                StateHasChanged();
             }
         }
         catch (Exception ex)

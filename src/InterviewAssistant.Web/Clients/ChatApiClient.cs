@@ -24,7 +24,7 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
     private readonly ILogger<ChatApiClient> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
                                                       .CreateLogger<ChatApiClient>();
 
-    private static readonly string loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+    private static readonly string loremipsum = "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit.";
     
     /// <inheritdoc/>
     public async IAsyncEnumerable<ChatResponse> SendMessageAsync(ChatRequest request)
@@ -32,7 +32,8 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
         _logger.LogInformation("API 요청 시뮬레이션: {Message}", request.Messages.LastOrDefault()?.Message ?? "빈 메시지");
 
         // 하드코딩된 응답 반환
-        var responses = new[] { new ChatResponse { Message = loremipsum.Trim() } };
+        var responses = loremipsum.Split([ " ", "\r", "\n" ], StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(message => new ChatResponse { Message = message.Trim() });
 
         // 응답 메시지 전송
         foreach (var response in responses)
