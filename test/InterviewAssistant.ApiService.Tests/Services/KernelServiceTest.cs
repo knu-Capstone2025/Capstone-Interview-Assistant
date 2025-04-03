@@ -3,8 +3,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -18,28 +19,28 @@ namespace InterviewAssistant.ApiService.Tests.Services
     public class KernelServiceTests
     {
         private Kernel _kernel;
-        private Mock<IChatCompletionService> _mockChatCompletionService;
-        private Mock<IConfiguration> _mockConfiguration;
+        private IChatCompletionService _chatCompletionService;
+        private IConfiguration _configuration;
         private KernelService _kernelService;
         private const string ServiceId = "testServiceId";
 
         [SetUp]
         public void Setup()
         {
-            // Create mock services
-            _mockChatCompletionService = new Mock<IChatCompletionService>();
-            _mockConfiguration = new Mock<IConfiguration>();
+            // Create substitutes
+            _chatCompletionService = Substitute.For<IChatCompletionService>();
+            _configuration = Substitute.For<IConfiguration>();
 
             // Setup configuration
-            _mockConfiguration.Setup(c => c["SemanticKernel:ServiceId"]).Returns(ServiceId);
+            _configuration["SemanticKernel:ServiceId"].Returns(ServiceId);
             
-            // Create a kernel with our mock service
+            // Create a kernel with our substitute service
             var builder = Kernel.CreateBuilder();
-            builder.Services.AddKeyedSingleton<IChatCompletionService>(ServiceId, _mockChatCompletionService.Object);
+            builder.Services.AddKeyedSingleton<IChatCompletionService>(ServiceId, _chatCompletionService);
             _kernel = builder.Build();
 
             // Create kernel service
-            _kernelService = new KernelService(_kernel, _mockConfiguration.Object);
+            _kernelService = new KernelService(_kernel, _configuration);
         }
 
         [Test]
@@ -59,13 +60,13 @@ namespace InterviewAssistant.ApiService.Tests.Services
                 new StreamingChatMessageContent(AuthorRole.Assistant, "!")
             };
 
-            // Setup mock chat completion service to return our expected results
-            _mockChatCompletionService
-                .Setup(s => s.GetStreamingChatMessageContentsAsync(
-                    It.IsAny<ChatHistory>(), 
-                    It.IsAny<PromptExecutionSettings>(), 
-                    It.IsAny<Kernel>(), 
-                    It.IsAny<CancellationToken>()))
+            // Setup substitute chat completion service to return our expected results
+            _chatCompletionService
+                .GetStreamingChatMessageContentsAsync(
+                    Arg.Any<ChatHistory>(), 
+                    Arg.Any<PromptExecutionSettings>(), 
+                    Arg.Any<Kernel>(), 
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResults.ToAsyncEnumerable());
 
             // Act
@@ -76,19 +77,19 @@ namespace InterviewAssistant.ApiService.Tests.Services
             }
 
             // Assert
-            Assert.That(results.Count, Is.EqualTo(expectedResults.Count));
+            results.Count.ShouldBe(expectedResults.Count);
             for (int i = 0; i < expectedResults.Count; i++)
             {
-                Assert.That(results[i], Is.EqualTo(expectedResults[i].ToString()));
+                results[i].ShouldBe(expectedResults[i].ToString());
             }
 
             // Verify that the kernel service called the chat completion service with the right parameters
-            _mockChatCompletionService.Verify(s => s.GetStreamingChatMessageContentsAsync(
-                It.Is<ChatHistory>(h => h.Count == messages.Count),
-                It.IsAny<PromptExecutionSettings>(),
-                It.Is<Kernel>(k => k == _kernel),
-                It.IsAny<CancellationToken>()
-            ), Times.Once);
+            _chatCompletionService.Received(1).GetStreamingChatMessageContentsAsync(
+                Arg.Is<ChatHistory>(h => h.Count == messages.Count),
+                Arg.Any<PromptExecutionSettings>(),
+                Arg.Is<Kernel>(k => k == _kernel),
+                Arg.Any<CancellationToken>()
+            );
         }
 
         [Test]
@@ -98,12 +99,12 @@ namespace InterviewAssistant.ApiService.Tests.Services
             var messages = new List<ChatMessageContent>();
             var expectedResults = new List<StreamingChatMessageContent>();
 
-            _mockChatCompletionService
-                .Setup(s => s.GetStreamingChatMessageContentsAsync(
-                    It.IsAny<ChatHistory>(),
-                    It.IsAny<PromptExecutionSettings>(),
-                    It.IsAny<Kernel>(),
-                    It.IsAny<CancellationToken>()))
+            _chatCompletionService
+                .GetStreamingChatMessageContentsAsync(
+                    Arg.Any<ChatHistory>(),
+                    Arg.Any<PromptExecutionSettings>(),
+                    Arg.Any<Kernel>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResults.ToAsyncEnumerable());
 
             // Act
@@ -114,7 +115,7 @@ namespace InterviewAssistant.ApiService.Tests.Services
             }
 
             // Assert
-            Assert.That(results, Is.Empty);
+            results.ShouldBeEmpty();
         }
 
         [Test]
@@ -138,12 +139,12 @@ namespace InterviewAssistant.ApiService.Tests.Services
                 new StreamingChatMessageContent(AuthorRole.Assistant, " asking!")
             };
 
-            _mockChatCompletionService
-                .Setup(s => s.GetStreamingChatMessageContentsAsync(
-                    It.IsAny<ChatHistory>(),
-                    It.IsAny<PromptExecutionSettings>(),
-                    It.IsAny<Kernel>(),
-                    It.IsAny<CancellationToken>()))
+            _chatCompletionService
+                .GetStreamingChatMessageContentsAsync(
+                    Arg.Any<ChatHistory>(),
+                    Arg.Any<PromptExecutionSettings>(),
+                    Arg.Any<Kernel>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResults.ToAsyncEnumerable());
 
             // Act
@@ -154,19 +155,19 @@ namespace InterviewAssistant.ApiService.Tests.Services
             }
 
             // Assert
-            Assert.That(results.Count, Is.EqualTo(expectedResults.Count));
+            results.Count.ShouldBe(expectedResults.Count);
             for (int i = 0; i < expectedResults.Count; i++)
             {
-                Assert.That(results[i], Is.EqualTo(expectedResults[i].ToString()));
+                results[i].ShouldBe(expectedResults[i].ToString());
             }
 
             // Verify the chat history passed to the service contains all our original messages
-            _mockChatCompletionService.Verify(s => s.GetStreamingChatMessageContentsAsync(
-                It.Is<ChatHistory>(h => h.Count == messages.Count),
-                It.IsAny<PromptExecutionSettings>(),
-                It.Is<Kernel>(k => k == _kernel),
-                It.IsAny<CancellationToken>()
-            ), Times.Once);
+            _chatCompletionService.Received(1).GetStreamingChatMessageContentsAsync(
+                Arg.Is<ChatHistory>(h => h.Count == messages.Count),
+                Arg.Any<PromptExecutionSettings>(),
+                Arg.Is<Kernel>(k => k == _kernel),
+                Arg.Any<CancellationToken>()
+            );
         }
     }
 
