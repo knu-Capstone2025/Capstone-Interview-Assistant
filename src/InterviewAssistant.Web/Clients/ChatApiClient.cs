@@ -24,7 +24,7 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
     private readonly ILogger<ChatApiClient> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
                                                       .CreateLogger<ChatApiClient>();
 
-    private static readonly string loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+    private static readonly string loremipsum = "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit.";
     
     /// <inheritdoc/>
     public async IAsyncEnumerable<ChatResponse> SendMessageAsync(ChatRequest request)
