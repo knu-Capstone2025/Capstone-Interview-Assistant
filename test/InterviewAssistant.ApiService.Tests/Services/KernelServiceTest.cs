@@ -170,16 +170,4 @@ namespace InterviewAssistant.ApiService.Tests.Services
             );
         }
     }
-
-    // Extension method to convert IEnumerable to IAsyncEnumerable for testing
-    public static class EnumerableExtensions
-    {
-        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
-        {
-            foreach (var item in source)
-            {
-                yield return item;
-            }
-        }
-    }
 }
