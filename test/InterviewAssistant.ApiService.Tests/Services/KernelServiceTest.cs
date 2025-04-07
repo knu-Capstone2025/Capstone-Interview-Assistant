@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Shouldly;
+using InterviewAssistant.ApiService.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +16,7 @@ using NSubstitute;
 
 using NUnit.Framework;
 
-using InterviewAssistant.ApiService.Services;
+using Shouldly;
 
 namespace InterviewAssistant.ApiService.Tests.Services;
 
