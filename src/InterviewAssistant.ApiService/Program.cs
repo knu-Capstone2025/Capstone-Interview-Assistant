@@ -1,7 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
+
+using Microsoft.SemanticKernel;
+
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +17,24 @@ builder.Services.AddProblemDetails();
 //OpenAPI 설정
 builder.Services.AddOpenApi();
 builder.Services.AddAIModelService();
+
+
+builder.AddAzureOpenAIClient("openai");
+
+builder.Services.AddSingleton<Kernel>(sp =>
+{
+    var config = builder.Configuration;
+
+    var openAIClient = sp.GetRequiredService<OpenAIClient>();
+    var kernel = Kernel.CreateBuilder()
+                       .AddOpenAIChatCompletion(
+                           modelId: config["GitHub:Models:ModelId"]!,
+                           openAIClient: openAIClient,
+                           serviceId: "github")
+                       .Build();
+                       
+    return kernel;
+});
 
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>
