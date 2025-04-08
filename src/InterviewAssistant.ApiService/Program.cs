@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // .NET Aspire 기본 설정
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
+builder.Services.AddScoped<IKernelService, KernelService>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
