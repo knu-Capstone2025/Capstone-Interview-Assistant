@@ -27,6 +27,7 @@ public static partial class ChatCompletionDelegate
                 MessageRoleType.User => new ChatMessageContent(AuthorRole.User, msg.Message),
                 MessageRoleType.Assistant => new ChatMessageContent(AuthorRole.Assistant, msg.Message),
                 MessageRoleType.System => new ChatMessageContent(AuthorRole.System, msg.Message),
+                MessageRoleType.Tool => new ChatMessageContent(AuthorRole.Tool, msg.Message),
                 _ => throw new ArgumentException($"Invalid role: {msg.Role}")
             };
             messages.Add(message);
