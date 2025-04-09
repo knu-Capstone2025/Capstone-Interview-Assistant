@@ -1,9 +1,12 @@
 using InterviewAssistant.ApiService.Delegates;
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.ApiService.Services;
-using ChatMessageContent = Microsoft.SemanticKernel.ChatMessageContent;
+
 using NSubstitute;
+
 using Shouldly;
+
+using ChatMessageContent = Microsoft.SemanticKernel.ChatMessageContent;
 
 namespace InterviewAssistant.Tests
 {
