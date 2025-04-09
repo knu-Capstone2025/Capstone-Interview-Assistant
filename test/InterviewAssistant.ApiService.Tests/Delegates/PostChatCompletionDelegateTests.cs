@@ -13,8 +13,8 @@ namespace InterviewAssistant.Tests
     [TestFixture]
     public class ChatCompletionDelegateTests
     {
-        [Test]
-        public async Task PostChatCompletionAsync_ShouldReturnStreamedChatResponses()
+        [TestCase("This is response 1", "And response 2")]
+        public async Task PostChatCompletionAsync_ShouldReturnStreamedChatResponses(params string[] expectedResponses)
         {
             // Arrange
             var messages = new List<ChatMessage>
@@ -26,7 +26,7 @@ namespace InterviewAssistant.Tests
             var request = new ChatRequest { Messages = messages };
 
             var mockService = Substitute.For<IKernelService>();
-            var simulatedStream = GetFakeStreamedResponses("This is response 1", "And response 2");
+            var simulatedStream = GetFakeStreamedResponses(expectedResponses);
             mockService.CompleteChatStreamingAsync(Arg.Any<IEnumerable<ChatMessageContent>>())
                        .Returns(simulatedStream);
 
@@ -40,9 +40,11 @@ namespace InterviewAssistant.Tests
             }
 
             // Assert
-            responses.Count.ShouldBe(2);
-            responses[0].Message.ShouldBe("This is response 1");
-            responses[1].Message.ShouldBe("And response 2");
+            responses.Count.ShouldBe(expectedResponses.Length);
+            for (var i = 0; i < expectedResponses.Length; i++)
+            {
+                responses[i].Message.ShouldBe(expectedResponses[i]);
+            }
         }
 
         private async IAsyncEnumerable<string> GetFakeStreamedResponses(params string[] responses)
