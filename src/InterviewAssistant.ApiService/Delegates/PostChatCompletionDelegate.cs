@@ -1,7 +1,9 @@
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.ApiService.Services;
+
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.AspNetCore.Mvc;
+
 using ChatMessageContent = Microsoft.SemanticKernel.ChatMessageContent;
 
 namespace InterviewAssistant.ApiService.Delegates;
