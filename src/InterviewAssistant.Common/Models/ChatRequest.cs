@@ -51,6 +51,7 @@ public enum MessageRoleType
     /// Identifies the assistant role.
     /// </summary>
     Assistant,
+    
     /// <summary>
     /// Identifies the tool role.
     /// </summary>
