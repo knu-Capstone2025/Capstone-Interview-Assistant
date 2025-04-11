@@ -98,50 +98,50 @@ jobs:
         report_paths: '**/test-results/*.xml'
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: 📦 Publish Project
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-      run: dotnet publish --configuration Release --output ./publish
+    # - name: 📦 Publish Project
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+    #   run: dotnet publish --configuration Release --output ./publish
 
-    - name: 📤 Upload Published Artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: published-app
-        path: ./publish
+    # - name: 📤 Upload Published Artifact
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: published-app
+    #     path: ./publish
     
-    # - name: 🚀 Log in with Azure (Federated Credentials)
-    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-    #   run: |
-    #     azd auth login `
-    #       --client-id "$Env:AZURE_CLIENT_ID" `
-    #       --federated-credential-provider "github" `
-    #       --tenant-id "$Env:AZURE_TENANT_ID"
-    #   shell: bash
+    - name: 🚀 Log in with Azure (Federated Credentials)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+      run: |
+        azd auth login `
+          --client-id "$Env:AZURE_CLIENT_ID" `
+          --federated-credential-provider "github" `
+          --tenant-id "$Env:AZURE_TENANT_ID"
+      shell: bash
 
-    # - name: 🏗️ Provision Infrastructure
-    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-    #   run: azd provision --no-prompt
-    #   env:
-    #     AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
+    - name: 🏗️ Provision Infrastructure
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+      run: azd provision --no-prompt
+      env:
+        AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
 
-    # - name: 🔧 Set Azure Environment Variables
-    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-    #   run: |
-    #     azd env set ConnectionStrings__openai "$Env:ConnectionStrings__openai"
-    #   shell: bash
+    - name: 🔧 Set Azure Environment Variables
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+      run: |
+        azd env set ConnectionStrings__openai "$Env:ConnectionStrings__openai"
+      shell: bash
 
-    # - name: 🚢 Deploy Application
-    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-    #   run: azd deploy --no-prompt
+    - name: 🚢 Deploy Application
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
+      run: azd deploy --no-prompt
 
-  download-artifact:
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build.outputs.tests_passed == 'true'
+  # download-artifact:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build.outputs.tests_passed == 'true'
 
-    steps:
-    - name: ⬇️ Download Published Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: published-app
-        path: ./downloaded-publish
+  #   steps:
+  #   - name: ⬇️ Download Published Artifact
+  #     uses: actions/download-artifact@v4
+  #     with:
+  #       name: published-app
+  #       path: ./downloaded-publish
