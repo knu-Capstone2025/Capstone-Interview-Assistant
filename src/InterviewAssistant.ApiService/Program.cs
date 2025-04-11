@@ -17,8 +17,6 @@ builder.Services.AddScoped<IKernelService, KernelService>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
-builder.Services.AddAIModelService();
-
 
 builder.AddAzureOpenAIClient("openai");
 
