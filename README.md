@@ -59,4 +59,45 @@ InterviewAssistance
 
 ## 시작하기
 
-TBD
+### GitHub Model 사용을 위한 Personal Access Token 생성
+
+1. [Personal Access Token 관리](https://docs.github.com/ko/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#personal-access-token-classic-%EB%A7%8C%EB%93%A4%EA%B8%B0) 페이지 참조해서 GitHub PAT 생성
+
+### 로컬 실행
+
+1. 아래 명령어 실행
+
+    ```bash
+    dotnet user-secrets --project ./src/InterviewAssistant.AppHost set ConnectionStrings:openai "Endpoint=https://models.inference.ai.azure.com;Key={{GITHUB_PAT}}"
+    ```
+
+   > `{{GITHUB_PAT}}`은 앞서 생성한 GitHub PAT 값
+
+1. 아래 명령어 실행
+
+    ```bash
+    dotnet watch run --project ./src/InterviewAssistant.AppHost
+    ```
+
+1. .NET Aspire 대시보드 나타나면 `webfrontend` 클릭해서 앱 실행
+1. 화면 지시대로 이력서 및 구인공고 파일 업로드한 후 계속 진행
+
+### Azure 클라우드 배포
+
+1. 아래 명령어 실행
+
+    ```bash
+     azd auth login
+    ```
+
+1. 아래 명령어 실행
+
+    ```bash
+    azd up
+    ```
+
+   -  environment name 물어볼 경우 아무 값이나 입력 👉 예) `knu-interview-assistant`
+   -  openai 커넥션 스트링을 물어볼 경우 👉 `Endpoint=https://models.inference.ai.azure.com;Key={{GITHUB_PAT}}` 입력 `{{GITHUB_PAT}}`은 앞서 생성한 GitHub PAT 값
+
+1. 배포가 끝난 후 `webfrontend` 애플리케이션 URL 클릭하여 앱 실행
+1. 화면 지시대로 이력서 및 구인공고 파일 업로드한 후 계속 진행
