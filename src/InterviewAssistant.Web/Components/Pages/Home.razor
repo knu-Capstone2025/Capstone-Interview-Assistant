@@ -141,16 +141,16 @@
     {
         if (e.Key == "Enter" && !e.ShiftKey)
         {
-        // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
-        var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
-        
-        // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
-        if (!string.IsNullOrWhiteSpace(actualValue))
-        {
-            // 실제 값으로 userInput을 갱신합니다
-            userInput = actualValue;
-            await SendMessage();
-        }
+            // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
+            var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
+
+            // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
+            if (!string.IsNullOrWhiteSpace(actualValue))
+            {
+                // 실제 값으로 userInput을 갱신합니다
+                userInput = actualValue;
+                await SendMessage();
+            }
         }
     }
 
@@ -162,30 +162,32 @@
 
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
-        
+
         var currentInput = userInput;
         userInput = string.Empty;
 
         await ScrollToBottom();
-        
+
         try
         {
             isLoading = true;
             StateHasChanged();
-            
+
             // ChatService를 통해 응답 가져오기
             var responses = ChatService.SendMessageAsync(currentInput);
 
             var assistantMessage = new ChatMessage { Role = MessageRoleType.Assistant, Message = string.Empty };
             messages.Add(assistantMessage);
 
-            // 2초 동안 버퍼링 (로딩 인디케이터 유지)
-            await Task.Delay(2000);
-            isLoading = false;
-            StateHasChanged();
-
+            bool first = true;
             await foreach (var response in responses)
-            {
+            {    if (first)
+                {
+                    isLoading = false;
+                    first = false;
+                    StateHasChanged(); // 첫 문자 등자 등장하면 로딩 끄고 UI 갱신
+                }
+                
                 // 점진적으로 메시지를 추가하면서 렌더링
                 assistantMessage.Message += response.Message + " ";
                 await ScrollToBottom();
@@ -198,7 +200,6 @@
         }
         finally
         {
-            isLoading = false;
             StateHasChanged();
             await ScrollToBottom();
             await JSRuntime.InvokeVoidAsync("resetTextAreaHeight", "messageInput");
