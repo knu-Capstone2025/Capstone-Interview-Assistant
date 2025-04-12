@@ -189,7 +189,7 @@
                 }
                 
                 // 점진적으로 메시지를 추가하면서 렌더링
-                assistantMessage.Message += response.Message + " ";
+                assistantMessage.Message += response.Message;
                 await ScrollToBottom();
                 StateHasChanged();
             }
