@@ -23,8 +23,6 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
     private readonly HttpClient _http = http ?? throw new ArgumentNullException(nameof(http));
     private readonly ILogger<ChatApiClient> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
                                                       .CreateLogger<ChatApiClient>();
-
-    private static readonly string loremipsum = "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit.";
     
     /// <inheritdoc/>
     public async IAsyncEnumerable<ChatResponse> SendMessageAsync(ChatRequest request)
@@ -34,16 +32,13 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
         var httpResponse = await _http.PostAsJsonAsync("/api/chat/complete", request);
         httpResponse.EnsureSuccessStatusCode();
 
-        var responses = await httpResponse.Content.ReadFromJsonAsync<List<ChatResponse>>();
-        if (responses is null || responses.Count == 0)
+        var responses = httpResponse.Content.ReadFromJsonAsAsyncEnumerable<ChatResponse>();
+        await foreach (var response in responses)
         {
-            yield break;
-        }
-
-        // 응답 메시지 전송
-        foreach (var response in responses)
-        {
-            yield return response;
+            if (response is not null)
+            {
+                yield return response;
+            }
         }
 
         _logger.LogInformation("API 응답 시뮬레이션 완료");

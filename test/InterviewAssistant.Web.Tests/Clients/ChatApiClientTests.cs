@@ -1,14 +1,13 @@
-using InterviewAssistant.Common.Models;
-using InterviewAssistant.Web.Clients;
-
-using Microsoft.Extensions.Logging;
-
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
+using InterviewAssistant.Common.Models;
+using InterviewAssistant.Web.Clients;
+
+using Microsoft.Extensions.Logging;
 
 namespace InterviewAssistant.Web.Tests.Clients;
 
