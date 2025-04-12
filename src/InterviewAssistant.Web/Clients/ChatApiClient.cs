@@ -23,23 +23,22 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
     private readonly HttpClient _http = http ?? throw new ArgumentNullException(nameof(http));
     private readonly ILogger<ChatApiClient> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
                                                       .CreateLogger<ChatApiClient>();
-
-    private static readonly string loremipsum = "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit.";
     
     /// <inheritdoc/>
     public async IAsyncEnumerable<ChatResponse> SendMessageAsync(ChatRequest request)
     {
         _logger.LogInformation("API 요청 시뮬레이션: {Message}", request.Messages.LastOrDefault()?.Message ?? "빈 메시지");
+        
+        var httpResponse = await _http.PostAsJsonAsync("/api/chat/complete", request);
+        httpResponse.EnsureSuccessStatusCode();
 
-        // 하드코딩된 응답 반환
-        var responses = loremipsum.Split([ " ", "\r", "\n" ], StringSplitOptions.RemoveEmptyEntries)
-                                  .Select(message => new ChatResponse { Message = message.Trim() });
-
-        // 응답 메시지 전송
-        foreach (var response in responses)
+        var responses = httpResponse.Content.ReadFromJsonAsAsyncEnumerable<ChatResponse>();
+        await foreach (var response in responses)
         {
-            await Task.Delay(100);
-            yield return response;
+            if (response is not null)
+            {
+                yield return response;
+            }
         }
 
         _logger.LogInformation("API 응답 시뮬레이션 완료");
