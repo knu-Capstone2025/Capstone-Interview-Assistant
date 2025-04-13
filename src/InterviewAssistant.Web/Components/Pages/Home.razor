@@ -5,6 +5,8 @@
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
 @rendermode InteractiveServer
+@using Markdig
+@using System.Text.RegularExpressions
 
 <PageTitle>면접 코치 - InterviewAssistant</PageTitle>
 
@@ -57,7 +59,7 @@
             {
                 <div class="message @(message.Role == MessageRoleType.User ? "user-message" : "bot-message")">
                     <div class="message-content">
-                        @((MarkupString)message.Message)
+                        @((MarkupString)ConvertMarkdownInline(message.Message))
                     </div>
                 </div>
             }
@@ -223,5 +225,10 @@
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
         }
         await base.OnAfterRenderAsync(firstRender);
+    }
+    private string ConvertMarkdownInline(string? markdown)
+    {
+        var html = Markdown.ToHtml(markdown?.Trim() ?? "");
+        return System.Text.RegularExpressions.Regex.Replace(html, @"^<p>(.*?)</p>\r?\n?$", "<span>$1</span>", System.Text.RegularExpressions.RegexOptions.Singleline);
     }
 }
