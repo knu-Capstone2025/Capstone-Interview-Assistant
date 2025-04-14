@@ -1,12 +1,13 @@
 ﻿@page "/"
+@using System.Text.RegularExpressions
 @using InterviewAssistant.Common.Models
 @using InterviewAssistant.Web.Services
+@using Markdig
+@using Microsoft.AspNetCore.Components.Web
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
 @rendermode InteractiveServer
-@using Markdig
-@using System.Text.RegularExpressions
 
 <PageTitle>면접 코치 - InterviewAssistant</PageTitle>
 
@@ -59,7 +60,7 @@
             {
                 <div class="message @(message.Role == MessageRoleType.User ? "user-message" : "bot-message")">
                     <div class="message-content">
-                        @((MarkupString)ConvertMarkdownInline(message.Message))
+                        @((MarkupString)Markdown.ToHtml(message.Message).Trim())
                     </div>
                 </div>
             }
@@ -150,7 +151,7 @@
             if (!string.IsNullOrWhiteSpace(actualValue))
             {
                 // 실제 값으로 userInput을 갱신합니다
-                userInput = actualValue;
+                userInput = actualValue.TrimEnd('\n', '\r');
                 await SendMessage();
             }
         }
@@ -183,7 +184,8 @@
 
             bool first = true;
             await foreach (var response in responses)
-            {    if (first)
+            {    
+                if (first)
                 {
                     isLoading = false;
                     first = false;
@@ -225,10 +227,5 @@
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
         }
         await base.OnAfterRenderAsync(firstRender);
-    }
-    private string ConvertMarkdownInline(string? markdown)
-    {
-        var html = Markdown.ToHtml(markdown?.Trim() ?? "");
-        return System.Text.RegularExpressions.Regex.Replace(html, @"^<p>(.*?)</p>\r?\n?$", "<span>$1</span>", System.Text.RegularExpressions.RegexOptions.Singleline);
     }
 }

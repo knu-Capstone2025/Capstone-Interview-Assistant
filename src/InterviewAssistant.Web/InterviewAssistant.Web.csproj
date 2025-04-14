@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
+    <PackageReference Include="Markdig" Version="0.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.40.0" />
+    <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\InterviewAssistant.Common\InterviewAssistant.Common.csproj" />
   </ItemGroup>
 
 </Project>
