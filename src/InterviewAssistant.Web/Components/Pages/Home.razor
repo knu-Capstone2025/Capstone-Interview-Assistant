@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using InterviewAssistant.Common.Models
 @using InterviewAssistant.Web.Services
+@using Markdig
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
@@ -57,7 +58,7 @@
             {
                 <div class="message @(message.Role == MessageRoleType.User ? "user-message" : "bot-message")">
                     <div class="message-content">
-                        @((MarkupString)message.Message)
+                        @((MarkupString)Markdown.ToHtml(message.Message).Trim())
                     </div>
                 </div>
             }
@@ -148,7 +149,7 @@
             if (!string.IsNullOrWhiteSpace(actualValue))
             {
                 // 실제 값으로 userInput을 갱신합니다
-                userInput = actualValue;
+                userInput = actualValue.TrimEnd('\n', '\r');
                 await SendMessage();
             }
         }
@@ -181,7 +182,8 @@
 
             bool first = true;
             await foreach (var response in responses)
-            {    if (first)
+            {    
+                if (first)
                 {
                     isLoading = false;
                     first = false;
