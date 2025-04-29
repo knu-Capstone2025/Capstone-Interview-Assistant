@@ -35,6 +35,10 @@ builder.Services.AddSingleton<Kernel>(sp =>
     return kernel;
 });
 
+// HttpClient 및 GoogleDriveDownloader 서비스 등록
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<GoogleDriveDownloader>();
+
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
