@@ -34,7 +34,7 @@ public class GoogleDriveDownloader(HttpClient httpClient)
             var response = await httpClient.GetAsync(directDownloadUrl);
 
             var contentType = response.Content.Headers.ContentType?.MediaType;
-    
+
             if (contentType != null && contentType.StartsWith("text/html"))
             {
                 throw new UnauthorizedAccessException("이 파일은 비공개이거나 접근 권한이 필요합니다. 파일 소유자에게 공유 설정을 요청하세요.");
@@ -68,7 +68,7 @@ public class GoogleDriveDownloader(HttpClient httpClient)
     {
         if (shareUrl.Contains("drive.google.com"))
         {
-            string fileId = ExtractGoogleDriveFileId(shareUrl);
+            string? fileId = ExtractGoogleDriveFileId(shareUrl);
 
             if (!string.IsNullOrEmpty(fileId))
             {
@@ -82,7 +82,7 @@ public class GoogleDriveDownloader(HttpClient httpClient)
     /// <summary>
     /// 구글 드라이브 공유 링크에서 파일 ID를 추출합니다.
     /// </summary>
-    private string ExtractGoogleDriveFileId(string googleDriveUrl)
+    private string? ExtractGoogleDriveFileId(string googleDriveUrl)
     {
         var patterns = new[]
         {
