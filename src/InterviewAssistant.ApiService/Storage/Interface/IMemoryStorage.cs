@@ -14,7 +14,7 @@ public interface IMemoryStorage
     /// </summary>
     /// <param name="key">가져올 콘텐츠의 키</param>
     /// <returns>저장된 텍스트 내용</returns>
-    string GetContent(string key);
+    string? GetContent(string key);
 
     /// <summary>
     /// 지정된 키가 존재하는지 확인합니다.

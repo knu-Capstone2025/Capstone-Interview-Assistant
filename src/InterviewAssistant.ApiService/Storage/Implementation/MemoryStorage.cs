@@ -16,18 +16,13 @@ public class MemoryStorage : IMemoryStorage
         _storage[key] = content;
     }
 
-    public string GetContent(string key)
+    public string? GetContent(string key)
     {
-        if (_storage.TryGetValue(key, out string content))
+        if (_storage.TryGetValue(key, out string? content))
         {
             return content;
         }
         return null;
-    }
-
-    public IEnumerable<string> GetAllKeys()
-    {
-        return _storage.Keys;
     }
 
     public bool ContainsKey(string key)
