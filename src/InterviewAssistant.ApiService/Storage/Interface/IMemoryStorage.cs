@@ -1,4 +1,5 @@
 namespace InterviewAssistant.ApiService.Storage;
+
 public interface IMemoryStorage
 {
     /// <summary>

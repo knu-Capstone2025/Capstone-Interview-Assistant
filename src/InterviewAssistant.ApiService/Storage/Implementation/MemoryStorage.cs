@@ -1,6 +1,7 @@
 using InterviewAssistant.ApiService.Storage;
 
 namespace InterviewAssistant.ApiService.Storage;
+
 public class MemoryStorage : IMemoryStorage
 {
     private readonly Dictionary<string, string> _storage;
