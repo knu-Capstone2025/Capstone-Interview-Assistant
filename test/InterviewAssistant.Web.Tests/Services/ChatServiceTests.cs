@@ -31,32 +31,58 @@ public class ChatServiceTests
         _loggerFactory?.Dispose();
     }
 
-    // 테스트 1: 메시지 전송이 성공할 때 응답을 올바르게 반환하는지 검증
+    // 테스트 1:  메시지 목록이 정상적으로 처리될 때 응답 반환
     [Test]
     public async Task SendMessageAsync_WhenSuccessful_ReturnsResponse()
     {
-        // Arrange - 대체 API 클라이언트가 성공적인 응답을 반환하도록 설정
+        // Arrange - 테스트 데이터 설정
+        var messages = new List<ChatMessage>
+        {
+            new ChatMessage { Role = MessageRoleType.User, Message = "안녕하세요" }
+        };
         var expectedResponse = new ChatResponse { Message = "테스트 응답입니다" };
-        _apiClient.SendMessageAsync(Arg.Any<ChatRequest>()).Returns(new List<ChatResponse>() { expectedResponse }.ToAsyncEnumerable());
-        
-        // Act - ChatService의 메시지 전송 메서드 호출
-        var result = await _chatService.SendMessageAsync("안녕하세요").ToListAsync();
-        
+        _apiClient.SendMessageAsync(Arg.Any<ChatRequest>())
+            .Returns(new List<ChatResponse> { expectedResponse }.ToAsyncEnumerable());
+
+        // Act - 메시지 목록을 API에 전송
+        var result = await _chatService.SendMessageAsync(messages).ToListAsync();
+
         // Assert - 결과 검증
         result.ShouldNotBeNull();
+        result.Count.ShouldBe(1);
         result[0].Message.ShouldBe("테스트 응답입니다");
     }
 
-    // 테스트 2: 메시지 전송이 실패할 때 예외 처리하는지 검증
+    // 테스트 2: 빈 메시지 목록이 전달될 때 처리 중단
+    [Test]
+    public async Task SendMessageAsync_WhenMessagesAreEmpty_YieldsNoResponses()
+    {
+        // Arrange - 메세지 목록을 빈 리스트로 설정
+        var messages = new List<ChatMessage>();
+
+        // Act - 빈 메시지 목록을 전달
+        var result = await _chatService.SendMessageAsync(messages).ToListAsync();
+
+        // Assert - 빈 리스트가 반환되는지 검증
+        result.ShouldBeEmpty();
+    }
+
+
+    // 테스트 3: 메시지 전송이 실패할 때 예외 처리하는지 검증
     [Test]
     public void SendMessageAsync_WhenApiFails_ThrowsException()
     {
         // Arrange - 대체 API 클라이언트가 예외를 발생하도록 설정
-        _apiClient.SendMessageAsync(Arg.Any<ChatRequest>()).Throws(new Exception("API 호출 실패"));
+        var messages = new List<ChatMessage>
+        {
+            new ChatMessage { Role = MessageRoleType.User, Message = "안녕하세요" }
+        };
+        _apiClient.SendMessageAsync(Arg.Any<ChatRequest>())
+            .Throws(new Exception("API 호출 실패"));
 
         // Act & Assert - 예외가 발생하는지 검증
         var ex = Assert.ThrowsAsync<Exception>(async () =>
-            await _chatService.SendMessageAsync("안녕하세요").ToListAsync());
+            await _chatService.SendMessageAsync(messages).ToListAsync());
 
         Assert.That(ex.Message, Is.EqualTo("API 호출 실패"));
     }
