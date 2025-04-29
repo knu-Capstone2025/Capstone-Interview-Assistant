@@ -183,8 +183,8 @@ public class GoogleDriveDownloaderTests
 /// </summary>
 public class MockHttpMessageHandler : HttpMessageHandler, IDisposable
 {
-    public byte[] ResponseToReturn { get; set; }
-    public Exception ExceptionToThrow { get; set; }
+    public byte[]? ResponseToReturn { get; set; }
+    public Exception? ExceptionToThrow { get; set; }
     
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
