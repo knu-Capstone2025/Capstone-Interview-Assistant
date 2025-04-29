@@ -161,10 +161,11 @@
         if (string.IsNullOrWhiteSpace(userInput) || isLoading)
             return;
 
-        var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
-        messages.Add(userMessage);
+        messages.Add(new ChatMessage { 
+            Role = MessageRoleType.User, 
+            Message = userInput 
+        });
 
-        var currentInput = userInput;
         userInput = string.Empty;
 
         await ScrollToBottom();
@@ -175,7 +176,7 @@
             StateHasChanged();
 
             // ChatService를 통해 응답 가져오기
-            var responses = ChatService.SendMessageAsync(currentInput);
+            var responses = ChatService.SendMessageAsync(messages);
 
             var assistantMessage = new ChatMessage { Role = MessageRoleType.Assistant, Message = string.Empty };
             messages.Add(assistantMessage);

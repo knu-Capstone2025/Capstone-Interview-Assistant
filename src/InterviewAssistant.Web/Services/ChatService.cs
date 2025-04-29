@@ -11,9 +11,9 @@ public interface IChatService
     /// <summary>
     /// 사용자 메시지를 처리하고 응답을 반환합니다.
     /// </summary>
-    /// <param name="message">사용자 메시지</param>
+    /// <param name="messages">사용자 메시지</param>
     /// <returns>처리된 챗봇 응답</returns>
-    IAsyncEnumerable<ChatResponse> SendMessageAsync(string message);
+    IAsyncEnumerable<ChatResponse> SendMessageAsync(List<ChatMessage> messages);
 }
 
 /// <summary>
@@ -26,26 +26,36 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
                                                     .CreateLogger<ChatService>();
     
     /// <inheritdoc/>
-    public async IAsyncEnumerable<ChatResponse> SendMessageAsync(string message)
+    public async IAsyncEnumerable<ChatResponse> SendMessageAsync(List<ChatMessage> messages)
     {
-        if (string.IsNullOrWhiteSpace(message))
+        if (messages == null || messages.Count == 0)
         {
-            _logger.LogWarning("빈 메시지가 전송되었습니다.");
+            _logger.LogWarning("빈 메시지 목록이 전송되었습니다.");
             yield break;
         }
         
-        _logger.LogInformation("메시지 처리 시작: {Message}", message);
+        _logger.LogInformation("메시지 목록 처리 시작: {Count}개", messages.Count);
 
-        // 현재는 메세지 트림만 처리한다
-        string processedMessage = message.Trim();
+        // 메시지 목록 정리 (필요 시 트림 등 추가 가능)
+        var processedMessages = messages
+            .Where(m => !string.IsNullOrWhiteSpace(m.Message))
+            .Select(m => new ChatMessage
+            {
+                Role = m.Role,
+                Message = m.Message.Trim()
+            })
+            .ToList();
+
+        if (processedMessages.Count == 0)
+        {
+            _logger.LogWarning("모든 메시지가 비어있습니다.");
+            yield break;
+        }
                     
         // API 요청 생성 및 전송 (현재는 하드코딩된 응답을 반환하는 ChatApiClient 사용)
         var request = new ChatRequest
-        { 
-            Messages =
-            [
-                new ChatMessage { Role = MessageRoleType.User, Message = processedMessage }
-            ]
+        {
+            Messages = processedMessages
         };
         var responses = _client.SendMessageAsync(request);
         
@@ -54,6 +64,6 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
             yield return response;
         }
 
-        _logger.LogInformation("메시지 처리 완료");
+        _logger.LogInformation("메시지 목록 처리 완료");
     }
 }
