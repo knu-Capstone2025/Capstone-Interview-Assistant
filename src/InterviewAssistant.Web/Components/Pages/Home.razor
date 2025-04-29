@@ -161,10 +161,8 @@
         if (string.IsNullOrWhiteSpace(userInput) || isLoading)
             return;
 
-        messages.Add(new ChatMessage { 
-            Role = MessageRoleType.User, 
-            Message = userInput 
-        });
+        var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
+        messages.Add(userMessage);
 
         userInput = string.Empty;
 

@@ -13,7 +13,7 @@ public interface IChatService
     /// </summary>
     /// <param name="messages">사용자 메시지</param>
     /// <returns>처리된 챗봇 응답</returns>
-    IAsyncEnumerable<ChatResponse> SendMessageAsync(List<ChatMessage> messages);
+    IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages);
 }
 
 /// <summary>
@@ -26,19 +26,19 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
                                                     .CreateLogger<ChatService>();
     
     /// <inheritdoc/>
-    public async IAsyncEnumerable<ChatResponse> SendMessageAsync(List<ChatMessage> messages)
+    public async IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages)
     {
-        if (messages == null || messages.Count == 0)
+        if (messages == null || !messages.Any())
         {
             _logger.LogWarning("빈 메시지 목록이 전송되었습니다.");
             yield break;
         }
         
-        _logger.LogInformation("메시지 목록 처리 시작: {Count}개", messages.Count);
+        _logger.LogInformation("메시지 목록 처리 시작: {Count}개", messages.Count());
 
         // 메시지 목록 정리 (필요 시 트림 등 추가 가능)
         var processedMessages = messages
-            .Where(m => !string.IsNullOrWhiteSpace(m.Message))
+            .Where(m => string.IsNullOrWhiteSpace(m.Message.Trim()) == false)
             .Select(m => new ChatMessage
             {
                 Role = m.Role,
