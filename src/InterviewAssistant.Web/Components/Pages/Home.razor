@@ -89,7 +89,7 @@
                 placeholder="메시지를 입력하세요." 
                 rows="1"
                 disabled="@(isLoading || !isLinkShared)"></textarea>
-            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading || !isServerOutputEnded)">
+            <button class="send-btn" @onclick="SendMessage" disabled="@IsReadyToSendMessage()">
                 <span class="send-icon">↵</span>
             </button>
         </div>
@@ -165,8 +165,10 @@
     // 메시지 전송 - 서비스 사용
     private async Task SendMessage()
     {
-        if (string.IsNullOrWhiteSpace(userInput) || isLoading || !isServerOutputEnded)
+        if (IsReadyToSendMessage())
+        {
             return;
+        }
 
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
@@ -215,6 +217,11 @@
             await JSRuntime.InvokeVoidAsync("resetTextAreaHeight", "messageInput");
             await JSRuntime.InvokeVoidAsync("focusTextArea", "messageInput");
         }
+    }
+
+    private bool IsReadyToSendMessage()
+    {
+        return string.IsNullOrWhiteSpace(userInput) || isLoading || !isServerOutputEnded;
     }
 
     // 채팅창 스크롤을 항상 최하단으로
