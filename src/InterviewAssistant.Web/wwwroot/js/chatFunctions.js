@@ -1,9 +1,37 @@
 // chatFunctions.js
-window.scrollToBottomWithOffset = function (elementId, offset) {
+window.isAutoScrollEnabled = true;
+
+window.scrollToBottom = function (elementId) {
+    if (!window.isAutoScrollEnabled) return;
+
     const element = document.getElementById(elementId);
     if (element) {
-        element.scrollTop = element.scrollHeight - offset;
+        element.scrollTop = element.scrollHeight;
     }
+};
+
+window.setupAutoScrollDetection = function (elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    element.addEventListener(
+        "wheel",
+        () => {
+            window.isAutoScrollEnabled = false;
+        },
+        { passive: true }
+    );
+    element.addEventListener(
+        "touchmove",
+        () => {
+            window.isAutoScrollEnabled = false;
+        },
+        { passive: true }
+    );
+};
+
+window.resetAutoScroll = function () {
+    window.isAutoScrollEnabled = true;
 };
 
 window.focusTextArea = function (elementId) {
@@ -57,11 +85,11 @@ window.setupTextAreaResize = function (elementId) {
 };
 
 // 텍스트 영역 높이 리셋 함수
-window.resetTextAreaHeight = function(elementId) {
-  const textarea = document.getElementById(elementId);
-  if (textarea) {
-      // 기본 높이로 리셋 (CSS에서 지정한 min-height 값이 적용됨)
-      textarea.style.height = '';
-      textarea.style.overflowY = 'hidden';
-  }
+window.resetTextAreaHeight = function (elementId) {
+    const textarea = document.getElementById(elementId);
+    if (textarea) {
+        // 기본 높이로 리셋 (CSS에서 지정한 min-height 값이 적용됨)
+        textarea.style.height = "";
+        textarea.style.overflowY = "hidden";
+    }
 };
