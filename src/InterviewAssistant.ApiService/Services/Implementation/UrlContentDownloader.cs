@@ -10,16 +10,13 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
 {
     public async Task<string> DownloadAndExtractTextAsync(string url)
     {
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new ArgumentException("URL이 비어있거나 null입니다.", nameof(url));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(url, nameof(url));
 
         try
         {
             // 단축 URL이면 실제 URL로 리다이렉션 처리
             string actualUrl = await FollowRedirectsAsync(url);
-            
+
             // 구글 드라이브 링크인 경우 직접 다운로드 URL로 변환
             if (actualUrl.Contains("drive.google.com"))
             {
@@ -32,42 +29,33 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
 
             // 컨텐츠 타입 확인
             var contentType = response.Content.Headers.ContentType?.ToString();
-            
+
             // HTML인 경우 웹페이지일 수 있음
             if (contentType != null && contentType.Contains("text/html"))
             {
                 string content = await response.Content.ReadAsStringAsync();
-                
+
                 // 구글 드라이브인 경우 접근 권한 확인
                 if (actualUrl.Contains("drive.google.com") && (content.Contains("Sign in") || content.Contains("로그인")))
                 {
                     throw new UnauthorizedAccessException("이 파일은 비공개이거나 접근 권한이 필요합니다.");
                 }
-                
+
                 // 일반 웹페이지인 경우 HTML 내용 반환
                 return content;
             }
 
             // 바이너리 파일 또는 텍스트 파일 다운로드
             byte[] fileData = await response.Content.ReadAsByteArrayAsync();
-            
-            // 텍스트로 변환 시도
+
+            // 텍스트로 변환 시도 (UTF-8만 지원)
             try
             {
                 return Encoding.UTF8.GetString(fileData);
             }
-            catch (Exception)
+            catch
             {
-                try 
-                {
-                    // UTF-8로 변환 실패 시 다른 인코딩 시도
-                    return Encoding.GetEncoding(1252).GetString(fileData);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError($"텍스트 변환 실패: {ex.Message}");
-                    throw new InvalidOperationException("다운로드한 파일을 텍스트로 변환할 수 없습니다. 텍스트 파일이 아닐 수 있습니다.");
-                }
+                throw new InvalidOperationException("다운로드한 파일을 텍스트로 변환할 수 없습니다. 텍스트 파일이 아니거나 UTF-8 인코딩이 아닙니다.");
             }
         }
         catch (HttpRequestException ex)
@@ -89,32 +77,34 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
     {
         try
         {
-            // 최초 요청 시 리다이렉션을 자동으로 따라가지 않도록 설정
-            var handler = new HttpClientHandler
+            // 기존 HttpClient의 DefaultRequestHeaders 저장
+            var originalHeaders = new Dictionary<string, IEnumerable<string>>();
+            foreach (var header in httpClient.DefaultRequestHeaders)
             {
-                AllowAutoRedirect = false
-            };
-            
-            using var client = new HttpClient(handler);
-            
+                originalHeaders[header.Key] = header.Value;
+            }
+
+            // 리다이렉션을 수동으로 처리하기 위한 HEAD 요청
             var request = new HttpRequestMessage(HttpMethod.Head, url);
-            var response = await client.SendAsync(request);
-            
+
+            // 자동 리다이렉션 방지를 위해 요청 옵션 설정
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
             // 리다이렉션 응답인 경우(3xx) Location 헤더에서 대상 URL 가져오기
-            if ((int)response.StatusCode >= 300 && (int)response.StatusCode < 400 && 
+            if ((int)response.StatusCode >= 300 && (int)response.StatusCode < 400 &&
                 response.Headers.Location != null)
             {
                 var redirectUrl = response.Headers.Location.IsAbsoluteUri
                     ? response.Headers.Location.ToString()
                     : new Uri(new Uri(url), response.Headers.Location).ToString();
-                
+
                 // 재귀적으로 리다이렉션을 따라감
                 if (url != redirectUrl)
                 {
                     return await FollowRedirectsAsync(redirectUrl);
                 }
             }
-            
+
             return url;
         }
         catch (Exception)
