@@ -6,13 +6,8 @@ using System.Threading.Tasks;
 
 namespace InterviewAssistant.ApiService.Services;
 
-public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownloader> logger)
+public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownloader> logger) : IUrlContentDownloader
 {
-    /// <summary>
-    /// URL에서 파일을 다운로드하고 텍스트를 추출합니다.
-    /// </summary>
-    /// <param name="url">다운로드할 콘텐츠의 URL</param>
-    /// <returns>추출된 텍스트 내용</returns>
     public async Task<string> DownloadAndExtractTextAsync(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
