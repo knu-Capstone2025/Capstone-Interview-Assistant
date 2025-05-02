@@ -34,6 +34,13 @@ window.resetAutoScroll = function () {
     window.isAutoScrollEnabled = true;
 };
 
+window.forceScrollToBottom = function (elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.scrollTop = element.scrollHeight;
+    }
+};
+
 window.focusTextArea = function (elementId) {
     setTimeout(function () {
         const element = document.getElementById(elementId);

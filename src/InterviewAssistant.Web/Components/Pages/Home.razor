@@ -189,6 +189,10 @@
                     isLoading = false;
                     first = false;
                     StateHasChanged(); // 첫 문자 등자 등장하면 로딩 끄고 UI 갱신
+
+                    // 첫 응답 도착 시 무조건 맨 아래로 스크롤
+                    await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+                    await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
                 }
                 
                 // 점진적으로 메시지를 추가하면서 렌더링
