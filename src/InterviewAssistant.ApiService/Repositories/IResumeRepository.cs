@@ -1,3 +1,4 @@
+namespace InterviewAssistant.ApiService.Repositories;
 public interface IResumeRepository
 {
     void Save(string type, string content);
