@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using InterviewAssistant.ApiService.Models;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace InterviewAssistant.ApiService.Data;
 
