@@ -3,8 +3,11 @@ using System.Text.Json.Serialization;
 
 using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
+using InterviewAssistant.ApiService.Data;
+using InterviewAssistant.ApiService.Repositories;   
 
 using Microsoft.SemanticKernel;
+using Microsoft.EntityFrameworkCore;
 
 using OpenAI;
 
@@ -13,7 +16,11 @@ var builder = WebApplication.CreateBuilder(args);
 // .NET Aspire 기본 설정
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
+builder.Services.AddDbContext<ResumeDbContext>(options =>
+    options.UseInMemoryDatabase("ResumeStore"));
+    
 builder.Services.AddScoped<IKernelService, KernelService>();
+builder.Services.AddScoped<ResumeRepository>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
