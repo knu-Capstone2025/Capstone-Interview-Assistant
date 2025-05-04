@@ -6,68 +6,59 @@ using System.Threading.Tasks;
 
 namespace InterviewAssistant.ApiService.Services;
 
-public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownloader> logger) : IUrlContentDownloader
+public class UrlContentDownloader(HttpClient httpClient) : IUrlContentDownloader
 {
-    public async Task<string> DownloadAndExtractTextAsync(string url)
+
+    // 정규식을 정적 필드로 컴파일하여 저장
+    private static readonly Regex GoogleDriveIdPattern = new Regex(
+        @"https?://drive\.google\.com/.*(?:file/d/|id=)([^/&?#]+)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    public async Task<string> DownloadTextAsync(string url)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(url, nameof(url));
 
-        try
+        // 단축 URL이면 실제 URL로 리다이렉션 처리
+        string actualUrl = await FollowRedirectsAsync(url);
+
+        // 구글 드라이브 링크인 경우 직접 다운로드 URL로 변환
+        if (actualUrl.Contains("drive.google.com"))
         {
-            // 단축 URL이면 실제 URL로 리다이렉션 처리
-            string actualUrl = await FollowRedirectsAsync(url);
-
-            // 구글 드라이브 링크인 경우 직접 다운로드 URL로 변환
-            if (actualUrl.Contains("drive.google.com"))
-            {
-                actualUrl = ConvertToDirectDownloadUrl(actualUrl);
-            }
-
-            // HTTP 요청 생성 및 응답 확인
-            var response = await httpClient.GetAsync(actualUrl);
-            response.EnsureSuccessStatusCode();
-
-            // 컨텐츠 타입 확인
-            var contentType = response.Content.Headers.ContentType?.ToString();
-
-            // HTML인 경우 웹페이지일 수 있음
-            if (contentType != null && contentType.Contains("text/html"))
-            {
-                string content = await response.Content.ReadAsStringAsync();
-
-                // 구글 드라이브인 경우 접근 권한 확인
-                if (actualUrl.Contains("drive.google.com") && (content.Contains("Sign in") || content.Contains("로그인")))
-                {
-                    throw new UnauthorizedAccessException("이 파일은 비공개이거나 접근 권한이 필요합니다.");
-                }
-
-                // 일반 웹페이지인 경우 HTML 내용 반환
-                return content;
-            }
-
-            // 바이너리 파일 또는 텍스트 파일 다운로드
-            byte[] fileData = await response.Content.ReadAsByteArrayAsync();
-
-            // 텍스트로 변환 시도 (UTF-8만 지원)
-            try
-            {
-                return Encoding.UTF8.GetString(fileData);
-            }
-            catch
-            {
-                throw new InvalidOperationException("다운로드한 파일을 텍스트로 변환할 수 없습니다. 텍스트 파일이 아니거나 UTF-8 인코딩이 아닙니다.");
-            }
+            actualUrl = ConvertToDirectDownloadUrl(actualUrl);
         }
-        catch (HttpRequestException ex)
+
+        // HTTP 요청 생성 및 응답 확인
+        var response = await httpClient.GetAsync(actualUrl);
+        response.EnsureSuccessStatusCode();
+
+        // 컨텐츠 타입 확인
+        var contentType = response.Content.Headers.ContentType?.ToString();
+
+        // HTML인 경우 웹페이지일 수 있음
+        if (contentType != null && contentType.Contains("text/html"))
         {
-            logger.LogError($"HTTP 요청 오류: {ex.Message}");
-            throw new Exception($"URL에서 콘텐츠를 다운로드하는 중 오류가 발생했습니다: {ex.Message}", ex);
+            string content = await response.Content.ReadAsStringAsync();
+
+            // 구글 드라이브인 경우 접근 권한 확인
+            if (actualUrl.Contains("drive.google.com") && (content.Contains("Sign in") || content.Contains("로그인")))
+            {
+                throw new UnauthorizedAccessException("이 파일은 비공개이거나 접근 권한이 필요합니다.");
+            }
+
+            // 일반 웹페이지인 경우 HTML 내용 반환
+            return content;
         }
-        catch (Exception ex) when (!(ex is ArgumentException || ex is UnauthorizedAccessException || ex is InvalidOperationException))
-        {
-            logger.LogError($"예상치 못한 오류: {ex.Message}");
-            throw new Exception($"콘텐츠 다운로드 중 예상치 못한 오류가 발생했습니다: {ex.Message}", ex);
-        }
+
+        return await ExtractTextFromResponseAsync(response);
+    }
+
+    /// <summary>
+    /// 바이너리 파일 또는 텍스트 파일에서 텍스트를 추출합니다.
+    /// </summary>
+    private async Task<string> ExtractTextFromResponseAsync(HttpResponseMessage response)
+    {
+        byte[] fileData = await response.Content.ReadAsByteArrayAsync();
+        return Encoding.UTF8.GetString(fileData);
     }
 
     /// <summary>
@@ -75,20 +66,21 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
     /// </summary>
     private async Task<string> FollowRedirectsAsync(string url)
     {
+
+        // 기존 HttpClient의 DefaultRequestHeaders 저장
+        var originalHeaders = new Dictionary<string, IEnumerable<string>>();
+        foreach (var header in httpClient.DefaultRequestHeaders)
+        {
+            originalHeaders[header.Key] = header.Value;
+        }
+
+        // 리다이렉션을 수동으로 처리하기 위한 HEAD 요청
+        var request = new HttpRequestMessage(HttpMethod.Head, url);
+
         try
         {
-            // 기존 HttpClient의 DefaultRequestHeaders 저장
-            var originalHeaders = new Dictionary<string, IEnumerable<string>>();
-            foreach (var header in httpClient.DefaultRequestHeaders)
-            {
-                originalHeaders[header.Key] = header.Value;
-            }
-
-            // 리다이렉션을 수동으로 처리하기 위한 HEAD 요청
-            var request = new HttpRequestMessage(HttpMethod.Head, url);
-
-            // 자동 리다이렉션 방지를 위해 요청 옵션 설정
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
 
             // 리다이렉션 응답인 경우(3xx) Location 헤더에서 대상 URL 가져오기
             if ((int)response.StatusCode >= 300 && (int)response.StatusCode < 400 &&
@@ -104,12 +96,10 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
                     return await FollowRedirectsAsync(redirectUrl);
                 }
             }
-
             return url;
         }
-        catch (Exception)
+        catch
         {
-            // 리다이렉션 처리 중 오류 발생 시 원래 URL 반환
             return url;
         }
     }
@@ -121,7 +111,7 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
     {
         string? fileId = ExtractGoogleDriveFileId(shareUrl);
 
-        if (!string.IsNullOrEmpty(fileId))
+        if (string.IsNullOrWhiteSpace(fileId) == false)
         {
             return $"https://drive.google.com/uc?export=download&id={fileId}";
         }
@@ -134,20 +124,11 @@ public class UrlContentDownloader(HttpClient httpClient, ILogger<UrlContentDownl
     /// </summary>
     private string? ExtractGoogleDriveFileId(string googleDriveUrl)
     {
-        var patterns = new[]
-        {
-            @"https://drive\.google\.com/file/d/(.*?)(/|$)",
-            @"https://drive\.google\.com/open\?id=(.*?)($|&)",
-            @"id=(.*?)($|&)"
-        };
+        var match = GoogleDriveIdPattern.Match(googleDriveUrl);
 
-        foreach (var pattern in patterns)
+        if (match.Success && match.Groups.Count > 1)
         {
-            var match = Regex.Match(googleDriveUrl, pattern);
-            if (match.Success && match.Groups.Count > 1)
-            {
-                return match.Groups[1].Value;
-            }
+            return match.Groups[1].Value;
         }
 
         return null;
