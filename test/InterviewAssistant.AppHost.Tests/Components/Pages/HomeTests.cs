@@ -101,9 +101,9 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
         }
 
-        // // <summary>
-        // // 전송 버튼이 초기에는 비활성화되어 있고, 텍스트가 입력되면 활성화되는지 확인합니다.
-        // // </summary>
+        // <summary>
+        // 전송 버튼이 초기에는 비활성화되어 있고, 텍스트가 입력되면 활성화되는지 확인합니다.
+        // </summary>
         [Test]
         public async Task Home_SendButton_DisabledWhenNoInput()
         {
@@ -293,6 +293,47 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // Assert : 채팅창 활성화 확인
             var chatArea = Page.Locator("textarea#messageInput");
             await Expect(chatArea).ToBeVisibleAsync();
+        }
+
+        [Test]
+        public async Task Home_Serveroutput_Prohibit_UserTransport()
+        {
+            // Arrange
+            await Page.Locator("button.share-btn").ClickAsync();
+            await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
+            await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
+            await Page.Locator("button.submit-btn").ClickAsync();
+            await Task.Delay(1000); // UI 반영 대기
+
+            var statusMessage = Page.Locator(".response-status");
+            var textarea = Page.Locator("textarea#messageInput");
+            var sendButton = Page.Locator("button.send-btn");
+
+            var initialMessageCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Act
+            // 메시지 전송
+            await textarea.FillAsync("안녕하세요, 면접 준비를 도와주세요");
+            await sendButton.ClickAsync();
+            await Task.Delay(500);
+
+            // Assert
+            // 상태 메시지 확인
+            await Expect(statusMessage).ToContainTextAsync("서버 응답 출력 중... 출력이 완료될 때까지 기다려주세요.");
+
+            // 버튼 비활성화 확인
+            await Expect(sendButton).ToBeDisabledAsync();
+
+            // 엔터키 입력 시 메시지가 전송되지 않음
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500);
+
+            var messageCountAfterEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+            (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2, 
+                "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
+
+            // 서버 응답 종료 대기
+            await Page.WaitForSelectorAsync(".response-status", new() { State = WaitForSelectorState.Detached });
         }
     }
 }
