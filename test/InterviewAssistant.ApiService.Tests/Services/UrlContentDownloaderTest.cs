@@ -1,19 +1,11 @@
 #pragma warning disable CS1998
 
 using System;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Tests.Common;
-
-using Microsoft.Extensions.Logging;
-
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 using NUnit.Framework;
 
