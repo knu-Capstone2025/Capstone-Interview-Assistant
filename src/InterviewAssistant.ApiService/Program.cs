@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Data;
-using InterviewAssistant.ApiService.Repositories;   
+using InterviewAssistant.ApiService.Repositories;
 
 using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 // .NET Aspire 기본 설정
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
-builder.Services.AddDbContext<ResumeDbContext>(options =>
-    options.UseInMemoryDatabase("ResumeStore"));
-    
+builder.Services.AddDbContext<InterviewDbContext>(options =>
+    options.UseInMemoryDatabase("InterviewStore"));
+
 builder.Services.AddScoped<IKernelService, KernelService>();
 builder.Services.AddScoped<ResumeRepository>();
 
@@ -38,7 +38,7 @@ builder.Services.AddSingleton<Kernel>(sp =>
                            openAIClient: openAIClient,
                            serviceId: "github")
                        .Build();
-                       
+
     return kernel;
 });
 
