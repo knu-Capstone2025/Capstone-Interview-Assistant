@@ -16,15 +16,7 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task SaveResumeAsync(ResumeEntry entity)
     {
-        var existing = await _db.Resumes.FirstOrDefaultAsync(e => e.Id == entity.Id);
-        if (existing != null)
-        {
-            existing.Content = entity.Content;
-        }
-        else
-        {
-            await _db.Resumes.AddAsync(entity);
-        }
+        await _db.Resumes.AddAsync(entity);
         await _db.SaveChangesAsync();
     }
 
@@ -35,15 +27,7 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task SaveJobAsync(JobDescriptionEntry entity)
     {
-        var existing = await _db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == entity.Id);
-        if (existing != null)
-        {
-            existing.Content = entity.Content;
-        }
-        else
-        {
-            await _db.JobDescriptions.AddAsync(entity);
-        }
+        await _db.JobDescriptions.AddAsync(entity);
         await _db.SaveChangesAsync();
     }
 
