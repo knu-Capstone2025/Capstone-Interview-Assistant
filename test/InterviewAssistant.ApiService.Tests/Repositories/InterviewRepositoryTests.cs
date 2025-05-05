@@ -1,8 +1,9 @@
-using NUnit.Framework;
-using Microsoft.EntityFrameworkCore;
 using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Models;
 using InterviewAssistant.ApiService.Repositories;
+
+using Microsoft.EntityFrameworkCore;
+
 using Shouldly;
 
 namespace InterviewAssistant.Tests.Repositories
@@ -12,7 +13,7 @@ namespace InterviewAssistant.Tests.Repositories
         private InterviewDbContext CreateInMemoryDbContext()
         {
             var options = new DbContextOptionsBuilder<InterviewDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // 고유 DB로 테스트 격리
                 .Options;
 
             return new InterviewDbContext(options);
@@ -36,12 +37,12 @@ namespace InterviewAssistant.Tests.Repositories
         }
 
         [Test]
-        public async Task GetResumeByIdAsync_Should_Return_Correct_Resume()
+        public async Task GetResumeByIdAsync_Should_Return_Resume_When_Exists()
         {
             // Arrange
             var db = CreateInMemoryDbContext();
             var resume = new ResumeEntry { Id = Guid.NewGuid(), Content = "테스트 이력서" };
-            db.Resumes.Add(resume);
+            await db.Resumes.AddAsync(resume);
             await db.SaveChangesAsync();
 
             var repo = new InterviewRepository(db);
@@ -72,12 +73,12 @@ namespace InterviewAssistant.Tests.Repositories
         }
 
         [Test]
-        public async Task GetJobByIdAsync_Should_Return_Correct_Job()
+        public async Task GetJobByIdAsync_Should_Return_Job_When_Exists()
         {
             // Arrange
             var db = CreateInMemoryDbContext();
             var job = new JobDescriptionEntry { Id = Guid.NewGuid(), Content = "테스트 채용공고" };
-            db.JobDescriptions.Add(job);
+            await db.JobDescriptions.AddAsync(job);
             await db.SaveChangesAsync();
 
             var repo = new InterviewRepository(db);
