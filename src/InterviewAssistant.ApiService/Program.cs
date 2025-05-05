@@ -20,7 +20,7 @@ builder.Services.AddDbContext<InterviewDbContext>(options =>
     options.UseInMemoryDatabase("InterviewStore"));
 
 builder.Services.AddScoped<IKernelService, KernelService>();
-builder.Services.AddScoped<ResumeRepository>();
+builder.Services.AddScoped<InterviewRepository>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
