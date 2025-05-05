@@ -2,6 +2,7 @@
 @using InterviewAssistant.Common.Models
 @using InterviewAssistant.Web.Services
 @using Markdig
+@using Microsoft.JSInterop
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
@@ -88,10 +89,16 @@
                 placeholder="메시지를 입력하세요." 
                 rows="1"
                 disabled="@(isLoading || !isLinkShared)"></textarea>
-            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
+            <button class="send-btn" @onclick="SendMessage" disabled="@IsReadyToSendMessage()">
                 <span class="send-icon">↵</span>
             </button>
         </div>
+        @if (!isServerOutputEnded)
+        {
+            <div class="response-status">
+                <small>서버 응답 출력 중... 출력이 완료될 때까지 기다려주세요.</small>
+            </div>
+        }
     </div>
 </div>
 
@@ -101,7 +108,7 @@
     private bool isLoading = false;
     // 링크 공유 여부
     private bool isLinkShared = false;
-
+    private bool isServerOutputEnded = true;
     // 모달 관련 변수
     private bool showModal = false;
     private string resumeUrl = string.Empty;
@@ -158,8 +165,10 @@
     // 메시지 전송 - 서비스 사용
     private async Task SendMessage()
     {
-        if (string.IsNullOrWhiteSpace(userInput) || isLoading)
+        if (IsReadyToSendMessage())
+        {
             return;
+        }
 
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
@@ -173,6 +182,7 @@
         try
         {
             isLoading = true;
+            isServerOutputEnded = false; // 서버 응답이 시작됨을 표시
             StateHasChanged();
 
             // ChatService를 통해 응답 가져오기
@@ -207,11 +217,17 @@
         }
         finally
         {
+            isServerOutputEnded = true; // 서버 응답이 끝났음을 표시
             StateHasChanged();
             await ScrollToBottom();
             await JSRuntime.InvokeVoidAsync("resetTextAreaHeight", "messageInput");
             await JSRuntime.InvokeVoidAsync("focusTextArea", "messageInput");
         }
+    }
+
+    private bool IsReadyToSendMessage()
+    {
+        return string.IsNullOrWhiteSpace(userInput) || isLoading || !isServerOutputEnded;
     }
 
     // 채팅창 스크롤을 항상 최하단으로
