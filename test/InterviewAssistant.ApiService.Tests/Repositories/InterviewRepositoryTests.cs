@@ -18,14 +18,14 @@ namespace InterviewAssistant.Tests.Repositories
                 .Options;
 
             var context = new InterviewDbContext(options);
-            context.Database.EnsureCreated(); // 반드시 생성 필요
+            context.Database.EnsureCreated(); 
             return context;
         }
 
         private SqliteConnection CreateOpenConnection()
         {
             var connection = new SqliteConnection("DataSource=:memory:");
-            connection.Open(); // In-memory 유지하려면 반드시 Open 필요
+            connection.Open(); 
             return connection;
         }
 
@@ -65,14 +65,26 @@ namespace InterviewAssistant.Tests.Repositories
         {
             using var connection = CreateOpenConnection();
             using var db = CreateSQLiteInMemoryDbContext(connection);
+
+    
+            var resume = new ResumeEntry { Id = Guid.NewGuid(), Content = "연결된 이력서" };
+            await db.Resumes.AddAsync(resume);
+            await db.SaveChangesAsync();
+
             var repo = new InterviewRepository(db);
-            var job = new JobDescriptionEntry { Id = Guid.NewGuid(), Content = "채용공고 내용" };
+            var job = new JobDescriptionEntry
+            {
+                Id = Guid.NewGuid(),
+                Content = "채용공고 내용",
+                ResumeEntryId = resume.Id
+            };
 
             await repo.SaveJobAsync(job);
 
             var result = await db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == job.Id);
             result.ShouldNotBeNull();
             result!.Content.ShouldBe("채용공고 내용");
+            result.ResumeEntryId.ShouldBe(resume.Id);
         }
 
         [Test]
@@ -80,7 +92,18 @@ namespace InterviewAssistant.Tests.Repositories
         {
             using var connection = CreateOpenConnection();
             using var db = CreateSQLiteInMemoryDbContext(connection);
-            var job = new JobDescriptionEntry { Id = Guid.NewGuid(), Content = "테스트 채용공고" };
+
+            
+            var resume = new ResumeEntry { Id = Guid.NewGuid(), Content = "테스트 이력서" };
+            await db.Resumes.AddAsync(resume);
+            await db.SaveChangesAsync();
+
+            var job = new JobDescriptionEntry
+            {
+                Id = Guid.NewGuid(),
+                Content = "테스트 채용공고",
+                ResumeEntryId = resume.Id 
+            };
             await db.JobDescriptions.AddAsync(job);
             await db.SaveChangesAsync();
 
@@ -89,6 +112,7 @@ namespace InterviewAssistant.Tests.Repositories
 
             result.ShouldNotBeNull();
             result!.Content.ShouldBe("테스트 채용공고");
+            result.ResumeEntryId.ShouldBe(resume.Id);
         }
     }
 }
