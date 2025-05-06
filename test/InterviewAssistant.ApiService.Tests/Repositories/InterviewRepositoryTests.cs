@@ -2,6 +2,7 @@ using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Models;
 using InterviewAssistant.ApiService.Repositories;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 using Shouldly;
@@ -10,27 +11,34 @@ namespace InterviewAssistant.Tests.Repositories
 {
     public class InterviewRepositoryTests
     {
-        private InterviewDbContext CreateInMemoryDbContext()
+        private InterviewDbContext CreateSQLiteInMemoryDbContext(SqliteConnection connection)
         {
             var options = new DbContextOptionsBuilder<InterviewDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // 고유 DB로 테스트 격리
+                .UseSqlite(connection)
                 .Options;
 
-            return new InterviewDbContext(options);
+            var context = new InterviewDbContext(options);
+            context.Database.EnsureCreated(); // 반드시 생성 필요
+            return context;
+        }
+
+        private SqliteConnection CreateOpenConnection()
+        {
+            var connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open(); // In-memory 유지하려면 반드시 Open 필요
+            return connection;
         }
 
         [Test]
         public async Task SaveResumeAsync_Should_Insert_New_Resume()
         {
-            // Arrange
-            var db = CreateInMemoryDbContext();
+            using var connection = CreateOpenConnection();
+            using var db = CreateSQLiteInMemoryDbContext(connection);
             var repo = new InterviewRepository(db);
             var resume = new ResumeEntry { Id = Guid.NewGuid(), Content = "이력서 내용" };
 
-            // Act
             await repo.SaveResumeAsync(resume);
 
-            // Assert
             var result = await db.Resumes.FirstOrDefaultAsync(e => e.Id == resume.Id);
             result.ShouldNotBeNull();
             result!.Content.ShouldBe("이력서 내용");
@@ -39,18 +47,15 @@ namespace InterviewAssistant.Tests.Repositories
         [Test]
         public async Task GetResumeByIdAsync_Should_Return_Resume_When_Exists()
         {
-            // Arrange
-            var db = CreateInMemoryDbContext();
+            using var connection = CreateOpenConnection();
+            using var db = CreateSQLiteInMemoryDbContext(connection);
             var resume = new ResumeEntry { Id = Guid.NewGuid(), Content = "테스트 이력서" };
             await db.Resumes.AddAsync(resume);
             await db.SaveChangesAsync();
 
             var repo = new InterviewRepository(db);
-
-            // Act
             var result = await repo.GetResumeByIdAsync(resume.Id);
 
-            // Assert
             result.ShouldNotBeNull();
             result!.Content.ShouldBe("테스트 이력서");
         }
@@ -58,15 +63,13 @@ namespace InterviewAssistant.Tests.Repositories
         [Test]
         public async Task SaveJobAsync_Should_Insert_New_Job()
         {
-            // Arrange
-            var db = CreateInMemoryDbContext();
+            using var connection = CreateOpenConnection();
+            using var db = CreateSQLiteInMemoryDbContext(connection);
             var repo = new InterviewRepository(db);
             var job = new JobDescriptionEntry { Id = Guid.NewGuid(), Content = "채용공고 내용" };
 
-            // Act
             await repo.SaveJobAsync(job);
 
-            // Assert
             var result = await db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == job.Id);
             result.ShouldNotBeNull();
             result!.Content.ShouldBe("채용공고 내용");
@@ -75,18 +78,15 @@ namespace InterviewAssistant.Tests.Repositories
         [Test]
         public async Task GetJobByIdAsync_Should_Return_Job_When_Exists()
         {
-            // Arrange
-            var db = CreateInMemoryDbContext();
+            using var connection = CreateOpenConnection();
+            using var db = CreateSQLiteInMemoryDbContext(connection);
             var job = new JobDescriptionEntry { Id = Guid.NewGuid(), Content = "테스트 채용공고" };
             await db.JobDescriptions.AddAsync(job);
             await db.SaveChangesAsync();
 
             var repo = new InterviewRepository(db);
-
-            // Act
             var result = await repo.GetJobByIdAsync(job.Id);
 
-            // Assert
             result.ShouldNotBeNull();
             result!.Content.ShouldBe("테스트 채용공고");
         }
