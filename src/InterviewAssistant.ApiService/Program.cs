@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // .NET Aspire 기본 설정
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
-// ✅ SQLite In-Memory 연결 생성 및 열기
+// SQLite In-Memory 연결 생성 및 열기
 var sqliteConnection = new SqliteConnection("DataSource=:memory:");
 sqliteConnection.Open(); // 중요: 연결이 열려 있어야 메모리 DB 유지됨
 
