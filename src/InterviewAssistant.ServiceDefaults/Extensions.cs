@@ -77,18 +77,19 @@ public static class Extensions
             builder.Services.AddOpenTelemetry().UseOtlpExporter();
         }
 
-        var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-
-        if (!string.IsNullOrEmpty(appInsightsConnectionString))
+        try
         {
-            builder.Services.AddApplicationInsightsTelemetry(options =>
-                options.ConnectionString = appInsightsConnectionString);
-
-            builder.Services.AddOpenTelemetry()
-                .UseAzureMonitor(options =>
-                    options.ConnectionString = appInsightsConnectionString);
-
-            Console.WriteLine("✅ Application Insights connected successfully");
+            var connectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+            
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                builder.Services.AddOpenTelemetry().UseAzureMonitor();
+                Console.WriteLine("✅ Azure Monitor initialized");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error initializing Azure Monitor: {ex.Message}");
         }
 
         return builder;
