@@ -35,6 +35,8 @@ builder.Services.AddSingleton<Kernel>(sp =>
     return kernel;
 });
 
+builder.Services.AddHttpClient<IUrlContentDownloader, UrlContentDownloader>();
+
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
