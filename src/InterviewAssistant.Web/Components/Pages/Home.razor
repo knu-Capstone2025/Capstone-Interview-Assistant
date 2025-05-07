@@ -173,6 +173,8 @@
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
 
+        await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+
         userInput = string.Empty;
 
         await ScrollToBottom();
@@ -196,7 +198,11 @@
                 {
                     isLoading = false;
                     first = false;
-                    StateHasChanged(); // 첫 문자 등장하면 로딩 끄고 UI 갱신
+                    StateHasChanged(); // 첫 문자 등자 등장하면 로딩 끄고 UI 갱신
+
+                    // 첫 응답 도착 시 무조건 맨 아래로 스크롤
+                    await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+                    await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
                 }
                 
                 // 점진적으로 메시지를 추가하면서 렌더링
@@ -228,7 +234,7 @@
     private async Task ScrollToBottom()
     {
         await Task.Delay(50); // 렌더링 시간 고려
-        await JSRuntime.InvokeVoidAsync("scrollToBottomWithOffset", "chatMessages", 300);
+        await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatMessages");
     }
 
     // 페이지로드시 자동으로 리사이징
@@ -238,6 +244,7 @@
         {
             // 처음 렌더링될 때만 설정
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
+            await JSRuntime.InvokeVoidAsync("setupAutoScrollDetection", "chatMessages");
         }
         await base.OnAfterRenderAsync(firstRender);
     }
