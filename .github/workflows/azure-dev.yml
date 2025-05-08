@@ -127,4 +127,6 @@ jobs:
 
     - name: 🚢 Deploy Application
       if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'true'
-      run: azd deploy --no-prompt
+      run: azd up --no-prompt
+      env:
+        EnableAzureMonitoring: "true"
