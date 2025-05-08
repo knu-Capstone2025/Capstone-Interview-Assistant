@@ -14,7 +14,11 @@ public interface IChatApiClient
     /// <returns>API 응답</returns>
     IAsyncEnumerable<ChatResponse> SendMessageAsync(ChatRequest request);
 
-
+    /// <summary>
+    /// 이력서 및 채용공고 데이터를 백엔드 API로 전송합니다.
+    /// </summary>
+    /// <param name="request">이력서 및 채용공고 URL이 포함된 요청 객체</param>
+    /// <returns>API 응답</returns>
     IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request);
 }
 
@@ -57,7 +61,6 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
         var responses = httpResponse.Content.ReadFromJsonAsAsyncEnumerable<ChatResponse>();
         await foreach (var response in responses)
         {
-            // _logger.LogInformation($"수신된 응답: {response?.Message}");
             if (response is not null)
             {
                 yield return response;

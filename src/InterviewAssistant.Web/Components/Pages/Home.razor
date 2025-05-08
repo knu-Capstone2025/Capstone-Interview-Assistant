@@ -264,7 +264,7 @@
             // 처음 렌더링될 때만 설정
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
             await JSRuntime.InvokeVoidAsync("setupAutoScrollDetection", "chatMessages");
-            await JSRuntime.InvokeVoidAsync("initScrollButton", "chatMessages");
+            // await JSRuntime.InvokeVoidAsync("initScrollButton", "chatMessages");
         }
         await base.OnAfterRenderAsync(firstRender);
     }
