@@ -76,9 +76,12 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
 
     public async IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request)
     {
-        if (request == null || string.IsNullOrWhiteSpace(request.ResumeUrl) || string.IsNullOrWhiteSpace(request.JobDescriptionUrl))
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        if (string.IsNullOrWhiteSpace(request.ResumeUrl) || string.IsNullOrWhiteSpace(request.JobDescriptionUrl))
         {
-            _logger.LogWarning("ChatService.cs: 잘못된 인터뷰 데이터 요청이 수신되었습니다.");
+            _logger.LogWarning("잘못된 인터뷰 데이터 요청이 수신되었습니다.");
             yield break;
         }
 
