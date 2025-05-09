@@ -42,7 +42,7 @@
 <div class="chat-main">
     <!-- 채팅 메시지 영역 -->
     <div class="chat-messages" id="chatMessages">
-        @if (!isLinkShared)
+        @if (!isLinkShared || messages.Count == 0)
         {
             <div class="welcome-message">
                 <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
