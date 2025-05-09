@@ -10,6 +10,8 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.*" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.*" />
+    <PackageReference Include="Microsoft.SemanticKernel.Agents.core" Version="1.*" />
+    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.*" />
     <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.*-*" />
   </ItemGroup>
 
@@ -18,4 +20,9 @@
     <ProjectReference Include="..\InterviewAssistant.ServiceDefaults\InterviewAssistant.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Agents\**\*.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
