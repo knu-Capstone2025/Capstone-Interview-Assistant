@@ -1,6 +1,9 @@
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.ApiService.Services;
+using InterviewAssistant.ApiService.Repositories;
+using InterviewAssistant.ApiService.Models;
 
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,14 +15,29 @@ namespace InterviewAssistant.ApiService.Delegates;
 /// </summary>
 public static partial class ChatCompletionDelegate
 {
+
     /// <summary>
     /// Invokes the chat completion endpoint.
     /// </summary>
     /// <param name="req"><see cref="ChatRequest"/> instance as a request payload.</param>
     /// <returns>Returns an asynchronous stream of <see cref="ChatResponse"/>.</returns>
-    public static async IAsyncEnumerable<ChatResponse> PostChatCompletionAsync([FromBody] ChatRequest req, IKernelService service)
+    public static async IAsyncEnumerable<ChatResponse> PostChatCompletionAsync(
+        [FromBody] ChatRequest req,
+        IKernelService kernelService,
+        InterviewRepository repository)
     {
-        var messages = new List<ChatMessageContent>();
+
+        ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(ResumeId);
+        JobDescriptionEntry? jobDescriptionEntry = await repository.GetJobByIdAsync(JobDescriptionId);
+
+        if (resumeEntry == null || jobDescriptionEntry == null)
+        {
+            yield return new ChatResponse { Message = "이력서 또는 채용공고 데이터가 없습니다." };
+            yield break;
+        }
+
+        var messages = new List<ChatMessageContent>{};
+
         foreach (var msg in req.Messages)
         {
             ChatMessageContent message = msg.Role switch
@@ -32,9 +50,11 @@ public static partial class ChatCompletionDelegate
             };
             messages.Add(message);
         }
-
-        var result = service.CompleteChatStreamingAsync(messages);
-        await foreach (var text in result)
+ 
+        await foreach (var text in kernelService.InvokeInterviewAgentAsync(
+            resumeEntry.Content,
+            jobDescriptionEntry.Content,
+            messages))
         {
             yield return new ChatResponse { Message = text };
         }
