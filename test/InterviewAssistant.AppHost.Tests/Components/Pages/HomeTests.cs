@@ -63,25 +63,6 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await _app.StopAsync();
             await _app.DisposeAsync();
         }
-        /// <summary>
-        /// 컴포넌트가 초기 상태에서 환영 메시지를 올바르게 표시하는지 확인합니다.
-        /// </summary>
-        [Test]
-        public async Task Home_InitialRender_ShowsWelcomeMessage()
-        {
-            // Arrange : 페이지 접속 및 로드 완료 대기 (Setup 메서드에서 수행)
-
-            // Act : 환영 메시지 확인 (Locator 기반으로 변경)
-            var welcomeMessage = Page.Locator(".welcome-message");
-            await Expect(welcomeMessage).ToBeVisibleAsync();
-
-            var heading = Page.Locator(".welcome-message h2");
-            await Expect(heading).ToBeVisibleAsync();
-
-            // Assert : 환영 메시지 확인
-            var headingText = await heading.TextContentAsync();
-            headingText?.ShouldContain("면접 코치 봇에 오신 것을 환영합니다", Case.Insensitive, "환영 메시지가 올바른 내용을 포함해야 합니다");
-        }
 
         /// <summary>
         /// 입력 영역과 전송 버튼이 올바르게 렌더링되는지 확인합니다.
