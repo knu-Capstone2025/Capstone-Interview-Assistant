@@ -27,7 +27,7 @@ builder.Services.AddDbContext<InterviewDbContext>(options =>
 builder.Services.AddSingleton(sqliteConnection); // 연결이 앱 생명주기와 함께 유지되도록
 
 builder.Services.AddScoped<IKernelService, KernelService>();
-builder.Services.AddScoped<InterviewRepository>();
+builder.Services.AddScoped<IInterviewRepository, InterviewRepository>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
