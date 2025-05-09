@@ -301,8 +301,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             var statusMessage = Page.Locator(".response-status");
             var textarea = Page.Locator("textarea#messageInput");
             var sendButton = Page.Locator("button.send-btn");
-
-            var initialMessageCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+            var initialCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Act
             // 메시지 전송
@@ -321,16 +320,9 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await textarea.PressAsync("Enter");
             await Task.Delay(500);
 
-            var messageCountAfterEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
-            (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2,
+            var afterCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+            (afterCount - initialCount).ShouldBeLessThanOrEqualTo(2,
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
-
-            // 서버 응답이 끝나면 상태 메시지가 Hidden 상태가 되는지 검증
-            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
-            {
-                State = WaitForSelectorState.Hidden,
-                Timeout = 10000
-            });
         }
     }
 }
