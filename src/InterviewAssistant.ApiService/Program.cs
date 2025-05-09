@@ -68,6 +68,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// 데이터베이스 스키마 초기화
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<InterviewDbContext>();
+
+    dbContext.Database.EnsureCreated();
+}
+
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 
