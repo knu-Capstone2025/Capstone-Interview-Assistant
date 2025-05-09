@@ -78,11 +78,11 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
     {
         if (request == null || string.IsNullOrWhiteSpace(request.ResumeUrl) || string.IsNullOrWhiteSpace(request.JobDescriptionUrl))
         {
-            _logger.LogWarning("잘못된 인터뷰 데이터 요청이 수신되었습니다.");
+            _logger.LogWarning("ChatService.cs: 잘못된 인터뷰 데이터 요청이 수신되었습니다.");
             yield break;
         }
 
-        _logger.LogInformation("인터뷰 데이터 전송 시작: ResumeUrl={ResumeUrl}, JobDescriptionUrl={JobDescriptionUrl}",
+        _logger.LogInformation("ChatService.cs: 인터뷰 데이터 전송 시작: ResumeUrl={ResumeUrl}, JobDescriptionUrl={JobDescriptionUrl}",
             request.ResumeUrl, request.JobDescriptionUrl);
 
         var responses = _client.SendInterviewDataAsync(request);
@@ -91,6 +91,6 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
             yield return response;
         }
 
-        _logger.LogInformation("인터뷰 데이터 전송 완료");
+        _logger.LogInformation("ChatService.c: 인터뷰 데이터 전송 완료");
     }
 }

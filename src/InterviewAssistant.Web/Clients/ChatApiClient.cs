@@ -53,7 +53,7 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
 
     public async IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request)
     {
-        _logger.LogInformation("인터뷰 데이터 전송 시작");
+        _logger.LogInformation("ChatApiClient.cs: 인터뷰 데이터 전송 시작");
 
         var httpResponse = await _http.PostAsJsonAsync("/api/chat/interview-data", request);
         httpResponse.EnsureSuccessStatusCode();
@@ -67,6 +67,6 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
             }
         }
 
-        _logger.LogInformation("인터뷰 데이터 전송 완료");
+        _logger.LogInformation("ChatApiClient.cs: 인터뷰 데이터 전송 완료");
     }
 }
