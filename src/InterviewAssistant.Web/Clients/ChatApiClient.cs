@@ -53,6 +53,9 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
 
     public async IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request)
     {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));  // 명시적 예외 처리
+            
         _logger.LogInformation("ChatApiClient.cs: 인터뷰 데이터 전송 시작");
 
         var httpResponse = await _http.PostAsJsonAsync("/api/chat/interview-data", request);
