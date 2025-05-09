@@ -138,8 +138,14 @@ public class ChatServiceTests
     [Test]
     public void SendInterviewDataAsync_WithNullRequest_ThrowsArgumentNullException()
     {
-        // Arrange & Act & Assert
-        Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await _chatService.SendInterviewDataAsync(null!).ToListAsync());
+        // Arrange
+        InterviewDataRequest? request = null;
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await _chatService.SendInterviewDataAsync(request!).ToListAsync());
+
+        // Assert - 예외 메시지 검증 (매개변수 이름도 검증)
+        Assert.That(ex.ParamName, Is.EqualTo("request"));
     }
 }

@@ -133,7 +133,12 @@ public class ChatApiClientTests
     public void SendInterviewDataAsync_WithNullRequest_ThrowsArgumentNullException()
     {
         // Arrange
-        var chatApiClient = new ChatApiClient(new HttpClient(), Substitute.For<ILoggerFactory>());
+        var loggerFactory = Substitute.For<ILoggerFactory>();
+        var httpClient = new HttpClient
+        {
+            BaseAddress = new Uri("http://fake-api.test") // BaseAddress 설정 추가
+        };
+        var chatApiClient = new ChatApiClient(httpClient, loggerFactory);
 
         // Act & Assert
         Assert.ThrowsAsync<ArgumentNullException>(async () =>
