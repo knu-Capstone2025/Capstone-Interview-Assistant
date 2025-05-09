@@ -134,9 +134,11 @@ public class ChatApiClientTests
     {
         // Arrange
         var loggerFactory = Substitute.For<ILoggerFactory>();
-        var httpClient = new HttpClient
+        
+        var fakeHandler = new FakeHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var httpClient = new HttpClient(fakeHandler)
         {
-            BaseAddress = new Uri("http://fake-api.test") // BaseAddress 설정 추가
+            BaseAddress = new Uri("http://fake-api.test")  // 실제로는 요청이 나가지 않음
         };
         var chatApiClient = new ChatApiClient(httpClient, loggerFactory);
 
