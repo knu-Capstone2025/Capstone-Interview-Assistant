@@ -335,5 +335,49 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 서버 응답 종료 대기
             await Page.WaitForSelectorAsync(".response-status", new() { State = WaitForSelectorState.Detached });
         }
+
+        /// <summary>
+        /// 중복 이벤트 방지 플래그가 제대로 동작하는지 확인합니다.
+        /// </summary>
+        [Test]
+        public async Task Home_IMEFlag_PreventsDuplicateKeyEvents()
+        {
+            // Arrange: 페이지 로드 후 링크 공유 설정
+            await Page.Locator("button.share-btn").ClickAsync();
+            await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
+            await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
+            await Page.Locator("button.submit-btn").ClickAsync();
+            await Task.Delay(1000); // UI 반영 대기
+
+            var textarea = Page.Locator("textarea#messageInput");
+
+            // Act: 플래그를 사용한 중복 방지 확인
+            await textarea.FillAsync("안녕하세요");
+
+            // 첫 번째 Enter 입력
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500); // UI 반영 대기
+
+            var messageCountAfterFirstEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // 플래그가 설정된 상태에서 두 번째 Enter 입력
+            await textarea.PressAsync("Enter");
+            await Task.Delay(700); // UI 반영 대기
+
+            var messageCountAfterSecondEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Assert: 중복 이벤트가 발생하지 않았는지 확인
+            (messageCountAfterSecondEnter - messageCountAfterFirstEnter).ShouldBe(0, "IME 간섭 방지 플래그가 제대로 동작해야 합니다.");
+
+            // 플래그 해제 후 Enter 입력
+            await Page.EvaluateAsync("window.imeFlag = false;");
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500); // UI 반영 대기
+
+            var messageCountAfterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Assert: 플래그 해제 후 이벤트가 정상적으로 처리되었는지 확인
+            (messageCountAfterFlagReset - messageCountAfterSecondEnter).ShouldBe(1, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
+        }
     }
 }
