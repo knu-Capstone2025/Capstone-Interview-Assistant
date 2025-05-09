@@ -27,7 +27,7 @@ public static partial class ChatCompletionDelegate
     public static async IAsyncEnumerable<ChatResponse> PostInterviewDataAsync(
         [FromBody] InterviewDataRequest req,
         IUrlContentDownloader downloader,
-        InterviewRepository repository,
+        IInterviewRepository repository,
         IKernelService kernelService)
     {
 

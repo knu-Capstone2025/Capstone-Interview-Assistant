@@ -24,7 +24,7 @@ public static partial class ChatCompletionDelegate
     public static async IAsyncEnumerable<ChatResponse> PostChatCompletionAsync(
         [FromBody] ChatRequest req,
         IKernelService kernelService,
-        InterviewRepository repository)
+        IInterviewRepository repository)
     {
 
         ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(ResumeId);
