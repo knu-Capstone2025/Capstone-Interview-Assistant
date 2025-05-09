@@ -3,8 +3,12 @@ using System.Text.Json.Serialization;
 
 using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
+using InterviewAssistant.ApiService.Data;
+using InterviewAssistant.ApiService.Repositories;
 
 using Microsoft.SemanticKernel;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 
 using OpenAI;
 
@@ -13,7 +17,17 @@ var builder = WebApplication.CreateBuilder(args);
 // .NET Aspire 기본 설정
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
+// SQLite In-Memory 연결 생성 및 열기
+var sqliteConnection = new SqliteConnection("DataSource=:memory:");
+sqliteConnection.Open(); // 중요: 연결이 열려 있어야 메모리 DB 유지됨
+
+builder.Services.AddDbContext<InterviewDbContext>(options =>
+    options.UseSqlite(sqliteConnection)); // SQLite로 설정
+
+builder.Services.AddSingleton(sqliteConnection); // 연결이 앱 생명주기와 함께 유지되도록
+
 builder.Services.AddScoped<IKernelService, KernelService>();
+builder.Services.AddScoped<InterviewRepository>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
@@ -31,9 +45,11 @@ builder.Services.AddSingleton<Kernel>(sp =>
                            openAIClient: openAIClient,
                            serviceId: "github")
                        .Build();
-                       
+
     return kernel;
 });
+
+builder.Services.AddHttpClient<IUrlContentDownloader, UrlContentDownloader>();
 
 // JSON 직렬화 설정
 builder.Services.ConfigureHttpJsonOptions(options =>

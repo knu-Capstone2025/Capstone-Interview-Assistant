@@ -2,6 +2,7 @@
 @using InterviewAssistant.Common.Models
 @using InterviewAssistant.Web.Services
 @using Markdig
+@using Microsoft.JSInterop
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
@@ -88,10 +89,16 @@
                 placeholder="메시지를 입력하세요." 
                 rows="1"
                 disabled="@(isLoading || !isLinkShared)"></textarea>
-            <button class="send-btn" @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(userInput) || isLoading)">
+            <button class="send-btn" @onclick="SendMessage" disabled="@IsReadyToSendMessage()">
                 <span class="send-icon">↵</span>
             </button>
         </div>
+        @if (!isServerOutputEnded)
+        {
+            <div class="response-status">
+                <small>서버 응답 출력 중... 출력이 완료될 때까지 기다려주세요.</small>
+            </div>
+        }
     </div>
 </div>
 
@@ -101,7 +108,7 @@
     private bool isLoading = false;
     // 링크 공유 여부
     private bool isLinkShared = false;
-
+    private bool isServerOutputEnded = true;
     // 모달 관련 변수
     private bool showModal = false;
     private string resumeUrl = string.Empty;
@@ -158,13 +165,16 @@
     // 메시지 전송 - 서비스 사용
     private async Task SendMessage()
     {
-        if (string.IsNullOrWhiteSpace(userInput) || isLoading)
+        if (IsReadyToSendMessage())
+        {
             return;
+        }
 
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
 
-        var currentInput = userInput;
+        await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+
         userInput = string.Empty;
 
         await ScrollToBottom();
@@ -172,10 +182,11 @@
         try
         {
             isLoading = true;
+            isServerOutputEnded = false; // 서버 응답이 시작됨을 표시
             StateHasChanged();
 
             // ChatService를 통해 응답 가져오기
-            var responses = ChatService.SendMessageAsync(currentInput);
+            var responses = ChatService.SendMessageAsync(messages);
 
             var assistantMessage = new ChatMessage { Role = MessageRoleType.Assistant, Message = string.Empty };
             messages.Add(assistantMessage);
@@ -188,6 +199,10 @@
                     isLoading = false;
                     first = false;
                     StateHasChanged(); // 첫 문자 등자 등장하면 로딩 끄고 UI 갱신
+
+                    // 첫 응답 도착 시 무조건 맨 아래로 스크롤
+                    await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+                    await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
                 }
                 
                 // 점진적으로 메시지를 추가하면서 렌더링
@@ -202,6 +217,7 @@
         }
         finally
         {
+            isServerOutputEnded = true; // 서버 응답이 끝났음을 표시
             StateHasChanged();
             await ScrollToBottom();
             await JSRuntime.InvokeVoidAsync("resetTextAreaHeight", "messageInput");
@@ -209,11 +225,16 @@
         }
     }
 
+    private bool IsReadyToSendMessage()
+    {
+        return string.IsNullOrWhiteSpace(userInput) || isLoading || !isServerOutputEnded;
+    }
+
     // 채팅창 스크롤을 항상 최하단으로
     private async Task ScrollToBottom()
     {
         await Task.Delay(50); // 렌더링 시간 고려
-        await JSRuntime.InvokeVoidAsync("scrollToBottomWithOffset", "chatMessages", 300);
+        await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatMessages");
     }
 
     // 페이지로드시 자동으로 리사이징
@@ -223,6 +244,7 @@
         {
             // 처음 렌더링될 때만 설정
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
+            await JSRuntime.InvokeVoidAsync("setupAutoScrollDetection", "chatMessages");
         }
         await base.OnAfterRenderAsync(firstRender);
     }
