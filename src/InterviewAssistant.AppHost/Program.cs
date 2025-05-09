@@ -7,18 +7,18 @@ var insights = builder.ExecutionContext.IsPublishMode
 var openai = builder.AddConnectionString("openai");
 var config = builder.Configuration;
 
-var apiServiceBuilder = builder.AddProject<Projects.InterviewAssistant_ApiService>("apiservice")
+var apiService = builder.AddProject<Projects.InterviewAssistant_ApiService>("apiservice")
                     .WithReference(openai)
                     .WithReference(insights)
                     .WaitFor(insights)
                     .WithEnvironment("SemanticKernel__ServiceId", config["SemanticKernel:ServiceId"]!)
                     .WithEnvironment("GitHub__Models__ModelId", config["GitHub:Models:ModelId"]!);
 
-var webFrontendBuilder = builder.AddProject<Projects.InterviewAssistant_Web>("webfrontend")
+builder.AddProject<Projects.InterviewAssistant_Web>("webfrontend")
     .WithExternalHttpEndpoints()
-    .WithReference(apiServiceBuilder)
+    .WithReference(apiService)
     .WithReference(insights)
     .WaitFor(insights)
-    .WaitFor(apiServiceBuilder);
+    .WaitFor(apiService);
 
 builder.Build().Run();
