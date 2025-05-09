@@ -50,7 +50,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             _baseUrl = endpoint?.AllocatedEndpoint?.UriString!;
         }
-        
+
         [SetUp]
         public async Task Setup()
         {
@@ -106,7 +106,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 초기 상태에서 전송 버튼은 비활성화 (Locator 기반으로 변경)
             await Expect(sendButton).ToBeVisibleAsync();
             await Expect(sendButton).ToBeDisabledAsync();
-            
+
             // 텍스트 입력 필드 확인 (Locator 기반으로 변경)
             await Expect(textarea).ToBeVisibleAsync();
 
@@ -254,7 +254,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_LinkShareButton_Click_ActivatesChat()
         {
-           // Arrange
+            // Arrange
             var linkShareButton = Page.Locator("button.share-btn");
             var modal = Page.Locator(".modal");
             var submitButton = modal.Locator("button.submit-btn");
@@ -269,7 +269,12 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await jobUrlInput.FillAsync("https://example.com/job-posting");
 
             await submitButton.ClickAsync(); // 모달 창 닫기
-            await Expect(modal).Not.ToBeVisibleAsync(); // 모달이 닫혔는지 확인
+            // 모달이 DOM에서 완전히 제거될 때까지 대기
+            await Page.WaitForSelectorAsync(".modal", new()
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
 
             // Assert : 채팅창 활성화 확인
             var chatArea = Page.Locator("textarea#messageInput");
@@ -310,7 +315,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Task.Delay(500);
 
             var messageCountAfterEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
-            (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2, 
+            (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2,
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
 
             // 서버 응답 종료 대기
