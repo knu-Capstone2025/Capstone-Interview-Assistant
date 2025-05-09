@@ -276,9 +276,16 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 Timeout = 5000
             });
 
-            // Assert : 채팅창 활성화 확인
+            // Assert:
+            // 1) 환영 메시지 요소가 DOM에서 제거(Detached)되는지 확인
+            await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
+            // 2) 채팅 입력창이 활성화(Enabled) 되는지 확인
             var chatArea = Page.Locator("textarea#messageInput");
-            await Expect(chatArea).ToBeVisibleAsync();
+            await Expect(chatArea).ToBeEnabledAsync();
         }
 
         [Test]
@@ -318,8 +325,18 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2,
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
 
-            // 서버 응답 종료 대기
-            await Expect(sendButton).ToBeEnabledAsync();
+            // 서버 응답 완료 시점까지 대기:
+            // 1) 상태 메시지가 숨겨질 때까지
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Hidden,
+                Timeout = 10000
+            });
+            // 2) 전송 버튼이 다시 활성화될 때까지
+            await Page.WaitForSelectorAsync("button.send-btn:not([disabled])", new PageWaitForSelectorOptions
+            {
+                Timeout = 10000
+            });
         }
     }
 }
