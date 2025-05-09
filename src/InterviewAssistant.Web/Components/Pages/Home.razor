@@ -149,11 +149,11 @@
             {
                 messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
             }
-                    finally
-        {
-            // UI 업데이트
-            StateHasChanged();
-        }
+            finally
+            {
+                // UI 업데이트
+                StateHasChanged();
+            }
         }
         else
         {
