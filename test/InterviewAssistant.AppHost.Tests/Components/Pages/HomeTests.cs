@@ -319,7 +319,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
 
             // 서버 응답 종료 대기
-            await Page.WaitForSelectorAsync(".response-status", new() { State = WaitForSelectorState.Detached });
+            await Expect(sendButton).ToBeEnabledAsync();
         }
     }
 }
