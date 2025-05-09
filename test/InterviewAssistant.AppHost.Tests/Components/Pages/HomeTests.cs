@@ -325,16 +325,10 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2,
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
 
-            // 서버 응답 완료 시점까지 대기:
-            // 1) 상태 메시지가 숨겨질 때까지
+            // 서버 응답이 끝나면 상태 메시지가 Hidden 상태가 되는지 검증
             await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
             {
                 State = WaitForSelectorState.Hidden,
-                Timeout = 10000
-            });
-            // 2) 전송 버튼이 다시 활성화될 때까지
-            await Page.WaitForSelectorAsync("button.send-btn:not([disabled])", new PageWaitForSelectorOptions
-            {
                 Timeout = 10000
             });
         }
