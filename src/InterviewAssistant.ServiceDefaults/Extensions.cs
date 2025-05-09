@@ -1,10 +1,12 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -78,34 +80,17 @@ public static class Extensions
             builder.Services.AddOpenTelemetry().UseOtlpExporter();
         }
 
-        try
+        var connectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+            ?? builder.Configuration.GetConnectionString("applicationinsights");
+
+        if (!string.IsNullOrEmpty(connectionString) && string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
         {
-            var connectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-            
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                connectionString = builder.Configuration.GetConnectionString("applicationinsights");
-            }
-            
-            // If found in ConnectionStrings, set it as an environment variable (Azure SDK uses this value)
-            if (!string.IsNullOrEmpty(connectionString) && string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
-            {
-                Environment.SetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING", connectionString);
-            }
-            
-            if (!string.IsNullOrEmpty(connectionString))
-            {
-                builder.Services.AddOpenTelemetry().UseAzureMonitor();
-                Console.WriteLine("✅ Azure Monitor initialized with connection string");
-            }
-            else
-            {
-                Console.WriteLine("⚠️ No Azure Monitor connection string found");
-            }
+            Environment.SetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING", connectionString);
         }
-        catch (Exception ex)
+
+        if (!string.IsNullOrEmpty(connectionString))
         {
-            Console.WriteLine($"❌ Error initializing Azure Monitor: {ex.Message}");
+            builder.Services.AddOpenTelemetry().UseAzureMonitor();
         }
 
         return builder;
