@@ -134,7 +134,7 @@
                 JobDescriptionUrl = jobUrl
             };
 
-            // isLoading = true;
+            isLoading = true;
             isServerOutputEnded = false;
             StateHasChanged();
             
@@ -143,13 +143,26 @@
                 Role = MessageRoleType.Assistant, 
                 Message = string.Empty 
             };
-            messages.Add(assistantMessage);
+
+            var responses = ChatService.SendInterviewDataAsync(request);
+            bool first = true;
 
             try
             {
-                await foreach (var response in ChatService.SendInterviewDataAsync(request))
+                await foreach (var response in responses)
                 {
+                    if (first)
+                    {
+                        first = false;
+                        messages.Add(assistantMessage);
+
+                        isLoading = false;
+                        StateHasChanged();
+                        await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+                        await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
+                    }
                     assistantMessage.Message += response.Message;
+                    await ScrollToBottom();
                     StateHasChanged();
                 }
 
