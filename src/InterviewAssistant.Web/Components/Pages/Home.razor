@@ -42,7 +42,7 @@
 <div class="chat-main">
     <!-- 채팅 메시지 영역 -->
     <div class="chat-messages" id="chatMessages">
-        @if (messages.Count == 0)
+        @if (!isLinkShared)
         {
             <div class="welcome-message">
                 <h2>면접 코치 봇에 오신 것을 환영합니다!</h2>
@@ -119,7 +119,7 @@
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
-    private void SubmitLinks()
+    private async Task SubmitLinks()
     {
         // URL 유효성 검사
         if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl) &&
@@ -127,20 +127,60 @@
         {
             CloseModal();
             isLinkShared = true;
-            // 이후 URL을 서버에 전송하는 로직 추가
-            Logger?.LogInformation($"이력서 URL: {resumeUrl}, 채용공고 URL: {jobUrl}");
-            messages.Add(new ChatMessage { 
+
+            var request = new InterviewDataRequest
+            {
+                ResumeUrl = resumeUrl,
+                JobDescriptionUrl = jobUrl
+            };
+
+            isLoading = true;
+            isServerOutputEnded = false;
+            StateHasChanged();
+            
+            var assistantMessage = new ChatMessage 
+            { 
                 Role = MessageRoleType.Assistant, 
-                Message = $"이력서와 채용공고 URL이 등록되었습니다. 이제 면접 준비를 시작하겠습니다." 
-            });
-            messages.Add(new ChatMessage { 
-                Role = MessageRoleType.Assistant, 
-                Message = $"안녕하세요! 우선 자기소개부터 시작해 볼까요?"
-            });
+                Message = string.Empty 
+            };
+
+            var responses = ChatService.SendInterviewDataAsync(request);
+            bool first = true;
+
+            try
+            {
+                await foreach (var response in responses)
+                {
+                    if (first)
+                    {
+                        first = false;
+                        messages.Add(assistantMessage);
+
+                        isLoading = false;
+                        StateHasChanged();
+                        await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+                        await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
+                    }
+                    assistantMessage.Message += response.Message;
+                    await ScrollToBottom();
+                    StateHasChanged();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
+            }
+            finally
+            {
+                isServerOutputEnded = true;
+                isLoading = false;
+                StateHasChanged();
+            }
         }
         else
         {
-            JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
+            await JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
     }
 
@@ -245,6 +285,7 @@
             // 처음 렌더링될 때만 설정
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
             await JSRuntime.InvokeVoidAsync("setupAutoScrollDetection", "chatMessages");
+            // await JSRuntime.InvokeVoidAsync("initScrollButton", "chatMessages");
         }
         await base.OnAfterRenderAsync(firstRender);
     }
