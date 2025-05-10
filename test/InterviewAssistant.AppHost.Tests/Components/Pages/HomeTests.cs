@@ -93,11 +93,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Task.Delay(1000); // UI 반영 대기
-
-            // 디버깅용: isLinkShared 값 확인
-            var isLinkShared = await Page.EvaluateAsync<bool>("window.isLinkShared");
-            Console.WriteLine($"isLinkShared 값: {isLinkShared}");
+            await Page.WaitForSelectorAsync(".modal", new() { State = WaitForSelectorState.Detached, Timeout = 5000 });
 
             var sendButton = Page.Locator("button.send-btn");
             var textarea = Page.Locator("textarea#messageInput");
@@ -110,26 +106,8 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 텍스트 입력 필드 확인 (Locator 기반으로 변경)
             await Expect(textarea).ToBeVisibleAsync();
 
-            // 텍스트 입력 전 잠시 대기
-            await Task.Delay(500);
-
-            // 텍스트 필드 클릭하고 내용 지우기
-            await textarea.ClickAsync();
-            await textarea.FillAsync(""); // 내용 비우기 - TypeAsync 대신 FillAsync 사용
-
             // 텍스트 입력 
             await textarea.FillAsync("안녕하세요"); // TypeAsync 대신 FillAsync 사용
-
-            // 입력 완료 후 UI 업데이트를 위한 시간 제공
-            await Task.Delay(1000);
-
-            // 디버깅용: 입력된 텍스트 확인
-            var textareaValue = await Page.EvaluateAsync<string>("document.querySelector('textarea#messageInput').value");
-            Console.WriteLine($"입력된 텍스트: '{textareaValue}'");
-
-            // 디버깅용: 버튼 상태 확인
-            var buttonDisabled = await Page.EvaluateAsync<bool>("document.querySelector('button.send-btn').disabled");
-            Console.WriteLine($"버튼 비활성화 상태: {buttonDisabled}");
 
             // Assert
             // 텍스트 입력 후 전송 버튼은 활성화되어야 함
