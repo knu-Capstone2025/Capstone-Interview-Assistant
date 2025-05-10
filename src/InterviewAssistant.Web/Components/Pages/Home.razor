@@ -134,16 +134,25 @@
                 JobDescriptionUrl = jobUrl
             };
 
+            // isLoading = true;
+            isServerOutputEnded = false;
+            StateHasChanged();
+            
+            var assistantMessage = new ChatMessage 
+            { 
+                Role = MessageRoleType.Assistant, 
+                Message = string.Empty 
+            };
+            messages.Add(assistantMessage);
+
             try
             {
-            await foreach (var response in ChatService.SendInterviewDataAsync(request))
-            {
-                messages.Add(new ChatMessage
+                await foreach (var response in ChatService.SendInterviewDataAsync(request))
                 {
-                    Role = MessageRoleType.Assistant,
-                    Message = response.Message
-                });
-            }
+                    assistantMessage.Message += response.Message;
+                    StateHasChanged();
+                }
+
             }
             catch (Exception ex)
             {
@@ -151,7 +160,7 @@
             }
             finally
             {
-                // UI 업데이트
+                isServerOutputEnded = true;
                 StateHasChanged();
             }
         }
