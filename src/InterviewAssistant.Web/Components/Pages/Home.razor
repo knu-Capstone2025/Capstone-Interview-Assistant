@@ -88,7 +88,7 @@
                 @onkeydown="HandleKeyDown" 
                 placeholder="메시지를 입력하세요." 
                 rows="1"
-                disabled="@(isLoading || !isLinkShared)"></textarea>
+                disabled="@(!isLinkShared)"></textarea>
             <button class="send-btn" @onclick="SendMessage" disabled="@IsReadyToSendMessage()">
                 <span class="send-icon">↵</span>
             </button>
@@ -173,6 +173,7 @@
             }
             finally
             {
+                isLoading = false;
                 isServerOutputEnded = true;
                 StateHasChanged();
             }
