@@ -7,4 +7,6 @@ public interface IInterviewRepository
     Task<ResumeEntry?> GetResumeByIdAsync(Guid id);
     Task SaveJobAsync(JobDescriptionEntry entity);
     Task<JobDescriptionEntry?> GetJobByIdAsync(Guid id);
+    Task SaveOrUpdateResumeAsync(ResumeEntry entity);
+    Task SaveOrUpdateJobAsync(JobDescriptionEntry entity);
 }
