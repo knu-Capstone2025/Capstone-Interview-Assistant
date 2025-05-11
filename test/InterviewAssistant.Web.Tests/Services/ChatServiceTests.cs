@@ -19,7 +19,7 @@ public class ChatServiceTests
         // API 클라이언트와 로거를 대체 객체로 생성
         _apiClient = Substitute.For<IChatApiClient>();
         _loggerFactory = Substitute.For<ILoggerFactory>();
-        
+
         // 테스트할 ChatService 인스턴스 생성
         _chatService = new ChatService(_apiClient, _loggerFactory);
     }
@@ -85,5 +85,67 @@ public class ChatServiceTests
             await _chatService.SendMessageAsync(messages).ToListAsync());
 
         Assert.That(ex.Message, Is.EqualTo("API 호출 실패"));
+    }
+
+    // InterviewDataRequest가 올바른 경우 API에서 반환된 응답을 잘 처리하는지 검증.
+    [Test]
+    public async Task SendInterviewDataAsync_WhenRequestIsValid_ReturnsResponses()
+    {
+        // Arrange
+        var request = new InterviewDataRequest
+        {
+            ResumeUrl = "https://www.example.com/resume",
+            JobDescriptionUrl = "https://www.example.com/job"
+        };
+
+        var expectedResponses = new List<ChatResponse>
+        {
+            new ChatResponse { Message = "이력서 검토 완료" },
+            new ChatResponse { Message = "채용공고 분석 완료" }
+        };
+
+        _apiClient.SendInterviewDataAsync(Arg.Any<InterviewDataRequest>())
+            .Returns(expectedResponses.ToAsyncEnumerable());
+
+        // Act
+        var responses = await _chatService.SendInterviewDataAsync(request).ToListAsync();
+
+        // Assert
+        responses.Count.ShouldBe(2);
+        responses[0].Message.ShouldBe("이력서 검토 완료");
+        responses[1].Message.ShouldBe("채용공고 분석 완료");
+    }
+
+    // 비어있는 URL이 포함된 요청이 전달되었을 때 빈 응답 목록을 반환하는지 검증.
+    [Test]
+    public async Task SendInterviewDataAsync_WithInvalidRequest_YieldsNoResponses()
+    {
+        // Arrange
+        var invalidRequest = new InterviewDataRequest
+        {
+            ResumeUrl = "",
+            JobDescriptionUrl = ""
+        };
+
+        // Act
+        var responses = await _chatService.SendInterviewDataAsync(invalidRequest).ToListAsync();
+
+        // Assert
+        responses.ShouldBeEmpty();
+    }
+
+    //null 요청이 전달될 때 예외가 발생하는지 검증.
+    [Test]
+    public void SendInterviewDataAsync_WithNullRequest_ThrowsArgumentNullException()
+    {
+        // Arrange
+        InterviewDataRequest? request = null;
+
+        // Act & Assert
+        var ex = Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await _chatService.SendInterviewDataAsync(request!).ToListAsync());
+
+        // Assert - 예외 메시지 검증 (매개변수 이름도 검증)
+        Assert.That(ex.ParamName, Is.EqualTo("request"));
     }
 }

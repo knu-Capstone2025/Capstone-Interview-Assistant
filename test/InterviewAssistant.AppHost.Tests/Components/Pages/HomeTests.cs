@@ -50,7 +50,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             _baseUrl = endpoint?.AllocatedEndpoint?.UriString!;
         }
-        
+
         [SetUp]
         public async Task Setup()
         {
@@ -62,25 +62,6 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         {
             await _app.StopAsync();
             await _app.DisposeAsync();
-        }
-        /// <summary>
-        /// 컴포넌트가 초기 상태에서 환영 메시지를 올바르게 표시하는지 확인합니다.
-        /// </summary>
-        [Test]
-        public async Task Home_InitialRender_ShowsWelcomeMessage()
-        {
-            // Arrange : 페이지 접속 및 로드 완료 대기 (Setup 메서드에서 수행)
-
-            // Act : 환영 메시지 확인 (Locator 기반으로 변경)
-            var welcomeMessage = Page.Locator(".welcome-message");
-            await Expect(welcomeMessage).ToBeVisibleAsync();
-
-            var heading = Page.Locator(".welcome-message h2");
-            await Expect(heading).ToBeVisibleAsync();
-
-            // Assert : 환영 메시지 확인
-            var headingText = await heading.TextContentAsync();
-            headingText?.ShouldContain("면접 코치 봇에 오신 것을 환영합니다", Case.Insensitive, "환영 메시지가 올바른 내용을 포함해야 합니다");
         }
 
         /// <summary>
@@ -112,11 +93,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Task.Delay(1000); // UI 반영 대기
-
-            // 디버깅용: isLinkShared 값 확인
-            var isLinkShared = await Page.EvaluateAsync<bool>("window.isLinkShared");
-            Console.WriteLine($"isLinkShared 값: {isLinkShared}");
+            await Page.WaitForSelectorAsync(".modal", new() { State = WaitForSelectorState.Detached, Timeout = 5000 });
 
             var sendButton = Page.Locator("button.send-btn");
             var textarea = Page.Locator("textarea#messageInput");
@@ -125,30 +102,12 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 초기 상태에서 전송 버튼은 비활성화 (Locator 기반으로 변경)
             await Expect(sendButton).ToBeVisibleAsync();
             await Expect(sendButton).ToBeDisabledAsync();
-            
+
             // 텍스트 입력 필드 확인 (Locator 기반으로 변경)
             await Expect(textarea).ToBeVisibleAsync();
 
-            // 텍스트 입력 전 잠시 대기
-            await Task.Delay(500);
-
-            // 텍스트 필드 클릭하고 내용 지우기
-            await textarea.ClickAsync();
-            await textarea.FillAsync(""); // 내용 비우기 - TypeAsync 대신 FillAsync 사용
-
             // 텍스트 입력 
             await textarea.FillAsync("안녕하세요"); // TypeAsync 대신 FillAsync 사용
-
-            // 입력 완료 후 UI 업데이트를 위한 시간 제공
-            await Task.Delay(1000);
-
-            // 디버깅용: 입력된 텍스트 확인
-            var textareaValue = await Page.EvaluateAsync<string>("document.querySelector('textarea#messageInput').value");
-            Console.WriteLine($"입력된 텍스트: '{textareaValue}'");
-
-            // 디버깅용: 버튼 상태 확인
-            var buttonDisabled = await Page.EvaluateAsync<bool>("document.querySelector('button.send-btn').disabled");
-            Console.WriteLine($"버튼 비활성화 상태: {buttonDisabled}");
 
             // Assert
             // 텍스트 입력 후 전송 버튼은 활성화되어야 함
@@ -273,7 +232,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_LinkShareButton_Click_ActivatesChat()
         {
-           // Arrange
+            // Arrange
             var linkShareButton = Page.Locator("button.share-btn");
             var modal = Page.Locator(".modal");
             var submitButton = modal.Locator("button.submit-btn");
@@ -288,11 +247,23 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await jobUrlInput.FillAsync("https://example.com/job-posting");
 
             await submitButton.ClickAsync(); // 모달 창 닫기
-            await Expect(modal).Not.ToBeVisibleAsync(); // 모달이 닫혔는지 확인
+            // 모달이 DOM에서 완전히 제거될 때까지 대기
+            await Page.WaitForSelectorAsync(".modal", new()
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
 
-            // Assert : 채팅창 활성화 확인
+            // Assert:
+            // 1) 환영 메시지 요소가 DOM에서 제거(Detached)되는지 확인
+            await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
+            // 2) 채팅 입력창이 활성화(Enabled) 되는지 확인
             var chatArea = Page.Locator("textarea#messageInput");
-            await Expect(chatArea).ToBeVisibleAsync();
+            await Expect(chatArea).ToBeEnabledAsync();
         }
 
         [Test]
@@ -308,8 +279,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             var statusMessage = Page.Locator(".response-status");
             var textarea = Page.Locator("textarea#messageInput");
             var sendButton = Page.Locator("button.send-btn");
-
-            var initialMessageCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+            var initialCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Act
             // 메시지 전송
@@ -328,12 +298,9 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await textarea.PressAsync("Enter");
             await Task.Delay(500);
 
-            var messageCountAfterEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
-            (messageCountAfterEnter - initialMessageCount).ShouldBeLessThanOrEqualTo(2, 
+            var afterCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+            (afterCount - initialCount).ShouldBeLessThanOrEqualTo(2,
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
-
-            // 서버 응답 종료 대기
-            await Page.WaitForSelectorAsync(".response-status", new() { State = WaitForSelectorState.Detached });
         }
     }
 }

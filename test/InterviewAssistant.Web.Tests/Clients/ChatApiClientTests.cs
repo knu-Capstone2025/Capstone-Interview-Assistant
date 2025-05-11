@@ -86,4 +86,64 @@ public class ChatApiClientTests
         responses[0].Message.ShouldBe("안녕하세요!");
         responses[1].Message.ShouldBe("자기소개 부탁드립니다.");
     }
+
+    // 유효한 요청이 전송되었을 때 올바른 응답을 반환하는지 검증.
+    [Test]
+    public async Task SendInterviewDataAsync_ReturnsResponses_WithValidRequest()
+    {
+        // Arrange
+        var mockResponseJson = JsonSerializer.Serialize(new List<ChatResponse>
+        {
+            new ChatResponse { Message = "이력서 검토 완료" },
+            new ChatResponse { Message = "채용공고 분석 완료" }
+        });
+
+        var fakeHttpContent = new StringContent(mockResponseJson, Encoding.UTF8, "application/json");
+        var fakeResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = fakeHttpContent
+        };
+
+        var handler = new FakeHttpMessageHandler(fakeResponse);
+        var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("http://fake-api.test")
+        };
+
+        var loggerFactory = Substitute.For<ILoggerFactory>();
+        var chatApiClient = new ChatApiClient(httpClient, loggerFactory);
+
+        var request = new InterviewDataRequest
+        {
+            ResumeUrl = "https://www.example.com/resume",
+            JobDescriptionUrl = "https://www.example.com/job"
+        };
+
+        // Act
+        var responses = await chatApiClient.SendInterviewDataAsync(request).ToListAsync();
+
+        // Assert
+        responses.Count.ShouldBe(2);
+        responses[0].Message.ShouldBe("이력서 검토 완료");
+        responses[1].Message.ShouldBe("채용공고 분석 완료");
+    }
+
+    // null 요청이 전달될 때 ArgumentNullException이 발생하는지 검증.
+    [Test]
+    public void SendInterviewDataAsync_WithNullRequest_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var loggerFactory = Substitute.For<ILoggerFactory>();
+
+        var fakeHandler = new FakeHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var httpClient = new HttpClient(fakeHandler)
+        {
+            BaseAddress = new Uri("http://fake-api.test")  // 실제로는 요청이 나가지 않음
+        };
+        var chatApiClient = new ChatApiClient(httpClient, loggerFactory);
+
+        // Act & Assert
+        Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await chatApiClient.SendInterviewDataAsync(null!).ToListAsync());
+    }
 }
