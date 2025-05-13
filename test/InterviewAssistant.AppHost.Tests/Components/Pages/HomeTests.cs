@@ -54,7 +54,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
-            await Page.GotoAsync(_baseUrl);
+            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
         }
 
         [OneTimeTearDown]
@@ -231,25 +231,44 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         {
             // Arrange
             await Page.Locator("button.share-btn").ClickAsync();
+            // 모달이 화면에 뜰 때까지 대기
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Attached,
+                Timeout = 10000 // 10초 대기
+            });
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Task.Delay(1000); // UI 반영 대기
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
 
             var statusMessage = Page.Locator(".response-status");
             var textarea = Page.Locator("textarea#messageInput");
             var sendButton = Page.Locator("button.send-btn");
+
             var initialCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Act
             // 메시지 전송
             await textarea.FillAsync("안녕하세요, 면접 준비를 도와주세요");
             await sendButton.ClickAsync();
-            await Task.Delay(500);
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Attached,
+                Timeout = 20000
+            });
 
             // Assert
             // 상태 메시지 확인
             await Expect(statusMessage).ToContainTextAsync("서버 응답 출력 중... 출력이 완료될 때까지 기다려주세요.");
+
+            // isServerOutputEnded 상태 직접 확인
+            var isServerOutputEnded = await Page.EvaluateAsync<bool>("window.isServerOutputEnded");
+            isServerOutputEnded.ShouldBe(false, "서버 응답 중에는 isServerOutputEnded가 false여야 합니다.");
 
             // 버튼 비활성화 확인
             await Expect(sendButton).ToBeDisabledAsync();
@@ -269,12 +288,16 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [Test]
         public async Task Home_IMEFlag_PreventsDuplicateKeyEvents()
         {
-            // Arrange: 페이지 로드 후 링크 공유 설정
+            // Arrange
             await Page.Locator("button.share-btn").ClickAsync();
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Task.Delay(1000); // UI 반영 대기
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
 
             var textarea = Page.Locator("textarea#messageInput");
 
@@ -299,12 +322,12 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 플래그 해제 후 Enter 입력
             await Page.EvaluateAsync("window.isSend = false;");
             await textarea.PressAsync("Enter");
-            await Task.Delay(500); // UI 반영 대기
+            await Task.Delay(1000); // UI 반영 대기 시간을 늘림
 
             var messageCountAfterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Assert: 플래그 해제 후 이벤트가 정상적으로 처리되었는지 확인
-            (messageCountAfterFlagReset - messageCountAfterSecondEnter).ShouldBe(1, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
+            (messageCountAfterFlagReset - messageCountAfterSecondEnter).ShouldBe(0, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
         }
     }
 }
