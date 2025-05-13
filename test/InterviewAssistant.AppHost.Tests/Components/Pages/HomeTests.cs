@@ -327,7 +327,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             var messageCountAfterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Assert: 플래그 해제 후 이벤트가 정상적으로 처리되었는지 확인
-            (messageCountAfterFlagReset - messageCountAfterSecondEnter).ShouldBe(0, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
+            (messageCountAfterFlagReset - messageCountAfterSecondEnter).ShouldBe(1, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
         }
     }
 }
