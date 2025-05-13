@@ -261,8 +261,17 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 State = WaitForSelectorState.Detached,
                 Timeout = 5000
             });
-            // 2) 채팅 입력창이 활성화(Enabled) 되는지 확인
+
+            // 2) AI 응답이 끝날 때까지 대기
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 15000
+            });
+
+            // 2) 입력창 활성화 상태 확인
             var chatArea = Page.Locator("textarea#messageInput");
+            await Expect(chatArea).ToBeVisibleAsync();
             await Expect(chatArea).ToBeEnabledAsync();
         }
 
