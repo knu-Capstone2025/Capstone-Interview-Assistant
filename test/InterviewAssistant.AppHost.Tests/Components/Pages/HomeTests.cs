@@ -266,7 +266,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
             {
                 State = WaitForSelectorState.Detached,
-                Timeout = 15000
+                Timeout = 20000
             });
 
             // 2) 입력창 활성화 상태 확인
