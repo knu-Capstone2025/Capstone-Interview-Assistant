@@ -242,7 +242,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         }
 
         [Test]
-        public async Task Home_Serveroutput_Prohibit_UserTransport()
+        public async Task Home_LinkShareButton_Click_ActivatesChat()
         {
             // Arrange
             var linkShareButton = Page.Locator("button.share-btn");
