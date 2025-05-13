@@ -264,14 +264,6 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 State = WaitForSelectorState.Detached,
                 Timeout = 10000 // 모달 닫힘 대기 시간
             });
-            await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
-            await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
-            await Page.Locator("button.submit-btn").ClickAsync();
-            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
-            {
-                State = WaitForSelectorState.Detached,
-                Timeout = 15000 // 환영 메시지 사라짐 대기 시간
-            });
 
             // 2) AI 응답이 끝날 때까지 대기
             await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
@@ -280,7 +272,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 Timeout = 40000 // AI 응답 상태 메시지 사라짐 대기 시간
             });
 
-            // 2) 입력창 활성화 상태 확인
+            // 3) 입력창 활성화 상태 확인
             var chatArea = Page.Locator("textarea#messageInput");
             await Expect(chatArea).ToBeVisibleAsync();
             await Expect(chatArea).ToBeEnabledAsync();
