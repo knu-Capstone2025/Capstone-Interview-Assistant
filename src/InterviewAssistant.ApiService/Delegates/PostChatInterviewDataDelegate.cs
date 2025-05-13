@@ -15,9 +15,6 @@ namespace InterviewAssistant.ApiService.Delegates;
 /// </summary>
 public static partial class ChatCompletionDelegate
 {
-    // 고정 ID 정의
-    private static readonly Guid ResumeId = new Guid("11111111-1111-1111-1111-111111111111");
-    private static readonly Guid JobDescriptionId = new Guid("22222222-2222-2222-2222-222222222222");
 
     /// <summary>
     /// Invokes the chat interview data endpoint.
@@ -36,18 +33,18 @@ public static partial class ChatCompletionDelegate
 
         ResumeEntry resumeEntry = new()
         {
-            Id = ResumeId,
+            Id = req.ResumeId,
             Content = resumeContent
         };
-        await repository.SaveOrUpdateResumeAsync(resumeEntry);
+        await repository.SaveResumeAsync(resumeEntry);
 
         JobDescriptionEntry jobDescriptionEntry = new()
         {
-            Id = JobDescriptionId,
+            Id = req.JobDescriptionId,
             Content = jobDescriptionContent,
-            ResumeEntryId = ResumeId
+            ResumeEntryId = req.ResumeId
         };
-        await repository.SaveOrUpdateJobAsync(jobDescriptionEntry);
+        await repository.SaveJobAsync(jobDescriptionEntry);
 
         await foreach (var text in kernelService.InvokeInterviewAgentAsync(resumeContent, jobDescriptionContent))
         {
