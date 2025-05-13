@@ -54,7 +54,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
-            await Page.GotoAsync(_baseUrl);
+            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
         }
 
         [OneTimeTearDown]
@@ -118,7 +118,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Expect(sendButton).ToBeVisibleAsync();
             await Expect(sendButton).ToBeDisabledAsync();
 
-            // 텍스트 입력 필드 확인 (Locator 기반으로 변경)
+            // 텍스트 입력 필드 확인 (Locator 기반으로 변경), 링크 공유 후 채팅창 활성화 확인
             await Expect(textarea).ToBeVisibleAsync();
 
             // 텍스트 입력 
@@ -241,11 +241,8 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             alertMessage.ShouldBe("URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
 
-        /// <summary>
-        /// 링크 공유 후 채팅창이 활성화 되는지 확인합니다.
-        /// </summary>
         [Test]
-        public async Task Home_LinkShareButton_Click_ActivatesChat()
+        public async Task Home_Serveroutput_Prohibit_UserTransport()
         {
             // Arrange
             var linkShareButton = Page.Locator("button.share-btn");
@@ -267,10 +264,10 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 State = WaitForSelectorState.Detached,
                 Timeout = 10000 // 모달 닫힘 대기 시간
             });
-
-            // Assert:
-            // 1) 환영 메시지 요소가 DOM에서 제거(Detached)되는지 확인
-            await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+            await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
+            await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
+            await Page.Locator("button.submit-btn").ClickAsync();
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
             {
                 State = WaitForSelectorState.Detached,
                 Timeout = 15000 // 환영 메시지 사라짐 대기 시간
@@ -336,6 +333,10 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 상태 메시지 확인
             await Expect(statusMessage).ToContainTextAsync("서버 응답 출력 중... 출력이 완료될 때까지 기다려주세요.");
 
+            // isServerOutputEnded 상태 직접 확인
+            var isServerOutputEnded = await Page.EvaluateAsync<bool>("window.isServerOutputEnded");
+            isServerOutputEnded.ShouldBe(false, "서버 응답 중에는 isServerOutputEnded가 false여야 합니다.");
+
             // 버튼 비활성화 확인
             await Expect(sendButton).ToBeDisabledAsync();
 
@@ -353,6 +354,55 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             messageCountAfterEnter.ShouldBe(messageCountBeforeEnter,
                 "서버 응답 중 Enter 키를 눌렀을 때 추가 메시지가 전송되지 않아야 합니다. " +
                 $"Enter 전 메시지 수: {messageCountBeforeEnter}, Enter 후 메시지 수: {messageCountAfterEnter}");
+        }
+
+        /// <summary>
+        /// 중복 이벤트 방지 플래그가 제대로 동작하는지 확인합니다.
+        /// </summary>
+        [Test]
+        public async Task Home_IMEFlag_PreventsDuplicateKeyEvents()
+        {
+            // Arrange
+            await Page.Locator("button.share-btn").ClickAsync();
+            await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
+            await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
+            await Page.Locator("button.submit-btn").ClickAsync();
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
+
+            var textarea = Page.Locator("textarea#messageInput");
+
+            // Act: 플래그를 사용한 중복 방지 확인
+            await textarea.FillAsync("안녕하세요");
+
+            // 첫 번째 Enter 입력
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500); // UI 반영 대기
+
+            var messageCountAfterFirstEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // 플래그가 설정된 상태에서 두 번째 Enter 입력
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500); // UI 반영 대기
+
+            var messageCountAfterSecondEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Assert: 중복 이벤트가 발생하지 않았는지 확인
+            (messageCountAfterSecondEnter - messageCountAfterFirstEnter).ShouldBe(0, "IME 간섭 방지 플래그가 제대로 동작해야 합니다.");
+
+            // 플래그 해제 후 Enter 입력
+            await Page.EvaluateAsync("window.isSend = false;");
+            await textarea.FillAsync("안녕하세요2");
+            await textarea.PressAsync("Enter");
+            await Task.Delay(1000); // UI 반영 대기 시간을 늘림
+
+            var messageCountAfterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Assert: 플래그 해제 후 이벤트가 정상적으로 처리되었는지 확인
+            (messageCountAfterFlagReset - messageCountAfterFirstEnter).ShouldBe(2, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
         }
     }
 }
