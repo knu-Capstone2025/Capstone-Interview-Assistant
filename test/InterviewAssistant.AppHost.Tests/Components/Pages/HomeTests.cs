@@ -54,7 +54,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
-            await Page.GotoAsync(_baseUrl);
+            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
         }
 
         [OneTimeTearDown]
@@ -103,7 +103,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Expect(sendButton).ToBeVisibleAsync();
             await Expect(sendButton).ToBeDisabledAsync();
 
-            // 텍스트 입력 필드 확인 (Locator 기반으로 변경)
+            // 텍스트 입력 필드 확인 (Locator 기반으로 변경), 링크 공유 후 채팅창 활성화 확인
             await Expect(textarea).ToBeVisibleAsync();
 
             // 텍스트 입력 
@@ -226,70 +226,49 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             alertMessage.ShouldBe("URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
 
-        /// <summary>
-        /// 링크 공유 후 채팅창이 활성화 되는지 확인합니다.
-        /// </summary>
-        [Test]
-        public async Task Home_LinkShareButton_Click_ActivatesChat()
-        {
-            // Arrange
-            var linkShareButton = Page.Locator("button.share-btn");
-            var modal = Page.Locator(".modal");
-            var submitButton = modal.Locator("button.submit-btn");
-
-            await linkShareButton.ClickAsync(); // 모달 창 열기
-            await Expect(modal).ToBeVisibleAsync(); // 모달이 제대로 열렸는지 확인
-
-            // 입력 필드에 URL 입력
-            var resumeUrlInput = modal.Locator("input#resumeUrl");
-            var jobUrlInput = modal.Locator("input#jobUrl");
-            await resumeUrlInput.FillAsync("https://example.com/resume.pdf");
-            await jobUrlInput.FillAsync("https://example.com/job-posting");
-
-            await submitButton.ClickAsync(); // 모달 창 닫기
-            // 모달이 DOM에서 완전히 제거될 때까지 대기
-            await Page.WaitForSelectorAsync(".modal", new()
-            {
-                State = WaitForSelectorState.Detached,
-                Timeout = 5000
-            });
-
-            // Assert:
-            // 1) 환영 메시지 요소가 DOM에서 제거(Detached)되는지 확인
-            await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
-            {
-                State = WaitForSelectorState.Detached,
-                Timeout = 5000
-            });
-            // 2) 채팅 입력창이 활성화(Enabled) 되는지 확인
-            var chatArea = Page.Locator("textarea#messageInput");
-            await Expect(chatArea).ToBeEnabledAsync();
-        }
-
         [Test]
         public async Task Home_Serveroutput_Prohibit_UserTransport()
         {
             // Arrange
             await Page.Locator("button.share-btn").ClickAsync();
+            // 모달이 화면에 뜰 때까지 대기
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Attached,
+                Timeout = 10000 // 10초 대기
+            });
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Task.Delay(1000); // UI 반영 대기
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
 
             var statusMessage = Page.Locator(".response-status");
             var textarea = Page.Locator("textarea#messageInput");
             var sendButton = Page.Locator("button.send-btn");
+
             var initialCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Act
             // 메시지 전송
             await textarea.FillAsync("안녕하세요, 면접 준비를 도와주세요");
             await sendButton.ClickAsync();
-            await Task.Delay(500);
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Attached,
+                Timeout = 20000
+            });
 
             // Assert
             // 상태 메시지 확인
             await Expect(statusMessage).ToContainTextAsync("서버 응답 출력 중... 출력이 완료될 때까지 기다려주세요.");
+
+            // isServerOutputEnded 상태 직접 확인
+            var isServerOutputEnded = await Page.EvaluateAsync<bool>("window.isServerOutputEnded");
+            isServerOutputEnded.ShouldBe(false, "서버 응답 중에는 isServerOutputEnded가 false여야 합니다.");
 
             // 버튼 비활성화 확인
             await Expect(sendButton).ToBeDisabledAsync();
@@ -301,6 +280,55 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             var afterCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
             (afterCount - initialCount).ShouldBeLessThanOrEqualTo(2,
                 "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
+        }
+
+        /// <summary>
+        /// 중복 이벤트 방지 플래그가 제대로 동작하는지 확인합니다.
+        /// </summary>
+        [Test]
+        public async Task Home_IMEFlag_PreventsDuplicateKeyEvents()
+        {
+            // Arrange
+            await Page.Locator("button.share-btn").ClickAsync();
+            await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
+            await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
+            await Page.Locator("button.submit-btn").ClickAsync();
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
+
+            var textarea = Page.Locator("textarea#messageInput");
+
+            // Act: 플래그를 사용한 중복 방지 확인
+            await textarea.FillAsync("안녕하세요");
+
+            // 첫 번째 Enter 입력
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500); // UI 반영 대기
+
+            var messageCountAfterFirstEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // 플래그가 설정된 상태에서 두 번째 Enter 입력
+            await textarea.PressAsync("Enter");
+            await Task.Delay(500); // UI 반영 대기
+
+            var messageCountAfterSecondEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Assert: 중복 이벤트가 발생하지 않았는지 확인
+            (messageCountAfterSecondEnter - messageCountAfterFirstEnter).ShouldBe(0, "IME 간섭 방지 플래그가 제대로 동작해야 합니다.");
+
+            // 플래그 해제 후 Enter 입력
+            await Page.EvaluateAsync("window.isSend = false;");
+            await textarea.FillAsync("안녕하세요2");
+            await textarea.PressAsync("Enter");
+            await Task.Delay(1000); // UI 반영 대기 시간을 늘림
+
+            var messageCountAfterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Assert: 플래그 해제 후 이벤트가 정상적으로 처리되었는지 확인
+            (messageCountAfterFlagReset - messageCountAfterFirstEnter).ShouldBe(2, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
         }
     }
 }

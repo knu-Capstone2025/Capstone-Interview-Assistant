@@ -109,6 +109,8 @@
     // 링크 공유 여부
     private bool isLinkShared = false;
     private bool isServerOutputEnded = true;
+    // 메시지 전송 중 여부
+    private bool isSend = false;
     // 모달 관련 변수
     private bool showModal = false;
     private string resumeUrl = string.Empty;
@@ -187,6 +189,10 @@
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
+        if(e.Repeat || isSend)
+        {
+            return;
+        }
         if (e.Key == "Enter" && !e.ShiftKey)
         {
             // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
@@ -197,7 +203,9 @@
             {
                 // 실제 값으로 userInput을 갱신합니다
                 userInput = actualValue.TrimEnd('\n', '\r');
+                isSend = true;
                 await SendMessage();
+                isSend = false;
             }
         }
     }
