@@ -283,18 +283,27 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Task.Delay(1000); // UI 반영 대기
+            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 5000
+            });
 
             var statusMessage = Page.Locator(".response-status");
             var textarea = Page.Locator("textarea#messageInput");
             var sendButton = Page.Locator("button.send-btn");
+
             var initialCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Act
             // 메시지 전송
             await textarea.FillAsync("안녕하세요, 면접 준비를 도와주세요");
             await sendButton.ClickAsync();
-            await Task.Delay(500);
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Attached,
+                Timeout = 20000
+            });
 
             // Assert
             // 상태 메시지 확인
