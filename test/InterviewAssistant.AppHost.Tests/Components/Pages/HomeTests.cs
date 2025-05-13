@@ -312,7 +312,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             // 플래그가 설정된 상태에서 두 번째 Enter 입력
             await textarea.PressAsync("Enter");
-            await Task.Delay(700); // UI 반영 대기
+            await Task.Delay(500); // UI 반영 대기
 
             var messageCountAfterSecondEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
@@ -321,13 +321,14 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             // 플래그 해제 후 Enter 입력
             await Page.EvaluateAsync("window.isSend = false;");
+            await textarea.FillAsync("안녕하세요2");
             await textarea.PressAsync("Enter");
             await Task.Delay(1000); // UI 반영 대기 시간을 늘림
 
             var messageCountAfterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
 
             // Assert: 플래그 해제 후 이벤트가 정상적으로 처리되었는지 확인
-            (messageCountAfterFlagReset - messageCountAfterSecondEnter).ShouldBe(1, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
+            (messageCountAfterFlagReset - messageCountAfterFirstEnter).ShouldBe(2, "플래그 해제 후 이벤트가 정상적으로 처리되어야 합니다.");
         }
     }
 }
