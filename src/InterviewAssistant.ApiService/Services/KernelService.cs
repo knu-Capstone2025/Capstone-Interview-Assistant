@@ -37,10 +37,11 @@ public class KernelService : IKernelService
     {
         try
         {
+            var endpoint = _config["MCP:MarkitdownSseEndpoint"] ?? "http://localhost:3001/sse";
             var transport = new SseClientTransport(new SseClientTransportOptions
             {
                 Name = "Markitdown",
-                Endpoint = new Uri("http://localhost:3001/sse")
+                Endpoint = new Uri(endpoint)
             });
 
             var mcpClient = await McpClientFactory.CreateAsync(transport);
