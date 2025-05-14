@@ -26,7 +26,6 @@ public static partial class ChatCompletionDelegate
     /// <returns>Returns an asynchronous stream of <see cref="ChatResponse"/>.</returns>
     public static async IAsyncEnumerable<ChatResponse> PostInterviewDataAsync(
         [FromBody] InterviewDataRequest req,
-        IUrlContentDownloader downloader,
         IInterviewRepository repository,
         IKernelService kernelService,
         Kernel kernel)
