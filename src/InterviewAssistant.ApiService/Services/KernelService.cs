@@ -47,12 +47,6 @@ public class KernelService : IKernelService
             var mcpClient = await McpClientFactory.CreateAsync(transport);
             var tools = await mcpClient.ListToolsAsync();
 
-            Console.WriteLine("[MCP 툴 목록]");
-            foreach (var tool in tools)
-            {
-                Console.WriteLine($" - {tool.Name}: {tool.Description}");
-            }
-
             _kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
         }
         catch (Exception ex)
