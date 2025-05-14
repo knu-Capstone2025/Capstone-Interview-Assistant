@@ -28,28 +28,37 @@ public static partial class ChatCompletionDelegate
         [FromBody] InterviewDataRequest req,
         IUrlContentDownloader downloader,
         IInterviewRepository repository,
-        IKernelService kernelService)
+        IKernelService kernelService,
+        Kernel kernel)
     {
 
-        string resumeContent = await downloader.DownloadTextAsync(req.ResumeUrl);
-        string jobDescriptionContent = await downloader.DownloadTextAsync(req.JobDescriptionUrl);
+        var markitdownPlugin = kernel.Plugins["Markitdown"];
+        var convertFunction = markitdownPlugin["convert_to_markdown"];
+
+        var resumeArgs = new KernelArguments { ["uri"] = req.ResumeUrl };
+        var resumeResult = await kernel.InvokeAsync(convertFunction, resumeArgs);
+        var resumeMarkdown = resumeResult.ToString();
+
+        var jobArgs = new KernelArguments { ["uri"] = req.JobDescriptionUrl };
+        var jobResult = await kernel.InvokeAsync(convertFunction, jobArgs);
+        var jobMarkdown = jobResult.ToString();
 
         ResumeEntry resumeEntry = new()
         {
             Id = ResumeId,
-            Content = resumeContent
+            Content = resumeMarkdown
         };
         await repository.SaveOrUpdateResumeAsync(resumeEntry);
 
         JobDescriptionEntry jobDescriptionEntry = new()
         {
             Id = JobDescriptionId,
-            Content = jobDescriptionContent,
+            Content = jobMarkdown,
             ResumeEntryId = ResumeId
         };
         await repository.SaveOrUpdateJobAsync(jobDescriptionEntry);
 
-        await foreach (var text in kernelService.InvokeInterviewAgentAsync(resumeContent, jobDescriptionContent))
+        await foreach (var text in kernelService.InvokeInterviewAgentAsync(resumeMarkdown, jobMarkdown))
         {
             yield return new ChatResponse { Message = text };
         }
