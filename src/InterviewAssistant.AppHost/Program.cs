@@ -1,5 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+var container = builder.AddDockerfile("markitdown-mcp", "../markitdown-mcp")
+                       .WithEndpoint(3001, 3001)
+                       .WithArgs("--sse", "--host", "0.0.0.0", "--port", "3001");
+
+
 var insights = builder.ExecutionContext.IsPublishMode
                ? builder.AddAzureApplicationInsights("applicationinsights")
                : builder.AddConnectionString("applicationinsights");
