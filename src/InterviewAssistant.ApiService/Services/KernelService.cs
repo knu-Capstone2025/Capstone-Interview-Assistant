@@ -1,8 +1,11 @@
 using System.Reflection;
-
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
+using ModelContextProtocol;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Protocol.Transport;
 
 namespace InterviewAssistant.ApiService.Services;
 
@@ -14,9 +17,48 @@ public interface IKernelService
         IEnumerable<ChatMessageContent>? messages = null);
 }
 
-public class KernelService(Kernel kernel, IConfiguration config) : IKernelService
+public class KernelService : IKernelService
 {
+    private readonly Kernel _kernel;
+    private readonly IConfiguration _config;
+
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
+
+    public KernelService(Kernel kernel, IConfiguration config)
+    {
+        Console.WriteLine("[KernelService 생성자 호출됨]");
+        _kernel = kernel;
+        _config = config;
+
+        Task.Run(InitializeMcpTools).Wait(); // MCP 등록 비동기 처리
+    }
+
+    private async Task InitializeMcpTools()
+    {
+        try
+        {
+            var transport = new SseClientTransport(new SseClientTransportOptions
+            {
+                Name = "Markitdown",
+                Endpoint = new Uri("http://localhost:3001/sse")
+            });
+
+            var mcpClient = await McpClientFactory.CreateAsync(transport);
+            var tools = await mcpClient.ListToolsAsync();
+
+            Console.WriteLine("[MCP 툴 목록]");
+            foreach (var tool in tools)
+            {
+                Console.WriteLine($" - {tool.Name}: {tool.Description}");
+            }
+
+            _kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MCP 초기화 실패] {ex.Message}");
+        }
+    }
 
     private ChatCompletionAgent GetInterviewAgent()
     {
@@ -30,12 +72,11 @@ public class KernelService(Kernel kernel, IConfiguration config) : IKernelServic
         }
 
         var definition = File.ReadAllText(filepath);
-
         var template = KernelFunctionYaml.ToPromptTemplateConfig(definition);
 
         var agent = new ChatCompletionAgent(template, new KernelPromptTemplateFactory())
         {
-            Kernel = kernel
+            Kernel = _kernel
         };
 
         return agent;
@@ -45,7 +86,7 @@ public class KernelService(Kernel kernel, IConfiguration config) : IKernelServic
     {
         return new PromptExecutionSettings()
         {
-            ServiceId = config["SemanticKernel:ServiceId"] ?? "github",
+            ServiceId = _config["SemanticKernel:ServiceId"] ?? "github",
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
     }
@@ -56,7 +97,6 @@ public class KernelService(Kernel kernel, IConfiguration config) : IKernelServic
         IEnumerable<ChatMessageContent>? messages = null)
     {
         var agent = GetInterviewAgent();
-
         var messagesList = messages?.ToList() ?? [];
 
         var arguments = new KernelArguments(GetExecutionSettings())
