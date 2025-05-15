@@ -10,6 +10,10 @@ using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 
+using ModelContextProtocol;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol.Transport;
+
 using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +38,19 @@ builder.Services.AddOpenApi();
 
 builder.AddAzureOpenAIClient("openai");
 
+builder.Services.AddSingleton<Task<IMcpClient>>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var endpoint = config["MCP:MarkitdownSseEndpoint"] ?? "http://localhost:3001/sse";
+    var transport = new SseClientTransport(new SseClientTransportOptions
+    {
+        Name = "Markitdown",
+        Endpoint = new Uri(endpoint)
+    });
+    return McpClientFactory.CreateAsync(transport); 
+});
+
+
 builder.Services.AddSingleton<Kernel>(sp =>
 {
     var config = builder.Configuration;
@@ -48,6 +65,9 @@ builder.Services.AddSingleton<Kernel>(sp =>
 
     return kernel;
 });
+
+
+
 
 builder.Services.AddHttpClient<IUrlContentDownloader, UrlContentDownloader>();
 

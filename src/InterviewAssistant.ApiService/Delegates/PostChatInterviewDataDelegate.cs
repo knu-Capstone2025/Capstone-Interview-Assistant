@@ -30,6 +30,7 @@ public static partial class ChatCompletionDelegate
         IKernelService kernelService,
         Kernel kernel)
     {
+        await kernelService.EnsureInitializedAsync();
 
         var markitdownPlugin = kernel.Plugins["Markitdown"];
         var convertFunction = markitdownPlugin["convert_to_markdown"];
@@ -38,9 +39,17 @@ public static partial class ChatCompletionDelegate
         var resumeResult = await kernel.InvokeAsync(convertFunction, resumeArgs);
         var resumeMarkdown = resumeResult.ToString();
 
+        Console.WriteLine("[MCP 변환 완료] 이력서:");
+        Console.WriteLine(resumeMarkdown[..Math.Min(500, resumeMarkdown.Length)]);
+
+
+
         var jobArgs = new KernelArguments { ["uri"] = req.JobDescriptionUrl };
         var jobResult = await kernel.InvokeAsync(convertFunction, jobArgs);
         var jobMarkdown = jobResult.ToString();
+
+        Console.WriteLine("[MCP 변환 완료] 채용공고:");
+        Console.WriteLine(jobMarkdown[..Math.Min(500, jobMarkdown.Length)]);
 
         ResumeEntry resumeEntry = new()
         {
@@ -56,6 +65,8 @@ public static partial class ChatCompletionDelegate
             ResumeEntryId = ResumeId
         };
         await repository.SaveOrUpdateJobAsync(jobDescriptionEntry);
+
+        
 
         await foreach (var text in kernelService.InvokeInterviewAgentAsync(resumeMarkdown, jobMarkdown))
         {

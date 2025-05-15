@@ -11,50 +11,38 @@ namespace InterviewAssistant.ApiService.Services;
 
 public interface IKernelService
 {
+    Task EnsureInitializedAsync();
     IAsyncEnumerable<string> InvokeInterviewAgentAsync(
         string resumeContent,
         string jobDescriptionContent,
         IEnumerable<ChatMessageContent>? messages = null);
 }
 
-public class KernelService : IKernelService
+public class KernelService(Kernel kernel, IConfiguration config, Task<IMcpClient> mcpClientTask) : IKernelService
 {
-    private readonly Kernel _kernel;
-    private readonly IConfiguration _config;
 
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
 
-    public KernelService(Kernel kernel, IConfiguration config)
+    private bool _initialized = false;
+    public async Task EnsureInitializedAsync()
     {
-        Console.WriteLine("[KernelService 생성자 호출됨]");
-        _kernel = kernel;
-        _config = config;
-
-        Task.Run(InitializeMcpTools).Wait(); // MCP 등록 비동기 처리
+        if (_initialized) return;
+        await InitializeMcpToolsAsync();
+        _initialized = true;
     }
-
-    private async Task InitializeMcpTools()
-    {
-        try
-        {
-            var endpoint = _config["MCP:MarkitdownSseEndpoint"] ?? "http://localhost:3001/sse";
-            var transport = new SseClientTransport(new SseClientTransportOptions
-            {
-                Name = "Markitdown",
-                Endpoint = new Uri(endpoint)
-            });
-
-            var mcpClient = await McpClientFactory.CreateAsync(transport);
-            var tools = await mcpClient.ListToolsAsync();
-
-            _kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
-        }
-        catch (Exception ex)
-        {
+   private async Task InitializeMcpToolsAsync()
+   {
+       try
+       {
+           var mcpClient = await mcpClientTask; 
+           var tools = await mcpClient.ListToolsAsync();
+           kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
+       }
+       catch (Exception ex)
+       {
             Console.WriteLine($"[MCP 초기화 실패] {ex.Message}");
         }
     }
-
     private ChatCompletionAgent GetInterviewAgent()
     {
         var filepath = Path.Combine(
@@ -71,7 +59,7 @@ public class KernelService : IKernelService
 
         var agent = new ChatCompletionAgent(template, new KernelPromptTemplateFactory())
         {
-            Kernel = _kernel
+            Kernel = kernel
         };
 
         return agent;
@@ -81,7 +69,7 @@ public class KernelService : IKernelService
     {
         return new PromptExecutionSettings()
         {
-            ServiceId = _config["SemanticKernel:ServiceId"] ?? "github",
+            ServiceId = config["SemanticKernel:ServiceId"] ?? "github",
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
     }
