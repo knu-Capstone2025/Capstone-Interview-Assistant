@@ -27,8 +27,8 @@ public static partial class ChatCompletionDelegate
         IInterviewRepository repository)
     {
 
-        ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(ResumeId);
-        JobDescriptionEntry? jobDescriptionEntry = await repository.GetJobByIdAsync(JobDescriptionId);
+        ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(req.ResumeId);
+        JobDescriptionEntry? jobDescriptionEntry = await repository.GetJobByIdAsync(req.JobDescriptionId);
 
         if (resumeEntry == null || jobDescriptionEntry == null)
         {

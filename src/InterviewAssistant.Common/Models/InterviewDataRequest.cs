@@ -5,6 +5,17 @@ namespace InterviewAssistant.Common.Models;
 /// </summary>
 public class InterviewDataRequest
 {
+
+    /// <summary>
+    /// Gets or sets the unique identifier for the resume being referenced in the chat.
+    /// </summary>
+    public Guid ResumeId { get; set; } = Guid.Empty;
+
+    /// <summary>
+    /// Gets or sets the unique identifier for the job description being referenced in the chat.
+    /// </summary>
+    public Guid JobDescriptionId { get; set; } = Guid.Empty;
+
     /// <summary>
     /// Gets or sets the URL of the resume document.
     /// </summary>
