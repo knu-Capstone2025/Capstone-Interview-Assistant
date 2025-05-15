@@ -18,7 +18,7 @@ public interface IKernelService
         IEnumerable<ChatMessageContent>? messages = null);
 }
 
-public class KernelService(Kernel kernel, IConfiguration config, Task<IMcpClient> mcpClientTask) : IKernelService
+public class KernelService(Kernel kernel, Task<IMcpClient> mcpClientTask) : IKernelService
 {
 
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
@@ -69,7 +69,6 @@ public class KernelService(Kernel kernel, IConfiguration config, Task<IMcpClient
     {
         return new PromptExecutionSettings()
         {
-            ServiceId = config["SemanticKernel:ServiceId"] ?? "github",
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
     }
