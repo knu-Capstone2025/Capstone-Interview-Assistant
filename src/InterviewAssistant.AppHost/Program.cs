@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var container = builder.AddDockerfile("markitdown-mcp", "../markitdown-mcp")
+var container = builder.AddDockerfile("markitdown-mcp", "../InterviewAssistant.McpMarkItDown/packages/markitdown-mcp")
                        .WithEndpoint(3001, 3001)
                        .WithArgs("--sse", "--host", "0.0.0.0", "--port", "3001");
 

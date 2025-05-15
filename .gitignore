@@ -487,4 +487,4 @@ $RECYCLE.BIN/
 .azure
 scripts/instances.json
 
-/src/markitdown-mcp/
+/src/InterviewAssistant.McpMarkItDown
