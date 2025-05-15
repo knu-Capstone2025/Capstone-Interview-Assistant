@@ -15,6 +15,8 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
 
+using ModelContextProtocol.Client;
+
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
 
@@ -31,6 +33,8 @@ public class KernelServiceTests
     private IChatCompletionService _chatCompletionService;
     private IConfiguration _configuration;
     private KernelService _kernelService;
+
+    private Task<IMcpClient> _mcpClient;
     private const string ServiceId = "testServiceId";
     private const string TestResume = "테스트 이력서 내용";
     private const string TestJobDescription = "테스트 직무 설명";
@@ -51,7 +55,7 @@ public class KernelServiceTests
         _kernel = builder.Build();
 
         // Create kernel service
-        _kernelService = new KernelService(_kernel, _configuration);
+        _kernelService = new KernelService(_kernel, _configuration, _mcpClient);
         
         // Setup File.Exists to return true for our YAML path
         var fileSystem = Substitute.For<IFileSystem>();
