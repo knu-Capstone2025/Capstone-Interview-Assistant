@@ -6,6 +6,8 @@ using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Repositories;
 
+using InterviewAssistant.Common.Middleware;
+
 using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
@@ -77,7 +79,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
-app.UseExceptionHandler();
+app.UseGlobalExceptionHandler();
 
 // Chat Completion 엔드포인트 매핑
 app.MapChatCompletionEndpoint();
