@@ -31,9 +31,7 @@ public class KernelServiceTests
 {
     private Kernel _kernel;
     private IChatCompletionService _chatCompletionService;
-    private IConfiguration _configuration;
     private KernelService _kernelService;
-
     private Task<IMcpClient> _mcpClient;
     private const string ServiceId = "testServiceId";
     private const string TestResume = "테스트 이력서 내용";
@@ -44,18 +42,14 @@ public class KernelServiceTests
     {
         // Create substitutes
         _chatCompletionService = Substitute.For<IChatCompletionService>();
-        _configuration = Substitute.For<IConfiguration>();
-
-        // Setup configuration
-        _configuration["SemanticKernel:ServiceId"].Returns(ServiceId);
-
+    
         // Create a kernel with our substitute service
         var builder = Kernel.CreateBuilder();
         builder.Services.AddKeyedSingleton<IChatCompletionService>(ServiceId, _chatCompletionService);
         _kernel = builder.Build();
 
         // Create kernel service
-        _kernelService = new KernelService(_kernel, _configuration, _mcpClient);
+        _kernelService = new KernelService(_kernel, _mcpClient);
         
         // Setup File.Exists to return true for our YAML path
         var fileSystem = Substitute.For<IFileSystem>();
