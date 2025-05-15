@@ -146,7 +146,7 @@ body {
 /* 입력 영역 */
 .chat-input-container {
     position: absolute; /* 절대 위치 지정 */
-    bottom: 120px; /* 하단에서 위에 배치 */
+    bottom: 50px; /* 하단에서 위에 배치 */
     left: 5%;
     right: 5%;
     background-color: var(--chat-bg);
