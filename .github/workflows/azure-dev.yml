@@ -83,6 +83,12 @@ jobs:
           echo "❌ Some tests failed. Deployment will be skipped."
         fi
 
+    - name: ❌ Fail Workflow if Tests Failed on Main Push
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'false'
+      run: |
+        echo "Tests failed on main branch push. Failing the workflow."
+        exit 1
+
     - name: 🔄 Convert Test Results to JUnit Format
       if: github.event_name == 'pull_request'
       run: find ./test-results -name '*.trx' -exec trx2junit {} \;
