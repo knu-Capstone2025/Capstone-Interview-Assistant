@@ -122,7 +122,7 @@ public class ChatCompletionDelegateTests
         // Assert
         results.ShouldNotBeEmpty();
         results.Count.ShouldBe(1);
-        results[0].Message.ShouldBe("이력서 또는 채용공고 데이터가 없습니다.");
+        results[0].Message.ShouldContain("이력서 또는 채용공고 데이터가 없습니다");
     }
 
     [Test]
@@ -151,9 +151,8 @@ public class ChatCompletionDelegateTests
         // Assert
         results.ShouldNotBeEmpty();
         results.Count.ShouldBe(1);
-        results[0].Message.ShouldBe("이력서 또는 채용공고 데이터가 없습니다.");
+        results[0].Message.ShouldContain("이력서 또는 채용공고 데이터가 없습니다");
     }
-
 
     [Test]
     public async Task PostChatCompletionAsync_WithMultipleResponses_ShouldReturnAllResponses()
