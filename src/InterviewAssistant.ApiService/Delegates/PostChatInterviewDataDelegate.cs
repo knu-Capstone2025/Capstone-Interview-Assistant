@@ -30,26 +30,51 @@ public static partial class ChatCompletionDelegate
         IInterviewRepository repository,
         IKernelService kernelService)
     {
-
-        string resumeContent = await downloader.DownloadTextAsync(req.ResumeUrl);
-        string jobDescriptionContent = await downloader.DownloadTextAsync(req.JobDescriptionUrl);
-
-        ResumeEntry resumeEntry = new()
+        if (string.IsNullOrEmpty(req.ResumeUrl) || string.IsNullOrEmpty(req.JobDescriptionUrl))
         {
-            Id = ResumeId,
-            Content = resumeContent
-        };
-        await repository.SaveOrUpdateResumeAsync(resumeEntry);
+            yield return new ChatResponse { Message = "이력서 URL과 채용공고 URL이 모두 필요합니다." };
+            yield break;
+        }
 
-        JobDescriptionEntry jobDescriptionEntry = new()
+        IAsyncEnumerable<string>? interviewResults = null;
+        bool hasError = false;
+        string errorMessage = string.Empty;
+
+        try
         {
-            Id = JobDescriptionId,
-            Content = jobDescriptionContent,
-            ResumeEntryId = ResumeId
-        };
-        await repository.SaveOrUpdateJobAsync(jobDescriptionEntry);
+            string resumeContent = await downloader.DownloadTextAsync(req.ResumeUrl);
+            string jobDescriptionContent = await downloader.DownloadTextAsync(req.JobDescriptionUrl);
 
-        await foreach (var text in kernelService.InvokeInterviewAgentAsync(resumeContent, jobDescriptionContent))
+            var resumeEntry = new ResumeEntry
+            {
+                Id = ResumeId,
+                Content = resumeContent
+            };
+            await repository.SaveOrUpdateResumeAsync(resumeEntry);
+
+            var jobDescriptionEntry = new JobDescriptionEntry
+            {
+                Id = JobDescriptionId,
+                Content = jobDescriptionContent,
+                ResumeEntryId = ResumeId
+            };
+            await repository.SaveOrUpdateJobAsync(jobDescriptionEntry);
+
+            interviewResults = kernelService.InvokeInterviewAgentAsync(resumeContent, jobDescriptionContent);
+        }
+        catch (Exception ex)
+        {
+            hasError = true;
+            errorMessage = $"처리 중 오류가 발생했습니다: {ex.Message}";
+        }
+
+        if (hasError)
+        {
+            yield return new ChatResponse { Message = errorMessage };
+            yield break;
+        }
+
+        await foreach (var text in interviewResults!)
         {
             yield return new ChatResponse { Message = text };
         }

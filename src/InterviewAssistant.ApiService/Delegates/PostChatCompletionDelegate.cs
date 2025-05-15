@@ -15,7 +15,6 @@ namespace InterviewAssistant.ApiService.Delegates;
 /// </summary>
 public static partial class ChatCompletionDelegate
 {
-
     /// <summary>
     /// Invokes the chat completion endpoint.
     /// </summary>
@@ -26,35 +25,55 @@ public static partial class ChatCompletionDelegate
         IKernelService kernelService,
         IInterviewRepository repository)
     {
+        List<ChatMessageContent> messages = new();
+        IAsyncEnumerable<string>? interviewResults = null;
+        bool hasError = false;
+        string errorMessage = string.Empty;
 
-        ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(ResumeId);
-        JobDescriptionEntry? jobDescriptionEntry = await repository.GetJobByIdAsync(JobDescriptionId);
-
-        if (resumeEntry == null || jobDescriptionEntry == null)
+        try
         {
-            yield return new ChatResponse { Message = "이력서 또는 채용공고 데이터가 없습니다." };
+            ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(ResumeId);
+            JobDescriptionEntry? jobDescriptionEntry = await repository.GetJobByIdAsync(JobDescriptionId);
+
+            if (resumeEntry == null || jobDescriptionEntry == null)
+            {
+                hasError = true;
+                errorMessage = "이력서 또는 채용공고 데이터가 없습니다.";
+                throw new Exception(errorMessage);
+            }
+
+            foreach (var msg in req.Messages)
+            {
+                ChatMessageContent message = msg.Role switch
+                {
+                    MessageRoleType.User => new ChatMessageContent(AuthorRole.User, msg.Message),
+                    MessageRoleType.Assistant => new ChatMessageContent(AuthorRole.Assistant, msg.Message),
+                    MessageRoleType.System => new ChatMessageContent(AuthorRole.System, msg.Message),
+                    MessageRoleType.Tool => new ChatMessageContent(AuthorRole.Tool, msg.Message),
+                    _ => throw new ArgumentException($"Invalid role: {msg.Role}")
+                };
+                messages.Add(message);
+            }
+
+            interviewResults = kernelService.InvokeInterviewAgentAsync(
+                resumeEntry.Content,
+                jobDescriptionEntry.Content,
+                messages);
+
+        }
+        catch (Exception ex)
+        {
+            hasError = true;
+            errorMessage = $"데이터 준비 중 오류가 발생했습니다: {ex.Message}";
+        }
+
+        if (hasError)
+        {   
+            yield return new ChatResponse { Message = errorMessage };
             yield break;
         }
 
-        var messages = new List<ChatMessageContent>{};
-
-        foreach (var msg in req.Messages)
-        {
-            ChatMessageContent message = msg.Role switch
-            {
-                MessageRoleType.User => new ChatMessageContent(AuthorRole.User, msg.Message),
-                MessageRoleType.Assistant => new ChatMessageContent(AuthorRole.Assistant, msg.Message),
-                MessageRoleType.System => new ChatMessageContent(AuthorRole.System, msg.Message),
-                MessageRoleType.Tool => new ChatMessageContent(AuthorRole.Tool, msg.Message),
-                _ => throw new ArgumentException($"Invalid role: {msg.Role}")
-            };
-            messages.Add(message);
-        }
- 
-        await foreach (var text in kernelService.InvokeInterviewAgentAsync(
-            resumeEntry.Content,
-            jobDescriptionEntry.Content,
-            messages))
+        await foreach (var text in interviewResults!)
         {
             yield return new ChatResponse { Message = text };
         }
