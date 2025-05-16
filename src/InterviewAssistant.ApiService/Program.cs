@@ -38,7 +38,7 @@ builder.Services.AddOpenApi();
 
 builder.AddAzureOpenAIClient("openai");
 
-builder.Services.AddSingleton<Task<IMcpClient>>(sp =>
+builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
     var endpoint = config["MCP:MarkitdownSseEndpoint"] ?? "http://localhost:3001/sse";
@@ -47,7 +47,7 @@ builder.Services.AddSingleton<Task<IMcpClient>>(sp =>
         Name = "Markitdown",
         Endpoint = new Uri(endpoint)
     });
-    return McpClientFactory.CreateAsync(transport); 
+    return McpClientFactory.CreateAsync(transport).GetAwaiter().GetResult(); 
 });
 
 

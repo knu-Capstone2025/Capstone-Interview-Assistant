@@ -18,7 +18,7 @@ public interface IKernelService
         IEnumerable<ChatMessageContent>? messages = null);
 }
 
-public class KernelService(Kernel kernel, Task<IMcpClient> mcpClientTask) : IKernelService
+public class KernelService(Kernel kernel, IMcpClient mcpClient) : IKernelService
 {
 
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
@@ -34,7 +34,6 @@ public class KernelService(Kernel kernel, Task<IMcpClient> mcpClientTask) : IKer
    {
        try
        {
-           var mcpClient = await mcpClientTask; 
            var tools = await mcpClient.ListToolsAsync();
            kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
        }
