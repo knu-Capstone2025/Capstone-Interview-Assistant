@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
-    <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.14" />
+    <PackageReference Include="ModelContextProtocol" Version="0.*-*" />
     <PackageReference Include="NSubstitute" Version="5.*" />
     <PackageReference Include="Shouldly" Version="4.*" />
     <PackageReference Include="NUnit" Version="4.*" />
