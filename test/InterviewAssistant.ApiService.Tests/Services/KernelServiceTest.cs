@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using InterviewAssistant.ApiService.Services;
+using InterviewAssistant.ApiService.Repositories;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,8 @@ public class KernelServiceTests
     private Kernel _kernel;
     private IChatCompletionService _chatCompletionService;
     private KernelService _kernelService;
-    private Task<IMcpClient> _mcpClient;
+    private IMcpClient _mcpClient;
+    private IInterviewRepository _interviewRepository;
     private const string ServiceId = "testServiceId";
     private const string TestResume = "테스트 이력서 내용";
     private const string TestJobDescription = "테스트 직무 설명";
@@ -49,7 +51,7 @@ public class KernelServiceTests
         _kernel = builder.Build();
 
         // Create kernel service
-        _kernelService = new KernelService(_kernel, _mcpClient);
+        _kernelService = new KernelService(_kernel, _mcpClient, _interviewRepository);
         
         // Setup File.Exists to return true for our YAML path
         var fileSystem = Substitute.For<IFileSystem>();
