@@ -1,12 +1,7 @@
 using InterviewAssistant.Common.Models;
 using InterviewAssistant.ApiService.Services;
-using InterviewAssistant.ApiService.Repositories;
-using InterviewAssistant.ApiService.Models;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace InterviewAssistant.ApiService.Delegates;
 
