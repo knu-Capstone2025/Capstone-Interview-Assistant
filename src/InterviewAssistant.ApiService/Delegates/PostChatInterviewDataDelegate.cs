@@ -18,7 +18,6 @@ public static partial class ChatCompletionDelegate
     // 고정 ID 정의
     private static readonly Guid ResumeId = new Guid("11111111-1111-1111-1111-111111111111");
     private static readonly Guid JobDescriptionId = new Guid("22222222-2222-2222-2222-222222222222");
-
     /// <summary>
     /// Invokes the chat interview data endpoint.
     /// </summary>
@@ -26,41 +25,9 @@ public static partial class ChatCompletionDelegate
     /// <returns>Returns an asynchronous stream of <see cref="ChatResponse"/>.</returns>
     public static async IAsyncEnumerable<ChatResponse> PostInterviewDataAsync(
         [FromBody] InterviewDataRequest req,
-        IInterviewRepository repository,
-        IKernelService kernelService,
-        Kernel kernel)
+        IKernelService kernelService)
     {
-        await kernelService.EnsureInitializedAsync();
-
-        var markitdownPlugin = kernel.Plugins["Markitdown"];
-        var convertFunction = markitdownPlugin["convert_to_markdown"];
-
-        var resumeArgs = new KernelArguments { ["uri"] = req.ResumeUrl };
-        var resumeResult = await kernel.InvokeAsync(convertFunction, resumeArgs);
-        var resumeMarkdown = resumeResult.ToString();
-
-        var jobArgs = new KernelArguments { ["uri"] = req.JobDescriptionUrl };
-        var jobResult = await kernel.InvokeAsync(convertFunction, jobArgs);
-        var jobMarkdown = jobResult.ToString();
-
-        ResumeEntry resumeEntry = new()
-        {
-            Id = ResumeId,
-            Content = resumeMarkdown
-        };
-        await repository.SaveOrUpdateResumeAsync(resumeEntry);
-
-        JobDescriptionEntry jobDescriptionEntry = new()
-        {
-            Id = JobDescriptionId,
-            Content = jobMarkdown,
-            ResumeEntryId = ResumeId
-        };
-        await repository.SaveOrUpdateJobAsync(jobDescriptionEntry);
-
-        
-
-        await foreach (var text in kernelService.InvokeInterviewAgentAsync(resumeMarkdown, jobMarkdown))
+        await foreach (var text in kernelService.PreprocessAndInvokeAsync(req.ResumeUrl, req.JobDescriptionUrl))
         {
             yield return new ChatResponse { Message = text };
         }
