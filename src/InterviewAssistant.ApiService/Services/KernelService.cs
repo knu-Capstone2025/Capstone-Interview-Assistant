@@ -59,24 +59,24 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         var convertFn = plugin["convert_to_markdown"];
 
         var resumeArgs = new KernelArguments { ["uri"] = resumeUrl };
-        var resumeMarkdown = (await kernel.InvokeAsync(convertFn, resumeArgs)).ToString();
+        var resumeContent = (await kernel.InvokeAsync(convertFn, resumeArgs)).ToString();
 
         var jobArgs = new KernelArguments { ["uri"] = jobDescriptionUrl };
-        var jobMarkdown = (await kernel.InvokeAsync(convertFn, jobArgs)).ToString();
+        var jobContent = (await kernel.InvokeAsync(convertFn, jobArgs)).ToString();
 
         // 저장
-        var resumeEntry = new ResumeEntry { Id = ResumeId, Content = resumeMarkdown };
+        var resumeEntry = new ResumeEntry { Id = ResumeId, Content = resumeContent };
         var jobEntry = new JobDescriptionEntry
         {
             Id = JobDescriptionId,
-            Content = jobMarkdown,
+            Content = jobContent,
             ResumeEntryId = ResumeId
         };
 
         await repository.SaveOrUpdateResumeAsync(resumeEntry);
         await repository.SaveOrUpdateJobAsync(jobEntry);
 
-        await foreach (var response in InvokeInterviewAgentAsync(resumeMarkdown, jobMarkdown))
+        await foreach (var response in InvokeInterviewAgentAsync(resumeContent, jobContent))
         {
             yield return response;
         }
