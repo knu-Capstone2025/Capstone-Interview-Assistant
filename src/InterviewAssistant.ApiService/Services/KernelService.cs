@@ -1,22 +1,83 @@
 using System.Reflection;
 
+using InterviewAssistant.ApiService.Repositories;
+using InterviewAssistant.ApiService.Models;
+
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
 
+using ModelContextProtocol.Client;
+
 namespace InterviewAssistant.ApiService.Services;
+
 
 public interface IKernelService
 {
+    Task EnsureInitializedAsync();
     IAsyncEnumerable<string> InvokeInterviewAgentAsync(
         string resumeContent,
         string jobDescriptionContent,
         IEnumerable<ChatMessageContent>? messages = null);
+    IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl);
 }
 
-public class KernelService(Kernel kernel, IConfiguration config) : IKernelService
+public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewRepository repository) : IKernelService
 {
+    private static readonly Guid ResumeId = new Guid("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid JobDescriptionId = new Guid("22222222-2222-2222-2222-222222222222");
+
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
+    
+    private bool _initialized = false;
+    public async Task EnsureInitializedAsync()
+    {
+        if (_initialized) return;
+        await InitializeMcpToolsAsync();
+        _initialized = true;
+    }
+    private async Task InitializeMcpToolsAsync()
+    {
+        try
+        {
+            var tools = await mcpClient.ListToolsAsync();
+            kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
+        }
+        catch (Exception ex)
+        {
+                Console.WriteLine($"[MCP 초기화 실패] {ex.Message}");
+            }
+        }
+    public async IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl)
+    {
+        await EnsureInitializedAsync();
+
+        var plugin = kernel.Plugins["Markitdown"];
+        var convertFn = plugin["convert_to_markdown"];
+
+        var resumeArgs = new KernelArguments { ["uri"] = resumeUrl };
+        var resumeContent = (await kernel.InvokeAsync(convertFn, resumeArgs)).ToString();
+
+        var jobArgs = new KernelArguments { ["uri"] = jobDescriptionUrl };
+        var jobContent = (await kernel.InvokeAsync(convertFn, jobArgs)).ToString();
+
+        // 저장
+        var resumeEntry = new ResumeEntry { Id = ResumeId, Content = resumeContent };
+        var jobEntry = new JobDescriptionEntry
+        {
+            Id = JobDescriptionId,
+            Content = jobContent,
+            ResumeEntryId = ResumeId
+        };
+
+        await repository.SaveOrUpdateResumeAsync(resumeEntry);
+        await repository.SaveOrUpdateJobAsync(jobEntry);
+
+        await foreach (var response in InvokeInterviewAgentAsync(resumeContent, jobContent))
+        {
+            yield return response;
+        }
+    }
 
     private ChatCompletionAgent GetInterviewAgent()
     {
@@ -30,7 +91,6 @@ public class KernelService(Kernel kernel, IConfiguration config) : IKernelServic
         }
 
         var definition = File.ReadAllText(filepath);
-
         var template = KernelFunctionYaml.ToPromptTemplateConfig(definition);
 
         var agent = new ChatCompletionAgent(template, new KernelPromptTemplateFactory())
@@ -45,7 +105,6 @@ public class KernelService(Kernel kernel, IConfiguration config) : IKernelServic
     {
         return new PromptExecutionSettings()
         {
-            ServiceId = config["SemanticKernel:ServiceId"] ?? "github",
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
     }
@@ -56,7 +115,6 @@ public class KernelService(Kernel kernel, IConfiguration config) : IKernelServic
         IEnumerable<ChatMessageContent>? messages = null)
     {
         var agent = GetInterviewAgent();
-
         var messagesList = messages?.ToList() ?? [];
 
         var arguments = new KernelArguments(GetExecutionSettings())
