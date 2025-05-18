@@ -4,7 +4,17 @@ namespace InterviewAssistant.Common.Models;
 /// This represents the request entity for the chat service. It contains a list of messages that are exchanged between the user and the assistant.
 /// </summary>
 public class ChatRequest
-{   
+{
+    /// <summary>
+    /// Gets or sets the unique identifier for the resume being referenced in the chat.
+    /// </summary>
+    public Guid ResumeId { get; set; } = Guid.Empty;
+
+    /// <summary>
+    /// Gets or sets the unique identifier for the job description being referenced in the chat.
+    /// </summary>
+    public Guid JobDescriptionId { get; set; } = Guid.Empty;
+
     /// <summary>
     /// Gets or sets the list of messages exchanged between the user and the assistant.
     /// </summary>
@@ -51,7 +61,7 @@ public enum MessageRoleType
     /// Identifies the assistant role.
     /// </summary>
     Assistant,
-    
+
     /// <summary>
     /// Identifies the tool role.
     /// </summary>
