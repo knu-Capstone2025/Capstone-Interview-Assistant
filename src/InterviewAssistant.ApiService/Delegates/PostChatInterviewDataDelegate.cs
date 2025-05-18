@@ -11,8 +11,6 @@ namespace InterviewAssistant.ApiService.Delegates;
 public static partial class ChatCompletionDelegate
 {
     // 고정 ID 정의
-    private static readonly Guid ResumeId = new Guid("11111111-1111-1111-1111-111111111111");
-    private static readonly Guid JobDescriptionId = new Guid("22222222-2222-2222-2222-222222222222");
     /// <summary>
     /// Invokes the chat interview data endpoint.
     /// </summary>

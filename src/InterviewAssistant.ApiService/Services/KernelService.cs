@@ -23,9 +23,6 @@ public interface IKernelService
 
 public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewRepository repository) : IKernelService
 {
-    private static readonly Guid ResumeId = new Guid("11111111-1111-1111-1111-111111111111");
-    private static readonly Guid JobDescriptionId = new Guid("22222222-2222-2222-2222-222222222222");
-
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
     
     public async IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl)
@@ -33,16 +30,15 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         var resumeContent = await ConvertUriToMarkdownAsync(resumeUrl);
         var jobContent = await ConvertUriToMarkdownAsync(jobDescriptionUrl);
 
-        var resumeEntry = new ResumeEntry { Id = ResumeId, Content = resumeContent };
+        var resumeEntry = new ResumeEntry { Content = resumeContent };
         var jobEntry = new JobDescriptionEntry
         {
-            Id = JobDescriptionId,
             Content = jobContent,
-            ResumeEntryId = ResumeId
+            ResumeEntryId = resumeEntry.Id
         };
 
-        await repository.SaveOrUpdateResumeAsync(resumeEntry);
-        await repository.SaveOrUpdateJobAsync(jobEntry);
+        await repository.SaveResumeAsync(resumeEntry);
+        await repository.SaveJobAsync(jobEntry);
 
         await foreach (var response in InvokeInterviewAgentAsync(resumeContent, jobContent))
         {
