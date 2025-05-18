@@ -10,6 +10,8 @@ using Microsoft.Extensions.AI;
 
 using ModelContextProtocol.Client;
 
+using System.Text.RegularExpressions;
+
 namespace InterviewAssistant.ApiService.Services;
 
 public interface IKernelService
@@ -24,7 +26,11 @@ public interface IKernelService
 public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewRepository repository) : IKernelService
 {
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
-    
+
+    private static readonly Regex GoogleDriveIdPattern = new Regex(
+        @"https?://drive\.google\.com/.*(?:file/d/|id=)([^/&?#]+)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     public async IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl)
     {
         var resumeContent = await ConvertUriToMarkdownAsync(resumeUrl);
@@ -47,11 +53,13 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
     }
     private async Task<string> ConvertUriToMarkdownAsync(string uri)
     {
+        var normalizedUri = NormalizeUri(uri);
+
         var tools = await mcpClient.ListToolsAsync();
         var convertTool = tools.FirstOrDefault(t => t.Name == "convert_to_markdown")
             ?? throw new InvalidOperationException("MCP 서버에 convert_to_markdown 도구가 없습니다");
 
-        var args = new AIFunctionArguments { { "uri", uri } };
+        var args = new AIFunctionArguments { { "uri", normalizedUri } };
         var result = await convertTool.InvokeAsync(args);
 
         return result?.ToString() ?? string.Empty;
@@ -135,5 +143,17 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
                 yield return response.Message.ToString()!;
             }
         }
+    }
+    private static string NormalizeUri(string uri)
+    {
+        var match = GoogleDriveIdPattern.Match(uri);
+        if (match.Success && match.Groups.Count > 1)
+        {
+            Console.WriteLine($"변환 완료!!");
+            var fileId = match.Groups[1].Value;
+            return $"https://drive.google.com/uc?export=download&id={fileId}";
+        }
+
+        return uri;
     }
 }
