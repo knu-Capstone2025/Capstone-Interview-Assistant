@@ -222,7 +222,6 @@
         messages.Add(userMessage);
 
         await JSRuntime.InvokeVoidAsync("resetAutoScroll");
-
         userInput = string.Empty;
 
         await ScrollToBottom();
@@ -232,6 +231,7 @@
             isLoading = true;
             isServerOutputEnded = false; // 서버 응답이 시작됨을 표시
             StateHasChanged();
+            await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
 
             // ChatService를 통해 응답 가져오기
             var responses = ChatService.SendMessageAsync(messages);
