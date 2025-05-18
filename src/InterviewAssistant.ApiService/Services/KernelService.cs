@@ -6,15 +6,14 @@ using InterviewAssistant.ApiService.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.Extensions.AI;
 
 using ModelContextProtocol.Client;
 
 namespace InterviewAssistant.ApiService.Services;
 
-
 public interface IKernelService
 {
-    Task EnsureInitializedAsync();
     IAsyncEnumerable<string> InvokeInterviewAgentAsync(
         string resumeContent,
         string jobDescriptionContent,
@@ -29,39 +28,11 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
 
     private static readonly string AgentYamlPath = "Agents/InterviewAgents/InterviewAgent.yaml";
     
-    private bool _initialized = false;
-    public async Task EnsureInitializedAsync()
-    {
-        if (_initialized) return;
-        await InitializeMcpToolsAsync();
-        _initialized = true;
-    }
-    private async Task InitializeMcpToolsAsync()
-    {
-        try
-        {
-            var tools = await mcpClient.ListToolsAsync();
-            kernel.Plugins.AddFromFunctions("Markitdown", tools.Select(t => t.AsKernelFunction()));
-        }
-        catch (Exception ex)
-        {
-                Console.WriteLine($"[MCP 초기화 실패] {ex.Message}");
-            }
-        }
     public async IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl)
     {
-        await EnsureInitializedAsync();
+        var resumeContent = await ConvertUriToMarkdownAsync(resumeUrl);
+        var jobContent = await ConvertUriToMarkdownAsync(jobDescriptionUrl);
 
-        var plugin = kernel.Plugins["Markitdown"];
-        var convertFn = plugin["convert_to_markdown"];
-
-        var resumeArgs = new KernelArguments { ["uri"] = resumeUrl };
-        var resumeContent = (await kernel.InvokeAsync(convertFn, resumeArgs)).ToString();
-
-        var jobArgs = new KernelArguments { ["uri"] = jobDescriptionUrl };
-        var jobContent = (await kernel.InvokeAsync(convertFn, jobArgs)).ToString();
-
-        // 저장
         var resumeEntry = new ResumeEntry { Id = ResumeId, Content = resumeContent };
         var jobEntry = new JobDescriptionEntry
         {
@@ -77,6 +48,17 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         {
             yield return response;
         }
+    }
+    private async Task<string> ConvertUriToMarkdownAsync(string uri)
+    {
+        var tools = await mcpClient.ListToolsAsync();
+        var convertTool = tools.FirstOrDefault(t => t.Name == "convert_to_markdown")
+            ?? throw new InvalidOperationException("MCP 서버에 convert_to_markdown 도구가 없습니다");
+
+        var args = new AIFunctionArguments { { "uri", uri } };
+        var result = await convertTool.InvokeAsync(args);
+
+        return result?.ToString() ?? string.Empty;
     }
 
     private ChatCompletionAgent GetInterviewAgent()
