@@ -93,10 +93,25 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
-            await Page.WaitForSelectorAsync(".modal", new() { State = WaitForSelectorState.Detached, Timeout = 5000 });
+            await Page.WaitForSelectorAsync(".modal", new() { State = WaitForSelectorState.Detached, Timeout = 10000 }); // 모달 닫힘 대기 시간 증가
 
             var sendButton = Page.Locator("button.send-btn");
             var textarea = Page.Locator("textarea#messageInput");
+
+            // 초기 AI 응답 및 UI 준비 대기
+            await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 15000
+            });
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 40000
+            });
+            
+            // Textarea가 활성화될 때까지 명시적으로 대기
+            await Expect(textarea).ToBeEnabledAsync(new() { Timeout = 15000 });
 
             // Act
             // 초기 상태에서 전송 버튼은 비활성화 (Locator 기반으로 변경)
@@ -227,30 +242,74 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         }
 
         [Test]
+        public async Task Home_LinkShareButton_Click_ActivatesChat()
+        {
+            // Arrange
+            var linkShareButton = Page.Locator("button.share-btn");
+            var modal = Page.Locator(".modal");
+            var submitButton = modal.Locator("button.submit-btn");
+
+            await linkShareButton.ClickAsync(); // 모달 창 열기
+            await Expect(modal).ToBeVisibleAsync(); // 모달이 제대로 열렸는지 확인
+
+            // 입력 필드에 URL 입력
+            var resumeUrlInput = modal.Locator("input#resumeUrl");
+            var jobUrlInput = modal.Locator("input#jobUrl");
+            await resumeUrlInput.FillAsync("https://example.com/resume.pdf");
+            await jobUrlInput.FillAsync("https://example.com/job-posting");
+
+            await submitButton.ClickAsync(); // 모달 창 닫기
+            await Page.WaitForSelectorAsync(".modal", new()
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 10000 // 모달 닫힘 대기 시간
+            });
+
+            // 2) AI 응답이 끝날 때까지 대기
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 40000 // AI 응답 상태 메시지 사라짐 대기 시간
+            });
+
+            // 3) 입력창 활성화 상태 확인
+            var chatArea = Page.Locator("textarea#messageInput");
+            await Expect(chatArea).ToBeVisibleAsync();
+            await Expect(chatArea).ToBeEnabledAsync();
+        }
+
+        [Test]
         public async Task Home_Serveroutput_Prohibit_UserTransport()
         {
             // Arrange
             await Page.Locator("button.share-btn").ClickAsync();
-            // 모달이 화면에 뜰 때까지 대기
-            await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
-            {
-                State = WaitForSelectorState.Attached,
-                Timeout = 10000 // 10초 대기
-            });
             await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
             await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
             await Page.Locator("button.submit-btn").ClickAsync();
             await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
             {
                 State = WaitForSelectorState.Detached,
-                Timeout = 5000
+                Timeout = 10000 // 모달 닫힘 대기 시간
+            });
+
+            // 초기 AI 응답 및 UI 준비 대기
+            await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 15000 // 환영 메시지 사라짐 대기 시간
+            });
+            await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = 40000 // AI 응답 상태 메시지 사라짐 대기 시간
             });
 
             var statusMessage = Page.Locator(".response-status");
             var textarea = Page.Locator("textarea#messageInput");
             var sendButton = Page.Locator("button.send-btn");
 
-            var initialCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+            // Textarea가 활성화될 때까지 명시적으로 대기
+            await Expect(textarea).ToBeEnabledAsync(new() { Timeout = 15000 });
 
             // Act
             // 메시지 전송
@@ -273,13 +332,20 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
             // 버튼 비활성화 확인
             await Expect(sendButton).ToBeDisabledAsync();
 
+            // Enter 키 입력 전 메시지 개수 확인
+            var messageCountBeforeEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
             // 엔터키 입력 시 메시지가 전송되지 않음
             await textarea.PressAsync("Enter");
-            await Task.Delay(500);
+            
+            await Task.Delay(1000);
 
-            var afterCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
-            (afterCount - initialCount).ShouldBeLessThanOrEqualTo(2,
-                "서버 응답 중에는 추가 메시지가 전송되지 않아야 합니다");
+            var messageCountAfterEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
+
+            // Enter 키 입력 후 메시지 개수가 동일한지 확인
+            messageCountAfterEnter.ShouldBe(messageCountBeforeEnter,
+                "서버 응답 중 Enter 키를 눌렀을 때 추가 메시지가 전송되지 않아야 합니다. " +
+                $"Enter 전 메시지 수: {messageCountBeforeEnter}, Enter 후 메시지 수: {messageCountAfterEnter}");
         }
 
         /// <summary>

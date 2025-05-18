@@ -69,6 +69,8 @@ public class ChatCompletionDelegateTests
         // Arrange
         var chatRequest = new ChatRequest
         {
+            ResumeId = _validResumeId,
+            JobDescriptionId = _validJobDescriptionId,
             Messages = new List<ChatMessage>
             {
                 new ChatMessage { Role = MessageRoleType.User, Message = "면접을 시작합니다" }
@@ -102,14 +104,16 @@ public class ChatCompletionDelegateTests
         // Arrange
         var chatRequest = new ChatRequest
         {
+            ResumeId = Guid.NewGuid(), // 유효하지 않은 이력서 ID
+            JobDescriptionId = _validJobDescriptionId,
             Messages = new List<ChatMessage>
             {
                 new ChatMessage { Role = MessageRoleType.User, Message = "면접을 시작합니다" }
             }
         };
 
-        // Setup repository to return null for the resume ID
-        _repository.GetResumeByIdAsync(Arg.Is<Guid>(g => g == _validResumeId)).ReturnsNull();
+        // Setup repository to return null for the invalid resume ID
+        _repository.GetResumeByIdAsync(Arg.Is<Guid>(g => g != _validResumeId)).ReturnsNull();
 
         // Act
         var results = new List<ChatResponse>();
@@ -131,14 +135,16 @@ public class ChatCompletionDelegateTests
         // Arrange
         var chatRequest = new ChatRequest
         {
+            ResumeId = _validResumeId,
+            JobDescriptionId = Guid.NewGuid(), // 유효하지 않은 직무 설명 ID
             Messages = new List<ChatMessage>
             {
                 new ChatMessage { Role = MessageRoleType.User, Message = "면접을 시작합니다" }
             }
         };
 
-        // Setup repository to return null for the job description ID
-        _repository.GetJobByIdAsync(Arg.Is<Guid>(g => g == _validJobDescriptionId)).ReturnsNull();
+        // Setup repository to return null for the invalid job description ID
+        _repository.GetJobByIdAsync(Arg.Is<Guid>(g => g != _validJobDescriptionId)).ReturnsNull();
 
         // Act
         var results = new List<ChatResponse>();
@@ -154,13 +160,14 @@ public class ChatCompletionDelegateTests
         results[0].Message.ShouldBe("이력서 또는 채용공고 데이터가 없습니다.");
     }
 
-
     [Test]
     public async Task PostChatCompletionAsync_WithMultipleResponses_ShouldReturnAllResponses()
     {
         // Arrange
         var chatRequest = new ChatRequest
         {
+            ResumeId = _validResumeId,
+            JobDescriptionId = _validJobDescriptionId,
             Messages = new List<ChatMessage>
             {
                 new ChatMessage { Role = MessageRoleType.User, Message = "면접을 시작합니다" }
@@ -195,5 +202,4 @@ public class ChatCompletionDelegateTests
         results[1].Message.ShouldBe("먼저 자기소개 부탁드립니다.");
         results[2].Message.ShouldBe("이력서를 보니 프론트엔드 개발자 경험이 있으시네요.");
     }
-
 }
