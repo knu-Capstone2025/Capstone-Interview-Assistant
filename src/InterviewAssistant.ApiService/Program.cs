@@ -12,7 +12,6 @@ using Microsoft.Data.Sqlite;
 
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol.Transport;
 
 using OpenAI;
 

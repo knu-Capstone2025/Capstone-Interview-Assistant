@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.SemanticKernel.Agents.core" Version="1.*" />
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.*" />
     <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.*-*" />
-    <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.13" />
+    <PackageReference Include="ModelContextProtocol" Version="0.*-*" />
   </ItemGroup>
 
   <ItemGroup>
