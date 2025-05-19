@@ -5,6 +5,7 @@ using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Repositories;
+using InterviewAssistant.ApiService.Extensions;
 
 using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
@@ -40,11 +41,12 @@ builder.AddAzureOpenAIClient("openai");
 builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var endpoint = config["MCP:MarkItdownSseEndpoint"] ?? "http://localhost:3001/sse";
+    var rawUri = new Uri(config["MCP:MarkItdownSseEndpoint"] ?? "http://localhost:3001/sse");
+    var endpoint = rawUri.Resolve(config);
     var transport = new SseClientTransport(new SseClientTransportOptions
     {
         Name = "MarkItdown",
-        Endpoint = new Uri(endpoint)
+        Endpoint = endpoint
     });
     return McpClientFactory.CreateAsync(transport).GetAwaiter().GetResult(); 
 });
