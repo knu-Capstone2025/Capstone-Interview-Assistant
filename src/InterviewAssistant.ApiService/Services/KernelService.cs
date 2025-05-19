@@ -20,7 +20,9 @@ public interface IKernelService
         string resumeContent,
         string jobDescriptionContent,
         IEnumerable<ChatMessageContent>? messages = null);
-    IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl);
+    IAsyncEnumerable<string> PreprocessAndInvokeAsync(
+        string resumeUrl,
+        string jobDescriptionUrl);
 }
 
 public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewRepository repository) : IKernelService
