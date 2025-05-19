@@ -58,7 +58,7 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         var normalizedUri = NormalizeUri(uri);
 
         var tools = await mcpClient.ListToolsAsync();
-        var convertTool = tools.FirstOrDefault(t => t.Name == "convert_to_markdown")
+        var convertTool = tools.SingleOrDefault(t => t.Name == "convert_to_markdown")
             ?? throw new InvalidOperationException("MCP 서버에 convert_to_markdown 도구가 없습니다");
 
         var args = new AIFunctionArguments { { "uri", normalizedUri } };
