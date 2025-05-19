@@ -16,7 +16,7 @@ InterviewAssistance
 │   ├── InterviewAssistance.Web
 │   ├── InterviewAssistance.ApiService
 │   ├── InterviewAssistance.Common
-│   └── InterviewAssistance.McpMarkitDown
+│   └── InterviewAssistance.McpMarkItDown
 │
 └── test
     ├── InterviewAssistance.AppHost.Tests
@@ -37,7 +37,7 @@ InterviewAssistance
 │       ├── InterviewAssistance.ApiService
 │       │   ├── InterviewAssistance.ServiceDefaults
 │       │   └── InterviewAssistance.Common
-│       └── InterviewAssistance.McpMarkitDown
+│       └── InterviewAssistance.McpMarkItDown
 └── test
     ├── InterviewAssistance.AppHost.Tests
     │   └── InterviewAssistance.AppHost
