@@ -40,7 +40,7 @@ builder.AddAzureOpenAIClient("openai");
 builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var endpoint = config["MCP:MarkitdownSseEndpoint"] ?? "http://localhost:3001/sse";
+    var endpoint = config["MCP:MarkItdownSseEndpoint"] ?? "http://localhost:3001/sse";
     var transport = new SseClientTransport(new SseClientTransportOptions
     {
         Name = "MarkItdown",
