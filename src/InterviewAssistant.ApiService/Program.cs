@@ -43,7 +43,7 @@ builder.Services.AddSingleton<IMcpClient>(sp =>
     var endpoint = config["MCP:MarkitdownSseEndpoint"] ?? "http://localhost:3001/sse";
     var transport = new SseClientTransport(new SseClientTransportOptions
     {
-        Name = "Markitdown",
+        Name = "MarkItdown",
         Endpoint = new Uri(endpoint)
     });
     return McpClientFactory.CreateAsync(transport).GetAwaiter().GetResult(); 
