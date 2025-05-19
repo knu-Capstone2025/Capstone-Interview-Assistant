@@ -1,7 +1,6 @@
 ﻿@page "/"
 @using InterviewAssistant.Common.Models
 @using InterviewAssistant.Web.Services
-@using InterviewAssistant.Web.Utilities
 @using Markdig
 @using Microsoft.JSInterop
 @inject IChatService ChatService
@@ -117,74 +116,74 @@
     private string resumeUrl = string.Empty;
     private string jobUrl = string.Empty;
     private void CloseModal() => showModal = false;
+    bool IsValidUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
     private async Task SubmitLinks()
     {
         // URL 검증
-        var (resumeIsValid, resumeError) = SecurityValidator.ValidateUrl(resumeUrl);
-        var (jobIsValid, jobError) = SecurityValidator.ValidateUrl(jobUrl);
-        if (!resumeIsValid)
+        if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl) &&
+            IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"이력서 URL이 유효하지 않습니다: {resumeError}");
-            return;
-        }
-        if (!jobIsValid)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", $"채용공고 URL이 유효하지 않습니다: {jobError}");
-            return;
-        }
+            CloseModal();
+            isLinkShared = true;
 
-        CloseModal();
-        isLinkShared = true;
-
-        // URL 정제
-        var request = new InterviewDataRequest
-        {
-            //이후 GUID 생성
-            ResumeUrl = resumeUrl,
-            JobDescriptionUrl = jobUrl
-        };
-
-        isLoading = true;
-        isServerOutputEnded = false;
-        StateHasChanged();
-        
-        var assistantMessage = new ChatMessage 
-        { 
-            Role = MessageRoleType.Assistant, 
-            Message = string.Empty 
-        };
-
-        var responses = ChatService.SendInterviewDataAsync(request);
-        bool first = true;
-
-        try
-        {
-            await foreach (var response in responses)
+            // URL 정제
+            var request = new InterviewDataRequest
             {
-                if (first)
-                {
-                    first = false;
-                    messages.Add(assistantMessage);
+                //이후 GUID 생성
+                ResumeUrl = resumeUrl,
+                JobDescriptionUrl = jobUrl
+            };
 
-                    isLoading = false;
+            isLoading = true;
+            isServerOutputEnded = false;
+            StateHasChanged();
+            
+            var assistantMessage = new ChatMessage 
+            { 
+                Role = MessageRoleType.Assistant, 
+                Message = string.Empty 
+            };
+
+            var responses = ChatService.SendInterviewDataAsync(request);
+            bool first = true;
+
+            try
+            {
+                await foreach (var response in responses)
+                {
+                    if (first)
+                    {
+                        first = false;
+                        messages.Add(assistantMessage);
+
+                        isLoading = false;
+                        StateHasChanged();
+                        await JSRuntime.InvokeVoidAsync("resetAutoScroll");
+                        await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
+                    }
+                    assistantMessage.Message += response.Message;
+                    await ScrollToBottom();
                     StateHasChanged();
-                    await JSRuntime.InvokeVoidAsync("resetAutoScroll");
-                    await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
                 }
-                assistantMessage.Message += response.Message;
-                await ScrollToBottom();
+            }
+            catch (Exception ex)
+            {
+                messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
+            }
+            finally
+            {
+                isServerOutputEnded = true;
+                isLoading = false;
                 StateHasChanged();
             }
         }
-        catch (Exception ex)
+        else
         {
-            messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
-        }
-        finally
-        {
-            isServerOutputEnded = true;
-            isLoading = false;
-            StateHasChanged();
+            await JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
     }
 
@@ -220,17 +219,7 @@
             return;
         }
 
-        // 입력 검증
-        var (isValid, errorMessage) = SecurityValidator.ValidateMessage(userInput);
-        if (!isValid)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
-            return;
-        }
-
-        // 입력 정제
-        var sanitizedInput = SecurityValidator.SanitizeMessage(userInput);
-        var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = sanitizedInput };
+        var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
         messages.Add(userMessage);
 
         await JSRuntime.InvokeVoidAsync("resetAutoScroll");
