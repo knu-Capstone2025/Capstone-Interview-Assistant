@@ -15,6 +15,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>
 {
     client.BaseAddress = new("https+http://apiservice");
+    client.Timeout = TimeSpan.FromMinutes(5); // 타임아웃을 5분으로 증가
 });
 
 // ChatService 등록

@@ -115,6 +115,9 @@
     private bool showModal = false;
     private string resumeUrl = string.Empty;
     private string jobUrl = string.Empty;
+    // 저장된 ID 변수
+    private Guid currentResumeId;
+    private Guid currentJobDescriptionId;
     private void CloseModal() => showModal = false;
     bool IsValidUrl(string url)
     {
@@ -130,10 +133,16 @@
             CloseModal();
             isLinkShared = true;
 
+            // URL을 기반으로 ID 생성 및 저장
+            currentResumeId = CreateConsistentGuid(resumeUrl);
+            currentJobDescriptionId = CreateConsistentGuid(jobUrl);
+
             var request = new InterviewDataRequest
             {
                 ResumeUrl = resumeUrl,
-                JobDescriptionUrl = jobUrl
+                JobDescriptionUrl = jobUrl,
+                ResumeId = currentResumeId,
+                JobDescriptionId = currentJobDescriptionId
             };
 
             isLoading = true;
@@ -183,6 +192,16 @@
         else
         {
             await JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
+        }
+    }    
+    
+    // URL에서 일관된 GUID를 생성하는 메서드
+    private Guid CreateConsistentGuid(string input)
+    {
+        using (var md5 = System.Security.Cryptography.MD5.Create())
+        {
+            byte[] hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input.ToLowerInvariant()));
+            return new Guid(hash);
         }
     }
 
@@ -234,7 +253,7 @@
             await JSRuntime.InvokeVoidAsync("forceScrollToBottom", "chatMessages");
 
             // ChatService를 통해 응답 가져오기
-            var responses = ChatService.SendMessageAsync(messages);
+            var responses = ChatService.SendMessageAsync(messages, resumeId: currentResumeId, jobDescriptionId: currentJobDescriptionId);
 
             var assistantMessage = new ChatMessage { Role = MessageRoleType.Assistant, Message = string.Empty };
             messages.Add(assistantMessage);
@@ -261,7 +280,8 @@
         }
         catch (Exception ex)
         {
-            messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류: {ex.Message}" });
+            messages.Add(new ChatMessage { Role = MessageRoleType.Assistant, Message = $"오류가 발생했습니다: {ex.Message}" });
+            Logger.LogError(ex, "메시지 전송 중 오류 발생");
         }
         finally
         {

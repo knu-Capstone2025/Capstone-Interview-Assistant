@@ -16,7 +16,17 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task SaveResumeAsync(ResumeEntry entity)
     {
-        await _db.Resumes.AddAsync(entity);
+        var existing = await _db.Resumes.FirstOrDefaultAsync(e => e.Id == entity.Id);
+        // 이력서가 이미 존재하는 경우, 내용을 업데이트합니다
+        if (existing != null)
+        {
+            existing.Content = entity.Content;
+        }
+        // 이력서가 없으면 새로 추가
+        else
+        {
+            await _db.Resumes.AddAsync(entity);
+        }
         await _db.SaveChangesAsync();
     }
 
@@ -27,7 +37,16 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task SaveJobAsync(JobDescriptionEntry entity)
     {
-        await _db.JobDescriptions.AddAsync(entity);
+        var existing = await _db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == entity.Id);
+        if (existing != null)
+        {
+            existing.Content = entity.Content;
+            existing.ResumeEntryId = entity.ResumeEntryId;
+        }
+        else
+        {
+            await _db.JobDescriptions.AddAsync(entity);
+        }
         await _db.SaveChangesAsync();
     }
 
