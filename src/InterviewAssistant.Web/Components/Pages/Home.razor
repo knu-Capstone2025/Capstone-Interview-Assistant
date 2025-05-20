@@ -131,11 +131,10 @@
             IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
         {
             CloseModal();
-            isLinkShared = true;
-
-            // URL을 기반으로 ID 생성 및 저장
-            currentResumeId = CreateConsistentGuid(resumeUrl);
-            currentJobDescriptionId = CreateConsistentGuid(jobUrl);
+            isLinkShared = true;            
+            // 무작위 GUID 생성
+            currentResumeId = Guid.NewGuid();
+            currentJobDescriptionId = Guid.NewGuid();
             
             Logger.LogInformation($"생성된 ResumeId: {currentResumeId}, JobDescriptionId: {currentJobDescriptionId}");
 
@@ -196,18 +195,6 @@
             await JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
     }    
-    
-    // URL에서 일관된 GUID를 생성하는 메서드
-    private Guid CreateConsistentGuid(string input)
-    {
-        using (var md5 = System.Security.Cryptography.MD5.Create())
-        {
-            byte[] hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input.ToLowerInvariant()));
-            var guid = new Guid(hash);
-            Logger.LogInformation($"Created GUID for input '{input}': {guid}");
-            return guid;
-        }
-    }
 
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
@@ -245,17 +232,13 @@
         Logger.LogInformation($"Sending message with Resume ID: {currentResumeId}");
         Logger.LogInformation($"Sending message with Job Description ID: {currentJobDescriptionId}");
         Logger.LogInformation($"Resume URL being used: {resumeUrl}");
-        Logger.LogInformation($"Job URL being used: {jobUrl}");
-
-        // 검증: URL에서 GUID를 다시 생성해보고 비교
-        var verifyResumeId = CreateConsistentGuid(resumeUrl);
-        var verifyJobId = CreateConsistentGuid(jobUrl);
-        
-        if (verifyResumeId != currentResumeId || verifyJobId != currentJobDescriptionId)
+        Logger.LogInformation($"Job URL being used: {jobUrl}");        
+        // GUID가 이미 생성되어 있는지 확인
+        if (currentResumeId == Guid.Empty || currentJobDescriptionId == Guid.Empty)
         {
-            Logger.LogWarning($"GUID mismatch detected!");
-            Logger.LogWarning($"Current Resume ID: {currentResumeId} vs Verified: {verifyResumeId}");
-            Logger.LogWarning($"Current Job ID: {currentJobDescriptionId} vs Verified: {verifyJobId}");
+            Logger.LogWarning("Missing GUIDs detected, creating new ones");
+            currentResumeId = Guid.NewGuid();
+            currentJobDescriptionId = Guid.NewGuid();
         }
 
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
