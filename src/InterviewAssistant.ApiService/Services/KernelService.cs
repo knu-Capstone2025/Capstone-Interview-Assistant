@@ -40,7 +40,11 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         var resumeContent = await ConvertUriToMarkdownAsync(resumeUrl);
         var jobContent = await ConvertUriToMarkdownAsync(jobDescriptionUrl);
 
-        var resumeEntry = new ResumeEntry { Id= resumeId, Content = resumeContent };
+        var resumeEntry = new ResumeEntry
+        {
+            Id = resumeId,
+            Content = resumeContent
+        };
         var jobEntry = new JobDescriptionEntry
         {
             Id = jobId,
