@@ -61,10 +61,12 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
             yield break;
         }
 
-        // API 요청 생성 및 전송 (현재는 하드코딩된 응답을 반환하는 ChatApiClient 사용)
+        // API 요청 생성 및 전송
         var request = new ChatRequest
         {
-            Messages = processedMessages
+            Messages = processedMessages,
+            ResumeId = resumeId,
+            JobDescriptionId = jobDescriptionId
         };
         var responses = _client.SendMessageAsync(request);
 

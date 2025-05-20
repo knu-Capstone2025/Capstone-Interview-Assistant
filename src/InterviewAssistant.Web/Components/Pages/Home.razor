@@ -136,6 +136,8 @@
             // URL을 기반으로 ID 생성 및 저장
             currentResumeId = CreateConsistentGuid(resumeUrl);
             currentJobDescriptionId = CreateConsistentGuid(jobUrl);
+            
+            Logger.LogInformation($"생성된 ResumeId: {currentResumeId}, JobDescriptionId: {currentJobDescriptionId}");
 
             var request = new InterviewDataRequest
             {
@@ -201,7 +203,9 @@
         using (var md5 = System.Security.Cryptography.MD5.Create())
         {
             byte[] hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input.ToLowerInvariant()));
-            return new Guid(hash);
+            var guid = new Guid(hash);
+            Logger.LogInformation($"Created GUID for input '{input}': {guid}");
+            return guid;
         }
     }
 
@@ -235,6 +239,23 @@
         if (IsReadyToSendMessage())
         {
             return;
+        }
+
+        // GUID 로깅
+        Logger.LogInformation($"Sending message with Resume ID: {currentResumeId}");
+        Logger.LogInformation($"Sending message with Job Description ID: {currentJobDescriptionId}");
+        Logger.LogInformation($"Resume URL being used: {resumeUrl}");
+        Logger.LogInformation($"Job URL being used: {jobUrl}");
+
+        // 검증: URL에서 GUID를 다시 생성해보고 비교
+        var verifyResumeId = CreateConsistentGuid(resumeUrl);
+        var verifyJobId = CreateConsistentGuid(jobUrl);
+        
+        if (verifyResumeId != currentResumeId || verifyJobId != currentJobDescriptionId)
+        {
+            Logger.LogWarning($"GUID mismatch detected!");
+            Logger.LogWarning($"Current Resume ID: {currentResumeId} vs Verified: {verifyResumeId}");
+            Logger.LogWarning($"Current Job ID: {currentJobDescriptionId} vs Verified: {verifyJobId}");
         }
 
         var userMessage = new ChatMessage { Role = MessageRoleType.User, Message = userInput };
