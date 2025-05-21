@@ -24,9 +24,6 @@ public static class AspireUrlParserExtensions
             var https = config[$"services:{appname}:https:0"]!;
             var http = config[$"services:{appname}:http:0"]!;
 
-            Console.WriteLine($"https = {config["services:mcpserver:https:0"]}");
-            Console.WriteLine($"http = {config["services:mcpserver:http:0"]}");
-
             return string.IsNullOrWhiteSpace(https)
                    ? new Uri(http + "/sse")
                    : new Uri(https + "/sse");

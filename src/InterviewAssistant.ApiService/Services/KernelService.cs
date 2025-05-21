@@ -158,7 +158,6 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         var match = GoogleDriveIdPattern.Match(uri);
         if (match.Success && match.Groups.Count > 1)
         {
-            Console.WriteLine($"변환 완료!!");
             var fileId = match.Groups[1].Value;
             return $"https://drive.google.com/uc?export=download&id={fileId}";
         }
