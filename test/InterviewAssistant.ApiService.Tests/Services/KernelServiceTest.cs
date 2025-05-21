@@ -43,8 +43,8 @@ public class KernelServiceTests
         // Create substitutes
         _chatCompletionService = Substitute.For<IChatCompletionService>();
 
-        var _mcpClient = Substitute.For<IMcpClient>();
-        var _interviewRepository = Substitute.For<IInterviewRepository>();
+        var mcpClient = Substitute.For<IMcpClient>();
+        var interviewRepository = Substitute.For<IInterviewRepository>();
 
         // Create a kernel with our substitute service
         var builder = Kernel.CreateBuilder();
@@ -52,7 +52,7 @@ public class KernelServiceTests
         _kernel = builder.Build();
 
         // Create kernel service
-        _kernelService = new KernelService(_kernel, _mcpClient, _interviewRepository);
+        _kernelService = new KernelService(_kernel, mcpClient, interviewRepository);
         
         // Setup File.Exists to return true for our YAML path
         var fileSystem = Substitute.For<IFileSystem>();
