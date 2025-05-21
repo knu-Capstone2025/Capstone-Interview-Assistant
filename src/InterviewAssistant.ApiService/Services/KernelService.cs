@@ -21,6 +21,8 @@ public interface IKernelService
         string jobDescriptionContent,
         IEnumerable<ChatMessageContent>? messages = null);
     IAsyncEnumerable<string> PreprocessAndInvokeAsync(
+        Guid resumeId,
+        Guid jobId,
         string resumeUrl,
         string jobDescriptionUrl);
 }
@@ -33,14 +35,19 @@ public class KernelService(Kernel kernel, IMcpClient mcpClient, IInterviewReposi
         @"https?://drive\.google\.com/.*(?:file/d/|id=)([^/&?#]+)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public async IAsyncEnumerable<string> PreprocessAndInvokeAsync(string resumeUrl, string jobDescriptionUrl)
+    public async IAsyncEnumerable<string> PreprocessAndInvokeAsync(Guid resumeId, Guid jobId, string resumeUrl, string jobDescriptionUrl)
     {
         var resumeContent = await ConvertUriToMarkdownAsync(resumeUrl);
         var jobContent = await ConvertUriToMarkdownAsync(jobDescriptionUrl);
 
-        var resumeEntry = new ResumeEntry { Content = resumeContent };
+        var resumeEntry = new ResumeEntry
+        {
+            Id = resumeId,
+            Content = resumeContent
+        };
         var jobEntry = new JobDescriptionEntry
         {
+            Id = jobId,
             Content = jobContent,
             ResumeEntryId = resumeEntry.Id
         };

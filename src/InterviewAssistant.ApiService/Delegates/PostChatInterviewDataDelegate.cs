@@ -20,7 +20,7 @@ public static partial class ChatCompletionDelegate
         [FromBody] InterviewDataRequest req,
         IKernelService kernelService)
     {
-        await foreach (var text in kernelService.PreprocessAndInvokeAsync(req.ResumeUrl, req.JobDescriptionUrl))
+        await foreach (var text in kernelService.PreprocessAndInvokeAsync(req.ResumeId, req.JobDescriptionId, req.ResumeUrl, req.JobDescriptionUrl))
         {
             yield return new ChatResponse { Message = text };
         }
