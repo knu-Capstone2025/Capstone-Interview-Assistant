@@ -32,6 +32,9 @@ jobs:
     steps:
     - name: 🧑‍💻 Checkout Repository
       uses: actions/checkout@v4
+    
+    - name: 🧑‍💻 Checkout MCP Server
+      uses: actions/checkout@v4
       with:
         repository: microsoft/markitdown
         path: src/InterviewAssistant.McpMarkItDown
