@@ -41,7 +41,7 @@ builder.AddAzureOpenAIClient("openai");
 builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var endpoint = new Uri("https+http://markitdown-mcp").Resolve(config);
+    var endpoint = new Uri("https+http://mcpserver").Resolve(config);
     var transport = new SseClientTransport(new SseClientTransportOptions
     {
         Name = "MarkItdown",
