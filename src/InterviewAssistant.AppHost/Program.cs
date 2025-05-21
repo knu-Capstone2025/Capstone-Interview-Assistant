@@ -1,9 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var mcpserver = builder.AddDockerfile("mcpserver", "../InterviewAssistant.McpMarkItDown/packages/markitdown-mcp")
+                       .WithImageTag("latest")
                        .WithHttpEndpoint(3001, 3001)
-                       .WithArgs("--sse", "--host", "0.0.0.0", "--port", "3001")
-                       .WithImageTag("latest");
+                       .WithArgs("--sse", "--host", "0.0.0.0", "--port", "3001");
+                       
 
 
 var insights = builder.ExecutionContext.IsPublishMode
