@@ -54,7 +54,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
-            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
+            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
         }
 
         [OneTimeTearDown]
