@@ -16,7 +16,8 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task SaveResumeAsync(ResumeEntry entity)
     {
-        var existing = await _db.Resumes.FirstOrDefaultAsync(e => e.Id == entity.Id);
+        // 해당 이력서가 정확히 하나라고 보장되어 있고 복수 존재함이 불가능
+        var existing = await _db.Resumes.SingleOrDefaultAsync(e => e.Id == entity.Id);
         // 이력서가 이미 존재하는 경우, 내용을 업데이트합니다
         if (existing != null)
         {
@@ -37,7 +38,7 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task SaveJobAsync(JobDescriptionEntry entity)
     {
-        var existing = await _db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == entity.Id);
+        var existing = await _db.JobDescriptions.SingleOrDefaultAsync(e => e.Id == entity.Id);
         if (existing != null)
         {
             existing.Content = entity.Content;
