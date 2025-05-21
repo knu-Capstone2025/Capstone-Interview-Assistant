@@ -33,8 +33,6 @@ public class KernelServiceTests
     private Kernel _kernel;
     private IChatCompletionService _chatCompletionService;
     private KernelService _kernelService;
-    private IMcpClient _mcpClient;
-    private IInterviewRepository _interviewRepository;
     private const string ServiceId = "testServiceId";
     private const string TestResume = "테스트 이력서 내용";
     private const string TestJobDescription = "테스트 직무 설명";
@@ -44,7 +42,10 @@ public class KernelServiceTests
     {
         // Create substitutes
         _chatCompletionService = Substitute.For<IChatCompletionService>();
-    
+
+        var _mcpClient = Substitute.For<IMcpClient>();
+        var _interviewRepository = Substitute.For<IInterviewRepository>();
+
         // Create a kernel with our substitute service
         var builder = Kernel.CreateBuilder();
         builder.Services.AddKeyedSingleton<IChatCompletionService>(ServiceId, _chatCompletionService);
