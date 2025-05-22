@@ -32,6 +32,12 @@ jobs:
     steps:
     - name: 🧑‍💻 Checkout Repository
       uses: actions/checkout@v4
+    
+    - name: 🧑‍💻 Checkout MCP Server
+      uses: actions/checkout@v4
+      with:
+        repository: microsoft/markitdown
+        path: src/InterviewAssistant.McpMarkItDown
 
     - name: 🔧 Set Up .NET Core SDK
       uses: actions/setup-dotnet@v4
@@ -101,10 +107,10 @@ jobs:
         report_paths: '**/test-results/*.xml'
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: ❌ Fail Workflow if Tests Failed on Main Push
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.test-status.outputs.tests_passed == 'false'
+    - name: ❌ Fail Workflow if Tests Failed
+      if: steps.test-status.outputs.tests_passed == 'false'
       run: |
-        echo "Tests failed on main branch push. Failing the workflow."
+        echo "Tests failed. Failing the workflow."
         exit 1
 
     - name: 🚀 Log in with Azure (Federated Credentials)

@@ -54,7 +54,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
         [SetUp]
         public async Task Setup()
         {
-            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
+            await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle});
         }
 
         [OneTimeTearDown]
@@ -109,7 +109,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 State = WaitForSelectorState.Detached,
                 Timeout = 40000
             });
-            
+
             // Textarea가 활성화될 때까지 명시적으로 대기
             await Expect(textarea).ToBeEnabledAsync(new() { Timeout = 15000 });
 
@@ -337,7 +337,7 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
 
             // 엔터키 입력 시 메시지가 전송되지 않음
             await textarea.PressAsync("Enter");
-            
+
             await Task.Delay(1000);
 
             var messageCountAfterEnter = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
@@ -347,10 +347,9 @@ namespace InterviewAssistant.AppHost.Tests.Components.Pages
                 "서버 응답 중 Enter 키를 눌렀을 때 추가 메시지가 전송되지 않아야 합니다. " +
                 $"Enter 전 메시지 수: {messageCountBeforeEnter}, Enter 후 메시지 수: {messageCountAfterEnter}");
         }
-
-        /// <summary>
-        /// 중복 이벤트 방지 플래그가 제대로 동작하는지 확인합니다.
-        /// </summary>
+        // / <summary>
+        // / 중복 이벤트 방지 플래그가 제대로 동작하는지 확인합니다.
+        // / </summary>
         [Test]
         public async Task Home_IMEFlag_PreventsDuplicateKeyEvents()
         {

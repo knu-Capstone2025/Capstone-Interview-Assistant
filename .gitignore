@@ -486,3 +486,5 @@ $RECYCLE.BIN/
 .DS_Store
 .azure
 scripts/instances.json
+
+src/InterviewAssistant.McpMarkItDown

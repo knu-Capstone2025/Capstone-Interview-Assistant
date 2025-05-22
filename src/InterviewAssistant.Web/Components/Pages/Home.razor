@@ -137,15 +137,17 @@
     }
     private async Task SubmitLinks()
     {
-        // URL 유효성 검사
+        // URL 검증
         if (!string.IsNullOrWhiteSpace(resumeUrl) && !string.IsNullOrWhiteSpace(jobUrl) &&
             IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
         {
             CloseModal();
             isLinkShared = true;
 
+            // URL 정제
             var request = new InterviewDataRequest
             {
+                //이후 GUID 생성
                 ResumeUrl = resumeUrl,
                 JobDescriptionUrl = jobUrl,
                 ResumeId = currentResumeId,
@@ -183,7 +185,6 @@
                     await ScrollToBottom();
                     StateHasChanged();
                 }
-
             }
             catch (Exception ex)
             {
