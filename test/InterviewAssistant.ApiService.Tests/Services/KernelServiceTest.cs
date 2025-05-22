@@ -1,27 +1,15 @@
-#pragma warning disable CS1998
-
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Repositories;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 using ModelContextProtocol.Client;
 
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
-
-using NUnit.Framework;
 
 using Shouldly;
 

@@ -3,19 +3,18 @@ using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Repositories;
 using InterviewAssistant.ApiService.Models;
 
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 using ChatMessageContent = Microsoft.SemanticKernel.ChatMessageContent;
 
 namespace InterviewAssistant.ApiService.Delegates;
+
 /// <summary>
 /// This represents the partial delegate entity that takes care of the chat completion endpoint.
 /// </summary>
 public static partial class ChatCompletionDelegate
 {
-
     /// <summary>
     /// Invokes the chat completion endpoint.
     /// </summary>
@@ -26,7 +25,6 @@ public static partial class ChatCompletionDelegate
         IKernelService kernelService,
         IInterviewRepository repository)
     {
-
         ResumeEntry? resumeEntry = await repository.GetResumeByIdAsync(req.ResumeId);
         JobDescriptionEntry? jobDescriptionEntry = await repository.GetJobByIdAsync(req.JobDescriptionId);
 
@@ -36,7 +34,7 @@ public static partial class ChatCompletionDelegate
             yield break;
         }
 
-        var messages = new List<ChatMessageContent>{};
+        var messages = new List<ChatMessageContent> { };
 
         foreach (var msg in req.Messages)
         {
@@ -50,7 +48,7 @@ public static partial class ChatCompletionDelegate
             };
             messages.Add(message);
         }
- 
+
         await foreach (var text in kernelService.InvokeInterviewAgentAsync(
             resumeEntry.Content,
             jobDescriptionEntry.Content,

@@ -116,11 +116,13 @@
     private string resumeUrl = string.Empty;
     private string jobUrl = string.Empty;
     private void CloseModal() => showModal = false;
+
     bool IsValidUrl(string url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
+
     private async Task SubmitLinks()
     {
         // URL 검증
