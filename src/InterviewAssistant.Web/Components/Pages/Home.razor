@@ -121,14 +121,14 @@
     private Guid currentJobDescriptionId;
     private void CloseModal() => showModal = false;
 
-    // 최초 렌더링 시 GUID 생성
+    //Blazor 컴포넌트가 처음 초기화될 때 자동으로 호출
     protected override async Task OnInitializedAsync()
     {
-        if (currentResumeId == Guid.Empty || currentJobDescriptionId == Guid.Empty)
-        {
-            currentResumeId = Guid.NewGuid();
-            currentJobDescriptionId = Guid.NewGuid();
-        }
+        // 최초 렌더링 시 GUID 생성
+        currentResumeId = Guid.NewGuid();
+        currentJobDescriptionId = Guid.NewGuid();
+        // 초기화 작업이 완료되었음을 명시
+        await Task.CompletedTask;
     }
     bool IsValidUrl(string url)
     {
