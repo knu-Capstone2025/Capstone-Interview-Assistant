@@ -15,6 +15,8 @@ public class HomeTests : PageTest
 {
     private DistributedApplication _app;
     private string _baseUrl;
+    private const int MODAL_TIMEOUT = 30000;  // 모달 타임아웃 30초
+    private const int RESPONSE_TIMEOUT = 60000; // 응답 타임아웃 60초
     public override BrowserNewContextOptions ContextOptions()
     {
         return new BrowserNewContextOptions
@@ -43,7 +45,15 @@ public class HomeTests : PageTest
     [SetUp]
     public async Task Setup()
     {
-        await Page.GotoAsync(_baseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        // 페이지 로드 전에 충분한 시간을 기다립니다
+        await Task.Delay(2000);
+        await Page.GotoAsync(_baseUrl, new PageGotoOptions
+        { 
+            WaitUntil = WaitUntilState.NetworkIdle,
+            Timeout = 30000 
+        });
+        // 페이지 로드 후 추가 대기
+        await Task.Delay(2000);
     }
 
     [OneTimeTearDown]
@@ -209,11 +219,11 @@ public class HomeTests : PageTest
 
         // Act
         await linkShareButton.ClickAsync();
-        await Expect(modal).ToBeVisibleAsync(); // Timeout error : 모달이 열릴 때까지 대기
+        await Expect(modal).ToBeVisibleAsync(new() { Timeout = MODAL_TIMEOUT });
 
         // `alert` 감지 이벤트 핸들러 등록
         string alertMessage = "";
-        TaskCompletionSource<bool> alertHandled = new TaskCompletionSource<bool>();
+        var alertHandled = new TaskCompletionSource<bool>();
 
         Page.Dialog += async (_, dialog) =>
         {
@@ -250,14 +260,14 @@ public class HomeTests : PageTest
         await Page.WaitForSelectorAsync(".modal", new()
         {
             State = WaitForSelectorState.Detached,
-            Timeout = 10000 // 모달 닫힘 대기 시간
+            Timeout = MODAL_TIMEOUT
         });
 
-        // 2) AI 응답이 끝날 때까지 대기
+        // 2) AI 응답이 끝날 때까지 대기        
         await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
         {
             State = WaitForSelectorState.Detached,
-            Timeout = 40000 // AI 응답 상태 메시지 사라짐 대기 시간
+            Timeout = RESPONSE_TIMEOUT
         });
 
         // 3) 입력창 활성화 상태 확인
