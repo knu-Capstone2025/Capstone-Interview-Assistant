@@ -5,10 +5,14 @@ using InterviewAssistant.ApiService.Endpoints;
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Repositories;
+using InterviewAssistant.ApiService.Extensions;
 
 using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+
+using ModelContextProtocol;
+using ModelContextProtocol.Client;
 
 using OpenAI;
 
@@ -34,6 +38,19 @@ builder.Services.AddOpenApi();
 
 builder.AddAzureOpenAIClient("openai");
 
+builder.Services.AddSingleton<IMcpClient>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var endpoint = new Uri("https+http://mcpserver").Resolve(config);
+    var transport = new SseClientTransport(new SseClientTransportOptions
+    {
+        Name = "MarkItdown",
+        Endpoint = endpoint
+    });
+    return McpClientFactory.CreateAsync(transport).GetAwaiter().GetResult(); 
+});
+
+
 builder.Services.AddSingleton<Kernel>(sp =>
 {
     var config = builder.Configuration;
@@ -48,6 +65,9 @@ builder.Services.AddSingleton<Kernel>(sp =>
 
     return kernel;
 });
+
+
+
 
 builder.Services.AddHttpClient<IUrlContentDownloader, UrlContentDownloader>();
 
