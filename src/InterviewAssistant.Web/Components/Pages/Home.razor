@@ -3,6 +3,7 @@
 @using InterviewAssistant.Web.Services
 @using Markdig
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
@@ -119,6 +120,16 @@
     private Guid currentResumeId;
     private Guid currentJobDescriptionId;
     private void CloseModal() => showModal = false;
+
+    // 최초 렌더링 시 GUID 생성
+    protected override async Task OnInitializedAsync()
+    {
+        if (currentResumeId == Guid.Empty || currentJobDescriptionId == Guid.Empty)
+        {
+            currentResumeId = Guid.NewGuid();
+            currentJobDescriptionId = Guid.NewGuid();
+        }
+    }
     bool IsValidUrl(string url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
@@ -131,12 +142,7 @@
             IsValidUrl(resumeUrl) && IsValidUrl(jobUrl))
         {
             CloseModal();
-            isLinkShared = true;            
-            // 무작위 GUID 생성
-            currentResumeId = Guid.NewGuid();
-            currentJobDescriptionId = Guid.NewGuid();
-            
-            Logger.LogInformation($"생성된 ResumeId: {currentResumeId}, JobDescriptionId: {currentJobDescriptionId}");
+            isLinkShared = true;
 
             var request = new InterviewDataRequest
             {
@@ -194,7 +200,7 @@
         {
             await JSRuntime.InvokeVoidAsync("alert", "URL이 유효하지 않습니다. 다시 확인해주세요.");
         }
-    }    
+    }
 
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
