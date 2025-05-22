@@ -11,7 +11,6 @@ using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 
-using ModelContextProtocol;
 using ModelContextProtocol.Client;
 
 using OpenAI;
@@ -59,15 +58,11 @@ builder.Services.AddSingleton<Kernel>(sp =>
     var kernel = Kernel.CreateBuilder()
                        .AddOpenAIChatCompletion(
                            modelId: config["GitHub:Models:ModelId"]!,
-                           openAIClient: openAIClient,
-                           serviceId: "github")
+                           openAIClient: openAIClient)
                        .Build();
 
     return kernel;
 });
-
-
-
 
 builder.Services.AddHttpClient<IUrlContentDownloader, UrlContentDownloader>();
 

@@ -5,15 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InterviewAssistant.ApiService.Repositories;
 
-public class InterviewRepository : IInterviewRepository
+public class InterviewRepository(InterviewDbContext db) : IInterviewRepository
 {
-    private readonly InterviewDbContext _db;
-
-    public InterviewRepository(InterviewDbContext db)
-    {
-        _db = db;
-    }
-
     public async Task SaveResumeAsync(ResumeEntry entity)
     {
         // 해당 이력서가 정확히 하나라고 보장되어 있고 복수 존재함이 불가능
@@ -33,7 +26,7 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task<ResumeEntry?> GetResumeByIdAsync(Guid id)
     {
-        return await _db.Resumes.FirstOrDefaultAsync(e => e.Id == id);
+        return await db.Resumes.FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public async Task SaveJobAsync(JobDescriptionEntry entity)
@@ -53,7 +46,6 @@ public class InterviewRepository : IInterviewRepository
 
     public async Task<JobDescriptionEntry?> GetJobByIdAsync(Guid id)
     {
-        return await _db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == id);
+        return await db.JobDescriptions.FirstOrDefaultAsync(e => e.Id == id);
     }
-
 }

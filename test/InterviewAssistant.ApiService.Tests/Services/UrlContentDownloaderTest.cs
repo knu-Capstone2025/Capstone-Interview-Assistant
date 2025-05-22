@@ -1,13 +1,7 @@
 #pragma warning disable CS1998
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Tests.Common;
-
-using NUnit.Framework;
 
 using Shouldly;
 
