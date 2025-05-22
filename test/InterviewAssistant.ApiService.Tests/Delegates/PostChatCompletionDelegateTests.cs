@@ -1,22 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 using InterviewAssistant.ApiService.Delegates;
 using InterviewAssistant.ApiService.Models;
 using InterviewAssistant.ApiService.Repositories;
 using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.Common.Models;
 
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
-
-using NUnit.Framework;
 
 using Shouldly;
 

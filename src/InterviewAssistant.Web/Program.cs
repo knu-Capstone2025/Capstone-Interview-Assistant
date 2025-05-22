@@ -1,6 +1,6 @@
+using InterviewAssistant.Web.Clients;
 using InterviewAssistant.Web.Components;
 using InterviewAssistant.Web.Services;
-using InterviewAssistant.Web.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 

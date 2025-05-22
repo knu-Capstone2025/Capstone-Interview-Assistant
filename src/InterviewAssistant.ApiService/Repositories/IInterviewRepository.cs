@@ -1,6 +1,7 @@
 using InterviewAssistant.ApiService.Models;
 
 namespace InterviewAssistant.ApiService.Repositories;
+
 public interface IInterviewRepository
 {
     Task SaveResumeAsync(ResumeEntry entity);
