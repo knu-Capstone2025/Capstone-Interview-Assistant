@@ -213,16 +213,24 @@
         }
         if (e.Key == "Enter" && !e.ShiftKey)
         {
-            // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
-            var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
-
-            // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
-            if (!string.IsNullOrWhiteSpace(actualValue))
+            try 
             {
-                // 실제 값으로 userInput을 갱신합니다
-                userInput = actualValue.TrimEnd('\n', '\r');
+                // isSend 플래그 설정으로 중복 전송 방지
                 isSend = true;
-                await SendMessage();
+                // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
+                var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
+                
+                // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
+                if (!string.IsNullOrWhiteSpace(actualValue))
+                {
+                    // 실제 값으로 userInput을 갱신합니다
+                    userInput = actualValue.TrimEnd('\n', '\r');
+                    await SendMessage();
+                }
+            }
+            finally 
+            {
+                // 성공/실패 상관없이 항상 플래그 해제
                 isSend = false;
             }
         }
