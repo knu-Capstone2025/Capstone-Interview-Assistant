@@ -6,6 +6,7 @@ using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Repositories;
 using InterviewAssistant.ApiService.Extensions;
+using InterviewAssistant.ApiService.Middleware;
 
 using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,7 @@ builder.Services.AddSingleton<IMcpClient>(sp =>
     return McpClientFactory.CreateAsync(transport).GetAwaiter().GetResult(); 
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddSingleton<Kernel>(sp =>
 {
