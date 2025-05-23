@@ -12,8 +12,10 @@ public interface IChatService
     /// 사용자 메시지를 처리하고 응답을 반환합니다.
     /// </summary>
     /// <param name="messages">사용자 메시지</param>
+    /// <param name="resumeId">이력서 ID</param>
+    /// <param name="jobDescriptionId">채용공고 ID</param>
     /// <returns>처리된 챗봇 응답</returns>
-    IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages);
+    IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages, Guid resumeId, Guid jobDescriptionId);
 
     /// <summary>
     /// 이력서 및 채용공고 데이터를 백엔드 API로 전송합니다.
@@ -33,7 +35,7 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
                                                     .CreateLogger<ChatService>();
 
     /// <inheritdoc/>
-    public async IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages)
+    public async IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages, Guid resumeId, Guid jobDescriptionId)
     {
         if (messages == null || !messages.Any())
         {
@@ -59,10 +61,12 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
             yield break;
         }
 
-        // API 요청 생성 및 전송 (현재는 하드코딩된 응답을 반환하는 ChatApiClient 사용)
+        // API 요청 생성 및 전송
         var request = new ChatRequest
         {
-            Messages = processedMessages
+            Messages = processedMessages,
+            ResumeId = resumeId,
+            JobDescriptionId = jobDescriptionId
         };
         var responses = _client.SendMessageAsync(request);
 
