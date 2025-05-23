@@ -2,7 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace InterviewAssistant.ApiService.Middleware;
+namespace InterviewAssistant.ApiService.Middlewares;
 
 /// <summary>
 /// 전역 예외 처리기

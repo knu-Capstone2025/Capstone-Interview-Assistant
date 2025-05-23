@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-using InterviewAssistant.ApiService.Middleware;
+using InterviewAssistant.ApiService.Middlewares;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -10,7 +10,7 @@ using NSubstitute;
 
 using Shouldly;
 
-namespace InterviewAssistant.ApiService.Tests.Middleware;
+namespace InterviewAssistant.ApiService.Tests.Middlewares;
 
 [TestFixture]
 public class GlobalExceptionHandlerTests

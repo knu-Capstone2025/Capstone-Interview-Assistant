@@ -6,7 +6,7 @@ using InterviewAssistant.ApiService.Services;
 using InterviewAssistant.ApiService.Data;
 using InterviewAssistant.ApiService.Repositories;
 using InterviewAssistant.ApiService.Extensions;
-using InterviewAssistant.ApiService.Middleware;
+using InterviewAssistant.ApiService.Middlewares;
 
 using Microsoft.SemanticKernel;
 using Microsoft.EntityFrameworkCore;
