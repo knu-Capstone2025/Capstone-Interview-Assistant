@@ -207,27 +207,28 @@
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if(e.Repeat || isSend)
+        if (e.Repeat || isSend) return;
+        
+        isSend = true;
+        
+        try
         {
-            return;
-        }
-        if (e.Key == "Enter" && !e.ShiftKey)
-        {
-            // 텍스트 영역의 실제 값을 JavaScript를 통해 가져옵니다
-            var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
-
-            // 실제 값이 비어있지 않은 경우에만 메시지를 보냅니다
-            if (!string.IsNullOrWhiteSpace(actualValue))
+            if (e.Key == "Enter" && !e.ShiftKey)
             {
-                // 실제 값으로 userInput을 갱신합니다
-                userInput = actualValue.TrimEnd('\n', '\r');
-                isSend = true;
-                await SendMessage();
-                isSend = false;
+                var actualValue = await JSRuntime.InvokeAsync<string>("getTextAreaValue", "messageInput");
+                
+                if (!string.IsNullOrWhiteSpace(actualValue))
+                {
+                    userInput = actualValue.TrimEnd('\n', '\r');
+                    await SendMessage();
+                }
             }
         }
+        finally
+        {
+            isSend = false;
+        }
     }
-
     // 메시지 전송 - 서비스 사용
     private async Task SendMessage()
     {
