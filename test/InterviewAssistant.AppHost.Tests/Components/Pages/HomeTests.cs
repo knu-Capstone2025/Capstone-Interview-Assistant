@@ -398,7 +398,7 @@ public class HomeTests : PageTest
         Console.WriteLine($"차단 테스트 후 메시지 수: {afterBlockedSend}");
         
         // Assert 2: isSend 플래그가 true일 때 메시지 전송 차단 확인
-        afterBlockedSend.ShouldBe(afterFirstSend, "isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다.");
+        afterBlockedSend.ShouldBe(afterFirstSend, "isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다_1.");
 
         // Act 3: 플래그 해제 후 정상 전송 확인
         await Page.EvaluateAsync("window.isSend = false;");
@@ -422,7 +422,7 @@ public class HomeTests : PageTest
         var blockedCorrectly = (afterBlockedSend == afterFirstSend);
         var allowedAfterReset = (afterFlagReset >= afterBlockedSend);
         
-        blockedCorrectly.ShouldBeTrue("isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다.");
+        blockedCorrectly.ShouldBeTrue("isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다_2.");
         
         // 만약 메시지 전송 기능이 실제로 작동한다면
         if (afterFirstSend > initialMessageCount || afterFlagReset > afterBlockedSend)
