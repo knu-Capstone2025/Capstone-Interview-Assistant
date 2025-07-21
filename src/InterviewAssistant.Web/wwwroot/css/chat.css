@@ -450,3 +450,82 @@ body {
 .submit-btn:hover {
     background-color: #3a6fc1;
 }
+
+/* PDF 다운로드 관련 스타일 */
+.interview-completed-section {
+    text-align: center;
+    padding: 20px;
+    margin: 20px 0;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    border: 2px dashed var(--primary-color);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.interview-completed-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.pdf-download-btn {
+    background: linear-gradient(45deg, #4a89dc, #5a99ec);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(74, 137, 220, 0.3);
+    min-width: 250px;
+}
+
+.pdf-download-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 137, 220, 0.4);
+}
+
+.pdf-download-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.pdf-download-btn:active {
+    transform: translateY(0);
+}
+
+/* 피드백 대기 중 버튼 스타일 */
+.pdf-download-btn-disabled {
+    background: linear-gradient(45deg, #94a3b8, #cbd5e1);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(148, 163, 184, 0.3);
+    min-width: 250px;
+}
+
+.pdf-download-btn-disabled:hover {
+    background: linear-gradient(45deg, #64748b, #94a3b8);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(148, 163, 184, 0.4);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

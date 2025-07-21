@@ -4,7 +4,9 @@
 @using Markdig
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Web
+@using System.Linq
 @inject IChatService ChatService
+@inject IReportService ReportService
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
 @rendermode InteractiveServer
@@ -64,6 +66,25 @@
                     </div>
                 </div>
             }
+
+            <!-- 종합 피드백 완료 시 PDF 다운로드 버튼 -->
+            @if (isInterviewCompleted)
+            {
+                <div class="interview-completed-section">
+                    <h3>🎉 면접이 완료되었습니다!</h3>
+                    <p>종합 피드백이 완료되어 면접 리포트를 다운로드할 수 있습니다.</p>
+                    <button class="pdf-download-btn" @onclick="DownloadPdfReport" disabled="@isGeneratingPdf">
+                        @if (isGeneratingPdf)
+                        {
+                            <span>📄 PDF 생성 중...</span>
+                        }
+                        else
+                        {
+                            <span>📄 면접 리포트 PDF 다운로드</span>
+                        }
+                    </button>
+                </div>
+            }
         }
         @if (isLoading)
         {
@@ -119,6 +140,12 @@
     // 저장된 ID 변수
     private Guid currentResumeId;
     private Guid currentJobDescriptionId;
+    // PDF 관련 변수
+    private bool isInterviewCompleted = false;
+    private bool isGeneratingPdf = false;
+    private List<QuestionAnswer> questionsAndAnswers = new();
+    private string finalFeedback = string.Empty;
+    
     private void CloseModal() => showModal = false;
 
     //Blazor 컴포넌트가 처음 초기화될 때 자동으로 호출
@@ -290,6 +317,9 @@
                 await ScrollToBottom();
                 StateHasChanged();
             }
+            
+            // 응답이 완전히 끝난 후 면접 완료 감지
+            CheckIfInterviewCompleted(assistantMessage.Message);
         }
         catch (Exception ex)
         {
@@ -329,5 +359,226 @@
             // await JSRuntime.InvokeVoidAsync("initScrollButton", "chatMessages");
         }
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    // 종합 피드백 완료 감지 로직
+    private void CheckIfInterviewCompleted(string message)
+    {
+        // 종합 피드백 완료 감지 키워드 (더 정확하게)
+        var feedbackCompletionKeywords = new[]
+        {
+            "종합 피드백",
+            "전반적인 평가", 
+            "면접을 마치겠습니다",
+            "최종 평가",
+            "총평을 드리겠습니다",
+            "종합적으로 평가",
+            "면접 결과",
+            "피드백을 종합하면"
+        };
+
+        // 종합 피드백이 완료되었는지 확인 (메시지 길이도 고려)
+        if (!isInterviewCompleted && 
+            feedbackCompletionKeywords.Any(keyword => message.Contains(keyword)) &&
+            message.Length > 100) // 종합 피드백은 보통 긴 메시지
+        {
+            isInterviewCompleted = true;
+            finalFeedback = message;
+            ExtractQuestionsAndAnswers();
+            Logger.LogInformation("종합 피드백 완료 감지됨!");
+            StateHasChanged();
+        }
+    }
+
+    // 질문과 답변 추출 (개선된 버전)
+    private void ExtractQuestionsAndAnswers()
+    {
+        questionsAndAnswers.Clear();
+        
+        // 사용자 메시지와 AI 응답을 매칭
+        for (int i = 1; i < messages.Count; i++)
+        {
+            // AI가 질문하고 사용자가 답변하는 패턴 찾기
+            if (messages[i-1].Role == MessageRoleType.Assistant && 
+                messages[i].Role == MessageRoleType.User &&
+                (messages[i-1].Message.Contains("?") || messages[i-1].Message.Contains("질문")))
+            {
+                questionsAndAnswers.Add(new QuestionAnswer
+                {
+                    Question = CleanMessage(messages[i-1].Message),
+                    Answer = CleanMessage(messages[i].Message),
+                    Feedback = ExtractFeedbackForAnswer(i)
+                });
+            }
+        }
+        
+        Logger.LogInformation($"추출된 질문/답변 쌍: {questionsAndAnswers.Count}개");
+    }
+
+    // 메시지 정리 (불필요한 문구 제거)
+    private string CleanMessage(string message)
+    {
+        // Markdown 제거 및 기본 정리
+        var cleaned = message
+            .Replace("**", "")
+            .Replace("*", "")
+            .Replace("#", "")
+            .Trim();
+            
+        // 너무 긴 메시지는 요약
+        if (cleaned.Length > 500)
+        {
+            cleaned = cleaned.Substring(0, 497) + "...";
+        }
+        
+        return cleaned;
+    }
+
+    // 특정 답변에 대한 피드백 추출
+    private string ExtractFeedbackForAnswer(int answerIndex)
+    {
+        // 답변 다음에 오는 AI 메시지에서 피드백 찾기
+        if (answerIndex + 1 < messages.Count && 
+            messages[answerIndex + 1].Role == MessageRoleType.Assistant)
+        {
+            var nextMessage = messages[answerIndex + 1].Message;
+            
+            // 피드백 키워드가 포함된 경우만 피드백으로 간주
+            var feedbackKeywords = new[] { "좋습니다", "훌륭합니다", "개선", "보완", "추가로", "피드백" };
+            
+            if (feedbackKeywords.Any(keyword => nextMessage.Contains(keyword)) && 
+                nextMessage.Length < 300)
+            {
+                return CleanMessage(nextMessage);
+            }
+        }
+        
+        return string.Empty;
+    }
+
+    // PDF 다운로드 메서드
+    private async Task DownloadPdfReport()
+    {
+        try
+        {
+            isGeneratingPdf = true;
+            StateHasChanged();
+
+            // 실제 대화 데이터 기반으로 강점과 개선점 추출
+            var (strengths, improvements) = ExtractStrengthsAndImprovements();
+
+            var report = new InterviewReport
+            {
+                CandidateName = "지원자", // 추후 이력서에서 추출
+                Position = "개발자", // 추후 채용공고에서 추출
+                InterviewDate = DateTime.Now,
+                QuestionsAndAnswers = questionsAndAnswers,
+                OverallFeedback = finalFeedback,
+                Strengths = strengths,
+                ImprovementAreas = improvements,
+                FitnessScore = ExtractFitnessScore(),
+                FinalAssessment = finalFeedback
+            };
+
+            var pdfBytes = await ReportService.GeneratePdfReportAsync(report);
+            var fileName = $"면접리포트_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdfBytes));
+            
+            Logger.LogInformation("PDF 리포트 다운로드 완료");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "PDF 생성 중 오류 발생");
+            await JSRuntime.InvokeVoidAsync("alert", "PDF 생성 중 오류가 발생했습니다: " + ex.Message);
+        }
+        finally
+        {
+            isGeneratingPdf = false;
+            StateHasChanged();
+        }
+    }
+
+    // 강점과 개선점 추출
+    private (List<string> strengths, List<string> improvements) ExtractStrengthsAndImprovements()
+    {
+        var strengths = new List<string>();
+        var improvements = new List<string>();
+
+        // 종합 피드백에서 강점과 개선점 추출
+        if (!string.IsNullOrEmpty(finalFeedback))
+        {
+            var lines = finalFeedback.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            
+            bool inStrengths = false;
+            bool inImprovements = false;
+            
+            foreach (var line in lines)
+            {
+                var cleanLine = line.Trim().Replace("*", "").Replace("-", "").Trim();
+                
+                if (cleanLine.Contains("강점") || cleanLine.Contains("잘한 점") || cleanLine.Contains("우수한"))
+                {
+                    inStrengths = true;
+                    inImprovements = false;
+                    continue;
+                }
+                
+                if (cleanLine.Contains("개선") || cleanLine.Contains("부족한") || cleanLine.Contains("보완"))
+                {
+                    inStrengths = false;
+                    inImprovements = true;
+                    continue;
+                }
+                
+                if (inStrengths && !string.IsNullOrWhiteSpace(cleanLine) && cleanLine.Length > 10)
+                {
+                    strengths.Add(cleanLine);
+                }
+                else if (inImprovements && !string.IsNullOrWhiteSpace(cleanLine) && cleanLine.Length > 10)
+                {
+                    improvements.Add(cleanLine);
+                }
+            }
+        }
+
+        // 기본값 설정
+        if (strengths.Count == 0)
+        {
+            strengths.AddRange(new[] { "면접에 성실히 참여함", "질문에 적극적으로 답변함" });
+        }
+        
+        if (improvements.Count == 0)
+        {
+            improvements.AddRange(new[] { "더 구체적인 경험 사례 제시 필요", "기술적 깊이 향상 권장" });
+        }
+
+        return (strengths, improvements);
+    }
+
+    // 적합성 점수 추출
+    private int ExtractFitnessScore()
+    {
+        // 종합 피드백에서 점수 추출 시도
+        if (!string.IsNullOrEmpty(finalFeedback))
+        {
+            var scoreMatches = System.Text.RegularExpressions.Regex.Matches(finalFeedback, @"(\d+)점|(\d+)/10|점수.*?(\d+)");
+            if (scoreMatches.Count > 0)
+            {
+                foreach (System.Text.RegularExpressions.Match match in scoreMatches)
+                {
+                    for (int i = 1; i < match.Groups.Count; i++)
+                    {
+                        if (int.TryParse(match.Groups[i].Value, out int score) && score <= 10)
+                        {
+                            return score;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 기본 점수 (질문/답변 수에 따라 결정)
+        return Math.Min(8, 5 + questionsAndAnswers.Count);
     }
 }

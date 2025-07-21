@@ -103,3 +103,16 @@ window.resetTextAreaHeight = function (elementId) {
         textarea.style.overflowY = "hidden";
     }
 };
+
+// PDF 파일 다운로드 함수
+window.downloadFile = function (filename, base64Data) {
+    const linkSource = `data:application/pdf;base64,${base64Data}`;
+    const downloadLink = document.createElement("a");
+    
+    downloadLink.href = linkSource;
+    downloadLink.download = filename;
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+};
