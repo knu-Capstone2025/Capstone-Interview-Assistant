@@ -15,6 +15,21 @@ public class PdfReportService : IPdfReportService
 
     public byte[] GenerateInterviewReport(InterviewReport report)
     {
+        // Null 체크 및 기본값 설정
+        if (report == null)
+        {
+            throw new ArgumentNullException(nameof(report));
+        }
+
+        // 기본값 설정
+        report.CandidateName ??= "알 수 없음";
+        report.Position ??= "알 수 없음";
+        report.QuestionsAndAnswers ??= new List<QuestionAnswer>();
+        report.OverallFeedback ??= "";
+        report.Strengths ??= new List<string>();
+        report.ImprovementAreas ??= new List<string>();
+        report.FinalAssessment ??= "";
+
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -86,23 +101,33 @@ public class PdfReportService : IPdfReportService
             {
                 column.Item().Text("질문 및 답변").FontSize(16).SemiBold().FontColor(Colors.Blue.Darken2);
                 
-                for (int i = 0; i < report.QuestionsAndAnswers.Count; i++)
+                if (report.QuestionsAndAnswers != null && report.QuestionsAndAnswers.Count > 0)
                 {
-                    var qa = report.QuestionsAndAnswers[i];
-                    column.Item().PaddingTop(15).Column(qaColumn =>
+                    for (int i = 0; i < report.QuestionsAndAnswers.Count; i++)
                     {
-                        qaColumn.Item().Text($"질문 {i + 1}").FontSize(14).SemiBold();
-                        qaColumn.Item().PaddingTop(5).Element(c => RenderMarkdownText(c, qa.Question, 12));
-                        
-                        qaColumn.Item().PaddingTop(10).Text("답변").FontSize(12).SemiBold().FontColor(Colors.Green.Darken1);
-                        qaColumn.Item().PaddingTop(5).Element(c => RenderMarkdownText(c, qa.Answer, 11));
-                        
-                        if (!string.IsNullOrEmpty(qa.Feedback))
+                        var qa = report.QuestionsAndAnswers[i];
+                        if (qa != null)
                         {
-                            qaColumn.Item().PaddingTop(10).Text("피드백").FontSize(12).SemiBold().FontColor(Colors.Orange.Darken1);
-                            qaColumn.Item().PaddingTop(5).Element(c => RenderMarkdownText(c, qa.Feedback, 11));
+                            column.Item().PaddingTop(15).Column(qaColumn =>
+                            {
+                                qaColumn.Item().Text($"질문 {i + 1}").FontSize(14).SemiBold();
+                                qaColumn.Item().PaddingTop(5).Element(c => RenderMarkdownText(c, qa.Question ?? "", 12));
+                                
+                                qaColumn.Item().PaddingTop(10).Text("답변").FontSize(12).SemiBold().FontColor(Colors.Green.Darken1);
+                                qaColumn.Item().PaddingTop(5).Element(c => RenderMarkdownText(c, qa.Answer ?? "", 11));
+                                
+                                if (!string.IsNullOrEmpty(qa.Feedback))
+                                {
+                                    qaColumn.Item().PaddingTop(10).Text("피드백").FontSize(12).SemiBold().FontColor(Colors.Orange.Darken1);
+                                    qaColumn.Item().PaddingTop(5).Element(c => RenderMarkdownText(c, qa.Feedback, 11));
+                                }
+                            });
                         }
-                    });
+                    }
+                }
+                else
+                {
+                    column.Item().PaddingTop(10).Text("질문과 답변이 없습니다.").FontSize(12).Italic();
                 }
             });
         }
@@ -123,13 +148,23 @@ public class PdfReportService : IPdfReportService
                 row.RelativeItem().Column(column =>
                 {
                     column.Item().Text("주요 강점").FontSize(14).SemiBold().FontColor(Colors.Green.Darken2);
-                    foreach (var strength in report.Strengths)
+                    if (report.Strengths != null && report.Strengths.Count > 0)
                     {
-                        column.Item().PaddingTop(5).Row(strengthRow =>
+                        foreach (var strength in report.Strengths)
                         {
-                            strengthRow.ConstantItem(15).Text("•").FontColor(Colors.Green.Medium);
-                            strengthRow.RelativeItem().Element(c => RenderMarkdownText(c, strength, 11));
-                        });
+                            if (!string.IsNullOrEmpty(strength))
+                            {
+                                column.Item().PaddingTop(5).Row(strengthRow =>
+                                {
+                                    strengthRow.ConstantItem(15).Text("•").FontColor(Colors.Green.Medium);
+                                    strengthRow.RelativeItem().Element(c => RenderMarkdownText(c, strength, 11));
+                                });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        column.Item().PaddingTop(5).Text("강점이 기록되지 않았습니다.").FontSize(11).Italic();
                     }
                 });
 
@@ -138,13 +173,23 @@ public class PdfReportService : IPdfReportService
                 row.RelativeItem().Column(column =>
                 {
                     column.Item().Text("개선 영역").FontSize(14).SemiBold().FontColor(Colors.Orange.Darken2);
-                    foreach (var improvement in report.ImprovementAreas)
+                    if (report.ImprovementAreas != null && report.ImprovementAreas.Count > 0)
                     {
-                        column.Item().PaddingTop(5).Row(improvementRow =>
+                        foreach (var improvement in report.ImprovementAreas)
                         {
-                            improvementRow.ConstantItem(15).Text("•").FontColor(Colors.Orange.Medium);
-                            improvementRow.RelativeItem().Element(c => RenderMarkdownText(c, improvement, 11));
-                        });
+                            if (!string.IsNullOrEmpty(improvement))
+                            {
+                                column.Item().PaddingTop(5).Row(improvementRow =>
+                                {
+                                    improvementRow.ConstantItem(15).Text("•").FontColor(Colors.Orange.Medium);
+                                    improvementRow.RelativeItem().Element(c => RenderMarkdownText(c, improvement, 11));
+                                });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        column.Item().PaddingTop(5).Text("개선 영역이 기록되지 않았습니다.").FontSize(11).Italic();
                     }
                 });
             });
