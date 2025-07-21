@@ -11,6 +11,8 @@ public class ReportService(HttpClient httpClient) : IReportService
 {
     public async Task<byte[]> GeneratePdfReportAsync(InterviewReport report)
     {
+        ArgumentNullException.ThrowIfNull(report);
+        
         var response = await httpClient.PostAsJsonAsync("/api/report/generate-pdf", report);
         response.EnsureSuccessStatusCode();
         

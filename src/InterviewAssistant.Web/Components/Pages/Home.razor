@@ -154,9 +154,11 @@
         // 최초 렌더링 시 GUID 생성
         currentResumeId = Guid.NewGuid();
         currentJobDescriptionId = Guid.NewGuid();
+        
         // 초기화 작업이 완료되었음을 명시
         await Task.CompletedTask;
     }
+
     bool IsValidUrl(string url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && 
@@ -357,6 +359,37 @@
             await JSRuntime.InvokeVoidAsync("setupTextAreaResize", "messageInput");
             await JSRuntime.InvokeVoidAsync("setupAutoScrollDetection", "chatMessages");
             // await JSRuntime.InvokeVoidAsync("initScrollButton", "chatMessages");
+            
+            try
+            {
+                // 먼저 DotNet 객체가 사용 가능한지 확인
+                await JSRuntime.InvokeVoidAsync("eval", @"
+                    if (typeof window.DotNet === 'undefined' || !window.DotNet.invokeMethodAsync) {
+                        console.warn('DotNet interop not ready');
+                    } else {
+                        console.log('DotNet interop is ready');
+                    }
+                ");
+                
+                // 잠시 대기 후 컴포넌트 등록
+                await Task.Delay(200);
+                
+                // 테스트용으로 컴포넌트 인스턴스를 전역에 등록
+                await JSRuntime.InvokeVoidAsync("eval", "window.homeComponent = arguments[0];", DotNetObjectReference.Create(this));
+                
+                // Global component assignment 함수도 정의
+                await JSRuntime.InvokeVoidAsync("eval", @"
+                    window.assignGlobalComponent = function(component) {
+                        window.globalComponent = component;
+                        console.log('Global component assigned');
+                    };
+                ");
+            }
+            catch (Exception ex)
+            {
+                // JavaScript interop 실패 시 무시 (테스트 중)
+                System.Diagnostics.Debug.WriteLine($"JavaScript interop setup failed: {ex.Message}");
+            }
         }
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -580,5 +613,19 @@
         
         // 기본 점수 (질문/답변 수에 따라 결정)
         return Math.Min(8, 5 + questionsAndAnswers.Count);
+    }
+
+    // 테스트용 메서드들
+    [JSInvokable]
+    public void SetIsSendFlag(bool value)
+    {
+        isSend = value;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public bool GetIsSendFlag()
+    {
+        return isSend;
     }
 }

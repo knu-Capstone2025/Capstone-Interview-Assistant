@@ -160,7 +160,12 @@ public class ReportServiceTests
         result.ShouldBe(expectedPdfBytes);
         _messageHandler.RequestContent.ShouldNotBeNull();
 
-        var sentData = JsonSerializer.Deserialize<InterviewReport>(_messageHandler.RequestContent);
+        // JSON 옵션 설정 (camelCase 등)
+        var jsonOptions = new JsonSerializerOptions 
+        { 
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+        };
+        var sentData = JsonSerializer.Deserialize<InterviewReport>(_messageHandler.RequestContent, jsonOptions);
         sentData.ShouldNotBeNull();
         sentData.CandidateName.ShouldBe("마크다운 테스트");
         sentData.Position.ShouldBe("**개발자**");
