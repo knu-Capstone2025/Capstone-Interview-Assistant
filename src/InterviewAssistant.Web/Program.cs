@@ -18,6 +18,12 @@ builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(client =>
     client.Timeout = TimeSpan.FromMinutes(5); // 타임아웃을 5분으로 증가
 });
 
+// ReportService 등록
+builder.Services.AddHttpClient<IReportService, ReportService>(client =>
+{
+    client.BaseAddress = new("https+http://apiservice");
+});
+
 // ChatService 등록
 builder.Services.AddScoped<IChatService, ChatService>();
 
