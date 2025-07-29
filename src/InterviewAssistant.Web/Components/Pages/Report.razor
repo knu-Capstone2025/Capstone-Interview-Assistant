@@ -1,0 +1,104 @@
+@page "/report"
+@using InterviewAssistant.Web.Services
+@using Markdig
+@inject IChatService ChatService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<PageTitle>면접 결과 리포트</PageTitle>
+
+<div class="report-container p-4">
+    <div class="text-center mb-4">
+        <h1>면접 결과 리포트</h1>
+        <p class="text-muted">AI가 분석한 면접 결과 요약입니다.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>종합 분석</h5>
+                </div>
+                <div class="card-body">
+                    <p>@reportSummary?.OverallFeedback</p>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-header">
+                     <h5>상세 분석</h5>
+                </div>
+                <div class="card-body">
+                    <h6>👍 강점</h6>
+                    <ul>
+                        @foreach(var item in reportSummary?.Strengths ?? new())
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                    <hr/>
+                    <h6> 개선점</h6>
+                    <ul>
+                        @foreach(var item in reportSummary?.Weaknesses ?? new())
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                 <div class="card-header">
+                    <h5>질문 유형 분석</h5>
+                </div>
+                <div class="card-body">
+                     <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-section mt-5">
+        <h3 class="text-center mb-3">전체 대화 기록</h3>
+        @foreach (var message in chatHistory)
+        {
+            <div class="message @(message.Role == MessageRoleType.User ? "user-message" : "bot-message")">
+                <div class="message-content">
+                    @((MarkupString)Markdown.ToHtml(message.Message).Trim())
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+  [Inject] private NavigationManager Navigation { get; set; } = default!;
+    private List<ChatMessage> chatHistory = new();
+    private InterviewReportModel? reportSummary;
+    private bool isInitialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+      await JSRuntime.InvokeVoidAsync("setBodyOverflow", "auto");
+      
+        chatHistory = ChatService.GetLastChatHistory();
+        reportSummary = ChatService.GetLastReportSummary();
+        
+        if (chatHistory.Count == 0 || reportSummary == null)
+        {
+            // 데이터가 없으면 홈으로 보냄
+            // NavigationManager.NavigateTo("/"); 
+        }
+        
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && reportSummary?.ChartData != null)
+        {
+            await JSRuntime.InvokeVoidAsync("createChart", "typeChart", reportSummary.ChartData);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

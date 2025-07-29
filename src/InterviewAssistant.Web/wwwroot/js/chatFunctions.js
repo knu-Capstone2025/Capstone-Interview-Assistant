@@ -103,3 +103,39 @@ window.resetTextAreaHeight = function (elementId) {
         textarea.style.overflowY = "hidden";
     }
 };
+
+window.createChart = (canvasId, chartData) => {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: "pie", // 'bar'로 바꾸면 막대그래프가 됩니다.
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: "질문 유형 분석",
+                    data: chartData.values,
+                    backgroundColor: [
+                        "rgba(255, 99, 132, 0.7)",
+                        "rgba(54, 162, 235, 0.7)",
+                        "rgba(255, 206, 86, 0.7)",
+                        "rgba(75, 192, 192, 0.7)",
+                        "rgba(153, 102, 255, 0.7)",
+                    ],
+                    borderColor: "rgba(255, 255, 255, 1)",
+                    borderWidth: 1,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+        },
+    });
+};
+
+// body 태그의 overflow 스타일을 설정하는 함수
+window.setBodyOverflow = (style) => {
+    document.body.style.overflow = style;
+};
