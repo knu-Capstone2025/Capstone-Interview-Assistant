@@ -346,7 +346,7 @@ public class HomeTests : PageTest
             $"Enter 전 메시지 수: {messageCountBeforeEnter}, Enter 후 메시지 수: {messageCountAfterEnter}");
     }
 
-    /// <summary>
+   /// <summary>
     /// 중복 이벤트 방지 플래그가 제대로 동작하는지 확인합니다.
     /// </summary>
     [Test]
@@ -357,13 +357,31 @@ public class HomeTests : PageTest
         await Page.Locator("input#resumeUrl").FillAsync("https://example.com/resume.pdf");
         await Page.Locator("input#jobUrl").FillAsync("https://example.com/job.pdf");
         await Page.Locator("button.submit-btn").ClickAsync();
+        
+        // 모달 닫힘 대기
         await Page.WaitForSelectorAsync(".modal", new PageWaitForSelectorOptions
         {
             State = WaitForSelectorState.Detached,
-            Timeout = 5000
+            Timeout = 10000
+        });
+
+        // 초기 AI 응답 완료까지 대기 (다른 테스트와 동일하게)
+        await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = 15000
+        });
+        
+        await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = RESPONSE_TIMEOUT // 60초로 증가
         });
 
         var textarea = Page.Locator("textarea#messageInput");
+        
+        // Textarea가 활성화될 때까지 명시적으로 대기 (타임아웃 증가)
+        await Expect(textarea).ToBeEnabledAsync(new() { Timeout = 20000 });
         
         // 초기 메시지 개수 확인
         var initialMessageCount = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
@@ -372,12 +390,12 @@ public class HomeTests : PageTest
         await textarea.FillAsync("첫 번째 메시지");
         await textarea.PressAsync("Enter");
         
-        // 고정된 대기 시간으로 처리 완료 대기
-        await Task.Delay(2000);
+        // 메시지 전송 후 충분한 대기 시간
+        await Task.Delay(3000);
         
         var afterFirstSend = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
         
-        // Assert 1: 첫 번째 메시지 전송 확인 (메시지가 추가되었을 수도, 안 되었을 수도 있음)
+        // Assert 1: 첫 번째 메시지 전송 확인
         Console.WriteLine($"초기 메시지 수: {initialMessageCount}, 첫 전송 후: {afterFirstSend}");
 
         // Act 2: isSend 플래그를 true로 설정하여 중복 전송 차단 테스트
@@ -391,14 +409,17 @@ public class HomeTests : PageTest
         var flagStatus = await Page.EvaluateAsync<bool>("window.isSend === true");
         Console.WriteLine($"isSend 플래그 상태: {flagStatus}");
         
+        // textarea가 여전히 활성화되어 있는지 재확인
+        await Expect(textarea).ToBeEnabledAsync(new() { Timeout = 5000 });
+        
         await textarea.PressAsync("Enter");
-        await Task.Delay(1500); // 처리 시간 대기
+        await Task.Delay(2000); // 처리 시간 대기
         
         var afterBlockedSend = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
         Console.WriteLine($"차단 테스트 후 메시지 수: {afterBlockedSend}");
         
         // Assert 2: isSend 플래그가 true일 때 메시지 전송 차단 확인
-        afterBlockedSend.ShouldBe(afterFirstSend, "isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다_1.");
+        afterBlockedSend.ShouldBe(afterFirstSend, "isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다.");
 
         // Act 3: 플래그 해제 후 정상 전송 확인
         await Page.EvaluateAsync("window.isSend = false;");
@@ -410,9 +431,12 @@ public class HomeTests : PageTest
         // 새로운 메시지로 다시 시도
         await textarea.ClearAsync();
         await textarea.FillAsync("플래그 해제 후 메시지");
-        await textarea.PressAsync("Enter");
         
-        await Task.Delay(2000); // 처리 시간 대기
+        // textarea 상태 재확인
+        await Expect(textarea).ToBeEnabledAsync(new() { Timeout = 5000 });
+        
+        await textarea.PressAsync("Enter");
+        await Task.Delay(3000); // 처리 시간 대기
         
         var afterFlagReset = await Page.EvaluateAsync<int>("document.querySelectorAll('.message').length");
         Console.WriteLine($"플래그 해제 후 메시지 수: {afterFlagReset}");
@@ -422,9 +446,9 @@ public class HomeTests : PageTest
         var blockedCorrectly = (afterBlockedSend == afterFirstSend);
         var allowedAfterReset = (afterFlagReset >= afterBlockedSend);
         
-        blockedCorrectly.ShouldBeTrue("isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다_2.");
+        blockedCorrectly.ShouldBeTrue("isSend 플래그가 true일 때 메시지 전송이 차단되어야 합니다.");
         
-        // 만약 메시지 전송 기능이 실제로 작동한다면
+        // 테스트 환경에서 실제 메시지 전송이 작동하는지 확인
         if (afterFirstSend > initialMessageCount || afterFlagReset > afterBlockedSend)
         {
             Console.WriteLine("메시지 전송 기능이 작동하는 환경입니다.");
