@@ -78,9 +78,7 @@
     private bool isInitialized = false;
 
     protected override async Task OnInitializedAsync()
-    {
-      await JSRuntime.InvokeVoidAsync("setBodyOverflow", "auto");
-      
+    {      
         chatHistory = ChatService.GetLastChatHistory();
         reportSummary = ChatService.GetLastReportSummary();
         
@@ -95,10 +93,16 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && reportSummary?.ChartData != null)
+    if (firstRender)
+    {
+        // JS 호출 코드를 OnAfterRenderAsync로 이동
+        await JSRuntime.InvokeVoidAsync("setBodyOverflow", "auto"); 
+
+        if (reportSummary?.ChartData != null)
         {
             await JSRuntime.InvokeVoidAsync("createChart", "typeChart", reportSummary.ChartData);
         }
-        await base.OnAfterRenderAsync(firstRender);
+    }
+    await base.OnAfterRenderAsync(firstRender);
     }
 }
