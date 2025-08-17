@@ -160,7 +160,7 @@
             StateHasChanged();
             
             var assistantMessage = new ChatMessage 
-            { 
+            {
                 Role = MessageRoleType.Assistant, 
                 Message = string.Empty 
             };
@@ -207,7 +207,8 @@
     // 키 입력 처리 (엔터키로 메시지 전송)
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Repeat || isSend) return;
+        var isSendJs = await JSRuntime.InvokeAsync<bool>("isMessageSendInProgress");
+        if (e.Repeat || isSend || isSendJs) return;
         
         isSend = true;
         
@@ -273,7 +274,7 @@
 
             bool first = true;
             await foreach (var response in responses)
-            {    
+            {
                 if (first)
                 {
                     isLoading = false;

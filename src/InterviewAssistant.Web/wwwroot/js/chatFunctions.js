@@ -103,3 +103,7 @@ window.resetTextAreaHeight = function (elementId) {
         textarea.style.overflowY = "hidden";
     }
 };
+
+window.isMessageSendInProgress = function () {
+    return window.isSend || false;
+};

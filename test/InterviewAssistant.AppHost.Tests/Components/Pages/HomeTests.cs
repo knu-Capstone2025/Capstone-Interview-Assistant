@@ -363,6 +363,18 @@ public class HomeTests : PageTest
             Timeout = 5000
         });
 
+        // 초기 AI 응답 및 UI 준비 대기
+        await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = 15000
+        });
+        await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = 40000
+        });
+
         var textarea = Page.Locator("textarea#messageInput");
         
         // 초기 메시지 개수 확인
