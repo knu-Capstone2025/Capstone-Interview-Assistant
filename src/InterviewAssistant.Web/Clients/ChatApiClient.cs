@@ -22,6 +22,14 @@ public interface IChatApiClient
     IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request);
 
     Task<InterviewReportModel?> GenerateReportAsync(List<ChatMessage> messages);
+
+    /// <summary>
+    /// 면접 결과 리포트를 PDF로 다운로드합니다.
+    /// </summary>
+    /// <param name="report">면접 결과 리포트</param>
+    /// <param name="chatHistory">채팅 기록</param>
+    /// <returns>PDF 바이트 배열</returns>
+    Task<byte[]?> DownloadReportPdfAsync(InterviewReportModel report, List<ChatMessage> chatHistory);
 }
 
 /// <summary>
@@ -86,6 +94,27 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
         }
 
         _logger.LogError("리포트 생성 실패: {StatusCode}", httpResponse.StatusCode);
+        return null;
+    }
+
+    public async Task<byte[]?> DownloadReportPdfAsync(InterviewReportModel report, List<ChatMessage> chatHistory)
+    {
+        _logger.LogInformation("API에 PDF 다운로드 요청");
+        
+        var request = new PdfDownloadRequest
+        {
+            Report = report,
+            ChatHistory = chatHistory
+        };
+
+        var httpResponse = await _http.PostAsJsonAsync("/api/pdf/download-report", request);
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            return await httpResponse.Content.ReadAsByteArrayAsync();
+        }
+
+        _logger.LogError("PDF 다운로드 실패: {StatusCode}", httpResponse.StatusCode);
         return null;
     }
 }
