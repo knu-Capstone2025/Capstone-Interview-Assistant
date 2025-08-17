@@ -139,3 +139,7 @@ window.createChart = (canvasId, chartData) => {
 window.setBodyOverflow = (style) => {
     document.body.style.overflow = style;
 };
+
+window.isMessageSendInProgress = function () {
+    return window.isSend || false;
+};

@@ -378,6 +378,18 @@ public class HomeTests : PageTest
             Timeout = RESPONSE_TIMEOUT // 60초로 증가
         });
 
+        // 초기 AI 응답 및 UI 준비 대기
+        await Page.WaitForSelectorAsync(".welcome-message", new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = 15000
+        });
+        await Page.WaitForSelectorAsync(".response-status", new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Detached,
+            Timeout = 40000
+        });
+
         var textarea = Page.Locator("textarea#messageInput");
         
         // Textarea가 활성화될 때까지 명시적으로 대기 (타임아웃 증가)
