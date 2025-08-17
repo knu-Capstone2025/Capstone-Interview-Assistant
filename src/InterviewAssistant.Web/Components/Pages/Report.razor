@@ -11,6 +11,22 @@
     <div class="text-center mb-4">
         <h1>면접 결과 리포트</h1>
         <p class="text-muted">AI가 분석한 면접 결과 요약입니다.</p>
+        
+        @if (reportSummary != null && chatHistory.Any())
+        {
+            <button class="btn btn-primary mt-2" @onclick="DownloadPdfAsync" disabled="@isDownloading">
+                @if (isDownloading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>PDF 생성 중...</span>
+                }
+                else
+                {
+                    <i class="bi bi-download me-2"></i>
+                    <span>PDF 다운로드</span>
+                }
+            </button>
+        }
     </div>
 
     <div class="row">
@@ -76,6 +92,7 @@
     private List<ChatMessage> chatHistory = new();
     private InterviewReportModel? reportSummary;
     private bool isInitialized = false;
+    private bool isDownloading = false;
 
     protected override async Task OnInitializedAsync()
     {      
@@ -89,6 +106,38 @@
         }
         
         await base.OnInitializedAsync();
+    }
+
+    private async Task DownloadPdfAsync()
+    {
+        if (reportSummary == null || !chatHistory.Any())
+        {
+            return;
+        }
+
+        isDownloading = true;
+        StateHasChanged();
+
+        try
+        {
+            var pdfBytes = await ChatService.DownloadReportPdfAsync(reportSummary, chatHistory);
+            
+            if (pdfBytes != null)
+            {
+                var fileName = $"면접결과_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                await JSRuntime.InvokeVoidAsync("downloadFile", Convert.ToBase64String(pdfBytes), fileName, "application/pdf");
+            }
+        }
+        catch (Exception ex)
+        {
+            // 에러 처리 (필요에 따라 사용자에게 알림)
+            Console.WriteLine($"PDF 다운로드 오류: {ex.Message}");
+        }
+        finally
+        {
+            isDownloading = false;
+            StateHasChanged();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -27,6 +27,14 @@ public interface IChatService
     Task<InterviewReportModel?> GenerateReportAsync(List<ChatMessage> messages);
     List<ChatMessage> GetLastChatHistory();
     InterviewReportModel? GetLastReportSummary();
+
+    /// <summary>
+    /// 면접 결과 리포트를 PDF로 다운로드합니다.
+    /// </summary>
+    /// <param name="report">면접 결과 리포트</param>
+    /// <param name="chatHistory">채팅 기록</param>
+    /// <returns>PDF 바이트 배열</returns>
+    Task<byte[]?> DownloadReportPdfAsync(InterviewReportModel report, List<ChatMessage> chatHistory);
 }
 
 /// <summary>
@@ -126,4 +134,10 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
 
     public List<ChatMessage> GetLastChatHistory() => _lastChatHistory;
     public InterviewReportModel? GetLastReportSummary() => _lastReportSummary;
+
+    public async Task<byte[]?> DownloadReportPdfAsync(InterviewReportModel report, List<ChatMessage> chatHistory)
+    {
+        _logger.LogInformation("PDF 다운로드 요청 시작");
+        return await _client.DownloadReportPdfAsync(report, chatHistory);
+    }
 }
