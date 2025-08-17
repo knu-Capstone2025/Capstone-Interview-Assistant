@@ -32,6 +32,13 @@ public static class ChatCompletionEndpoint
            .WithName("PostInterviewData")
            .WithOpenApi();
 
+        // 면접 리포트 생성 엔드포인트
+        api.MapPost("report", ChatReportDelegate.PostChatReportAsync)
+            .Accepts<List<ChatMessage>>(contentType: "application/json")
+            .Produces<InterviewReportModel>(statusCode: StatusCodes.Status200OK, contentType: "application/json")
+            .WithName("PostChatReport")
+            .WithOpenApi();
+
         return routeBuilder;
     }
 }

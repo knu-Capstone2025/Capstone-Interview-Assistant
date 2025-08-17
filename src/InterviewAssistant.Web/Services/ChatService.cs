@@ -23,6 +23,10 @@ public interface IChatService
     /// <param name="request">이력서 및 채용공고 URL이 포함된 요청 객체</param>
     /// <returns>API 응답</returns>
     IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request);
+
+    Task<InterviewReportModel?> GenerateReportAsync(List<ChatMessage> messages);
+    List<ChatMessage> GetLastChatHistory();
+    InterviewReportModel? GetLastReportSummary();
 }
 
 /// <summary>
@@ -33,6 +37,9 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
     private readonly IChatApiClient _client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly ILogger<ChatService> _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory)))
                                                     .CreateLogger<ChatService>();
+
+    private List<ChatMessage> _lastChatHistory = [];
+    private InterviewReportModel? _lastReportSummary;
 
     /// <inheritdoc/>
     public async IAsyncEnumerable<ChatResponse> SendMessageAsync(IEnumerable<ChatMessage> messages, Guid resumeId, Guid jobDescriptionId)
@@ -100,4 +107,23 @@ public class ChatService(IChatApiClient client, ILoggerFactory loggerFactory) : 
 
         _logger.LogInformation("ChatService.c: 인터뷰 데이터 전송 완료");
     }
+
+    public async Task<InterviewReportModel?> GenerateReportAsync(List<ChatMessage> messages)
+    {
+        _logger.LogInformation("리포트 생성 요청 시작");
+        // ChatApiClient에 report 호출 메서드를 추가해야 합니다. (다음 단계에서 추가)
+        var report = await _client.GenerateReportAsync(messages);
+
+        if (report != null)
+        {
+            // 수신된 데이터를 서비스 내에 저장
+            _lastChatHistory = new List<ChatMessage>(messages);
+            _lastReportSummary = report;
+        }
+
+        return report;
+    }
+
+    public List<ChatMessage> GetLastChatHistory() => _lastChatHistory;
+    public InterviewReportModel? GetLastReportSummary() => _lastReportSummary;
 }

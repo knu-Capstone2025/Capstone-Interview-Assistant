@@ -8,6 +8,7 @@
 @inject IJSRuntime JSRuntime
 @inject ILogger<Home> Logger
 @rendermode InteractiveServer
+@inject NavigationManager Navigation
 
 <PageTitle>면접 코치 - InterviewAssistant</PageTitle>
 
@@ -41,6 +42,17 @@
 
 <!-- 메인 채팅 영역 -->
 <div class="chat-main">
+
+    <div class="chat-header">
+        <h2>AI 면접 코치</h2>
+        @if (isLinkShared && messages.Count > 2 && isServerOutputEnded)
+        {
+            <button class="btn btn-success btn-sm" @onclick="GoToReport" disabled="@(reportGenerating || isLoading)">
+                결과 보기
+            </button>
+        }
+    </div>
+
     <!-- 채팅 메시지 영역 -->
     <div class="chat-messages" id="chatMessages">
         @if (!isLinkShared)
@@ -120,6 +132,7 @@
     private Guid currentResumeId;
     private Guid currentJobDescriptionId;
     private void CloseModal() => showModal = false;
+    private bool reportGenerating = false;
 
     //Blazor 컴포넌트가 처음 초기화될 때 자동으로 호출
     protected override async Task OnInitializedAsync()
@@ -330,5 +343,15 @@
             // await JSRuntime.InvokeVoidAsync("initScrollButton", "chatMessages");
         }
         await base.OnAfterRenderAsync(firstRender);
+    }
+    private async Task GoToReport()
+    {
+        reportGenerating = true;
+        StateHasChanged(); // 로딩 상태 UI 반영
+
+        await ChatService.GenerateReportAsync(messages);
+
+        reportGenerating = false;
+        Navigation.NavigateTo("/report");
     }
 }

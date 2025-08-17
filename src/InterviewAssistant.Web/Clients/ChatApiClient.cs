@@ -20,6 +20,8 @@ public interface IChatApiClient
     /// <param name="request">이력서 및 채용공고 URL이 포함된 요청 객체</param>
     /// <returns>API 응답</returns>
     IAsyncEnumerable<ChatResponse> SendInterviewDataAsync(InterviewDataRequest request);
+
+    Task<InterviewReportModel?> GenerateReportAsync(List<ChatMessage> messages);
 }
 
 /// <summary>
@@ -55,7 +57,7 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));  // 명시적 예외 처리
-            
+
         _logger.LogInformation("ChatApiClient.cs: 인터뷰 데이터 전송 시작");
 
         var httpResponse = await _http.PostAsJsonAsync("/api/chat/interview-data", request);
@@ -71,5 +73,19 @@ public class ChatApiClient(HttpClient http, ILoggerFactory loggerFactory) : ICha
         }
 
         _logger.LogInformation("ChatApiClient.cs: 인터뷰 데이터 전송 완료");
+    }
+
+    public async Task<InterviewReportModel?> GenerateReportAsync(List<ChatMessage> messages)
+    {
+        _logger.LogInformation("API에 리포트 생성 요청");
+        var httpResponse = await _http.PostAsJsonAsync("/api/chat/report", messages);
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            return await httpResponse.Content.ReadFromJsonAsync<InterviewReportModel>();
+        }
+
+        _logger.LogError("리포트 생성 실패: {StatusCode}", httpResponse.StatusCode);
+        return null;
     }
 }
