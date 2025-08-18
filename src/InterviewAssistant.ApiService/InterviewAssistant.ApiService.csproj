@@ -15,6 +15,9 @@
     <PackageReference Include="Microsoft.SemanticKernel.Agents.core" Version="1.*" />
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.*" />
     <PackageReference Include="ModelContextProtocol" Version="0.*-*" />
+    <PackageReference Include="QuestPDF" Version="2024.*" />
+    <PackageReference Include="Markdig" Version="0.*" />
+    <PackageReference Include="SkiaSharp" Version="2.*" />
   </ItemGroup>
 
   <ItemGroup>

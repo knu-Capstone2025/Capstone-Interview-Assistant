@@ -32,6 +32,7 @@ builder.Services.AddSingleton(sqliteConnection); // 연결이 앱 생명주기�
 
 builder.Services.AddScoped<IKernelService, KernelService>();
 builder.Services.AddScoped<IInterviewRepository, InterviewRepository>();
+builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 
 //OpenAPI 설정
 builder.Services.AddOpenApi();
@@ -98,6 +99,9 @@ app.UseExceptionHandler();
 
 // Chat Completion 엔드포인트 매핑
 app.MapChatCompletionEndpoint();
+
+// PDF 다운로드 엔드포인트 매핑
+app.MapPdfDownloadEndpoints();
 
 // .NET Aspire 헬스체크 및 모니터링 엔드포인트 매핑
 app.MapDefaultEndpoints();
