@@ -6,43 +6,43 @@ Azure OpenAI 및 Semantic Kernel을 활용한 인터뷰 코치 앱입니다
 
 ## 애플리케이션 구조
 ```text
-InterviewAssistance
+InterviewAssistant
 ├── src
-│   ├── InterviewAssistance.AppHost
-│   ├── InterviewAssistance.ServiceDefaults
-│   ├── InterviewAssistance.Web
-│   ├── InterviewAssistance.ApiService
-│   ├── InterviewAssistance.Common
-│   └── InterviewAssistance.McpMarkItDown
+│   ├── InterviewAssistant.AppHost
+│   ├── InterviewAssistant.ServiceDefaults
+│   ├── InterviewAssistant.Web
+│   ├── InterviewAssistant.ApiService
+│   ├── InterviewAssistant.Common
+│   └── InterviewAssistant.McpMarkItDown
 │
 └── test
-    ├── InterviewAssistance.AppHost.Tests
-    ├── InterviewAssistance.Web.Tests
-    ├── InterviewAssistance.ApiService.Tests
-    └── InterviewAssistance.Common.Tests
+    ├── InterviewAssistant.AppHost.Tests
+    ├── InterviewAssistant.Web.Tests
+    ├── InterviewAssistant.ApiService.Tests
+    └── InterviewAssistant.Common.Tests
 ```
 
 ## 프로젝트 의존성
 ```text
-InterviewAssistance
+InterviewAssistant
 ├── src
-│   └── InterviewAssistance.AppHost
-│       ├── InterviewAssistance.Web
-│       │   ├── InterviewAssistance.ServiceDefaults
-│       │   └── InterviewAssistance.Common
-│       ├── InterviewAssistance.ApiService
-│       │   ├── InterviewAssistance.ServiceDefaults
-│       │   └── InterviewAssistance.Common
-│       └── InterviewAssistance.McpMarkItDown
+│   └── InterviewAssistant.AppHost
+│       ├── InterviewAssistant.Web
+│       │   ├── InterviewAssistant.ServiceDefaults
+│       │   └── InterviewAssistant.Common
+│       ├── InterviewAssistant.ApiService
+│       │   ├── InterviewAssistant.ServiceDefaults
+│       │   └── InterviewAssistant.Common
+│       └── InterviewAssistant.McpMarkItDown
 └── test
-    ├── InterviewAssistance.AppHost.Tests
-    │   └── InterviewAssistance.AppHost
-    ├── InterviewAssistance.Web.Tests
-    │   └── InterviewAssistance.Web
-    ├── InterviewAssistance.ApiService.Tests
-    │   └── InterviewAssistance.ApiService
-    └── InterviewAssistance.Common.Tests
-        └── InterviewAssistance.Common
+    ├── InterviewAssistant.AppHost.Tests
+    │   └── InterviewAssistant.AppHost
+    ├── InterviewAssistant.Web.Tests
+    │   └── InterviewAssistant.Web
+    ├── InterviewAssistant.ApiService.Tests
+    │   └── InterviewAssistant.ApiService
+    └── InterviewAssistant.Common.Tests
+        └── InterviewAssistant.Common
 ```
 
 ## 사전 준비사항
@@ -123,12 +123,12 @@ curl -fsSL https://aka.ms/install-azd.sh | bash
 ### McpMarkItDown 설치
 1. 프로젝트 루트 디렉토리에서 다음 명령어를 실행하여 폴더를 생성합니다:
    ```bash
-   mkdir -p src/InterviewAssistance.McpMarkItDown
+   mkdir -p src/InterviewAssistant.McpMarkItDown
    ```
 
 2. 생성한 폴더로 이동한 후 MarkItDown을 클론합니다:
    ```bash
-   cd src/InterviewAssistance.McpMarkItDown
+   cd src/InterviewAssistant.McpMarkItDown
    git clone https://github.com/microsoft/markitdown .
    ```
 
