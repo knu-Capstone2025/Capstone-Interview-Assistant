@@ -38,10 +38,11 @@ public class PdfGenerationService : IPdfGenerationService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(11));
+                page.DefaultTextStyle(x => x.FontSize(11).FontFamily("NanumGothic"));
 
                 page.Header()
                     .Text("면접 결과 리포트")
+                    .FontFamily("NanumGothic")
                     .SemiBold().FontSize(20).FontColor(Colors.Blue.Medium);
 
                 page.Content()
